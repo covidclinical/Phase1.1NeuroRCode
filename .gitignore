@@ -1,0 +1,8 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+data/
+.Renviron
+.DS_Store
+Phase1.1NeuroRCode.Rproj

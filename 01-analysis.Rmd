@@ -1,0 +1,278 @@
+---
+title: "Refine analysis"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    code_download: true
+    highlight: tango
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(readxl)
+library(httr)
+library(rcartocolor)
+library(stringr)
+library(forcats)
+theme_set(theme_bw() + theme(legend.title = element_blank()))
+```
+
+## Download data
+
+```{r}
+github_link <- 'https://raw.githubusercontent.com/covidclinical/Phase1.1AggregateDataPerSite/master/'
+demo_link <- paste0(github_link, 'Demographics_persite_fakeID.csv')
+diag_link <- paste0(github_link, 'Diagnoses_persite_fakeID.csv')
+
+temp_file_1 <- temp_file_2 <- tempfile(fileext = ".csv")
+req <- GET(demo_link, 
+          # authenticate using GITHUB_PAT
+           authenticate(Sys.getenv("GITHUB_PAT"), ""),
+          # write result to disk
+           write_disk(path = temp_file_1))
+demo_all <- read_csv(temp_file_1)
+unlink(temp_file_1)
+
+req <- GET(diag_link, 
+           authenticate(Sys.getenv("GITHUB_PAT"), ""),
+           write_disk(path = temp_file_2))
+diag_all <- read_csv(temp_file_2)
+unlink(temp_file_2)
+```
+
+Notes:
+- `num_patients_ever_severe_icd1`: number of patients having the icd code and ever being severe
+- `num_patients_never_severe_icd1`: number of patients having the icd code and never being severe
+- `num_patients_ever_severe_icd0`: number of patients not having the icd code and ever being severe
+- `num_patients_never_severe_icd0`: number of patients not having the icd code and never being severe
+
+## Read in local files
+
+```{r}
+site_to_country <- read_csv('data/SiteID_Map_Non_Pediatric_3digit_toShare.csv') %>% 
+  mutate(Country = stringr::str_to_title(Country) %>% 
+           recode(Usa = 'US', 
+                  Singapore_spain = 'Singapore/Spain', 
+                  Uk = 'UK')) %>% 
+  select(SiteID = SiteID.new, Country)
+
+# Check for duplicated mapping:
+site_to_country[duplicated(site_to_country$SiteID),]
+
+icds_of_interest <- read_excel('data/2020-09-10_neuro-icd10.xlsx') %>% 
+  rename('icd' = `ICD-10`)
+```
+
+Two rows have country SINGAPORE_SPAIN because there is only one site in each one of the countries.
+If this were not combined: data could be known the specific site.
+
+SITE660 was mapped to both US and France?
+SITE309 was mapped to both US and Italy?
+
+
+# Descriptive statistics
+
+`Diagnoses_persite_fakeID.csv` has `length(unique(diag_all$SiteID))` unique SiteID's.
+`Demographics_persite_fakeID.csv` has `length(unique(demo_all$SiteID))` unique SiteID's.
+
+## Mold data frames
+
+```{r}
+diag_ana <- diag_all %>% 
+  mutate(all_nas = is.na(num_patients_ever_severe_icd0) & 
+           is.na(num_patients_ever_severe_icd1) &
+           is.na(num_patients_never_severe_icd0)&
+           is.na(num_patients_never_severe_icd1)) %>% 
+  filter(!all_nas) %>% 
+  select(-all_nas) %>% 
+  mutate(
+    num_patients_icd = num_patients_ever_severe_icd1 + num_patients_never_severe_icd1,
+    icd = gsub('icd:', '', icd),
+    time = recode(time, 
+                  before_admission = 'Before admission',
+                  since_admission = 'After admission')) %>% 
+  left_join(site_to_country, by = 'SiteID') %>% 
+  right_join(icds_of_interest, by = 'icd') %>% 
+  distinct() %>% 
+  mutate(full_icd = paste0(`ICD-10 Description`, ' (', icd, ')')) %>%
+  {.}
+
+demo_ana <- demo_all %>% 
+  filter(race == 'all', age_group == 'all', sex == 'all') %>% 
+  mutate(num_patients_never_severe = num_patients_all - num_patients_ever_severe) %>% 
+  left_join(site_to_country, by = 'SiteID')
+
+# check_all <- demo_all %>% 
+#   filter(race == 'all') 
+
+# check whether the rows with race = all are actual sum of the rest
+# check_race <- demo_all %>%
+#   filter(race != 'all') %>%
+#   group_by(SiteID, sex, age_group) %>%
+#   summarise(num_patients_sum = sum(num_patients_all)) %>%
+#   left_join(check_all)
+
+
+# check_na <- check_race %>% 
+#   filter(is.na(num_patients_all)) %>% 
+#   pull(SiteID) %>% 
+#   unique()
+```
+
+More quality check:
+```{r}
+# length(unique(diag_all$SiteID))
+check_diag <- diag_all %>% 
+  filter(!is.na(num_patients_ever_severe_icd1)) %>% 
+  mutate(num_patients_icd = num_patients_ever_severe_icd1 + num_patients_never_severe_icd1,
+         icd = gsub('icd:', '', icd)) %>% 
+  group_by(SiteID) %>%
+  summarise(max_icd_pats_all = max(num_patients_icd, na.rm = T), .groups = 'drop') %>%
+  left_join(demo_ana)
+
+check_diag %>% 
+  filter(max_icd_pats_all > num_patients_all)
+```
+
+
+
+Calculate percentages:
+```{r}
+country_pats <- demo_ana %>% 
+  group_by(Country) %>% 
+  summarise(total_patients_per_country = sum(num_patients_all), .groups = 'drop')
+
+dot_dat <- diag_ana %>% 
+  group_by(Country, time, icd) %>% 
+  summarise(pats_time_icd_ctry = sum(num_patients_icd), .groups = 'drop') %>% 
+  left_join(country_pats, by = 'Country') %>%
+  mutate(percent_pats = pats_time_icd_ctry/total_patients_per_country) 
+
+dot_dat %>% 
+  ggplot(aes(x = forcats::fct_reorder(icd, percent_pats), y = percent_pats, group = icd)) +
+    geom_point(aes(color = time)) +
+    geom_line() +
+    facet_grid(rows = vars(Country)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.1), labels = scales::percent_format(accuracy = 1)) +
+  scale_color_carto_d(palette = 4) +
+  labs(x = NULL, y = 'Percent patients')
+    
+```
+
+
+```{r}
+site_pats <- demo_ana %>% 
+  group_by(SiteID) %>% 
+  summarise(total_patients_per_site = sum(num_patients_all)) %>% 
+  ungroup()
+
+code_prevalence <- diag_ana %>% 
+  group_by(SiteID, time, icd, `Neurological Disease Category`, full_icd) %>% 
+  summarise(pats_time_icd_site = sum(num_patients_icd), .groups = 'drop') %>% 
+  left_join(site_pats, by = 'SiteID') %>% 
+  mutate(percent_pats_site = pats_time_icd_site/total_patients_per_site,
+         SiteID = as.factor(SiteID))
+
+before_code_prev <- code_prevalence %>% 
+  filter(time == 'Before admission',
+         SiteID != 'SITE309') %>%
+  ggplot(aes(y = icd, x = SiteID, fill = percent_pats_site)) +
+  geom_tile() +
+  labs(y = NULL, x = NULL) +
+  #f6d2a9,#f5b78e,#f19c7c,#ea8171,#dd686c,#ca5268,#b13f64
+  scale_fill_gradient(
+    # low = '#f6d2a9', high = '#b13f64',
+    low = '#d1eeea', high = '#2a5674',
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0, 0.3),
+    guide = guide_legend(override.aes = list(fill = "white"))) +
+  scale_x_discrete(drop = F) + 
+  facet_grid(rows = vars(`Neurological Disease Category`), space = 'free', scale = 'free') +
+  theme(panel.grid = element_blank(),
+        strip.text.y = element_text(angle = 0),
+        axis.text.x = element_blank(),
+        legend.text = element_text(color = "white"),
+        plot.margin = unit(c(1.5,0.2,1,0.5), "lines"),
+        panel.spacing = unit(2, "points")) +
+  NULL
+
+after_code_prev <- code_prevalence %>% 
+  filter(time == 'After admission',
+         SiteID != 'SITE309') %>%
+  ggplot(aes(y = icd, x = SiteID, fill = percent_pats_site)) +
+  geom_tile() +
+  labs(y = NULL, x = NULL) +
+  scale_x_discrete(drop = F) + 
+  #d1eeea,#a8dbd9,#85c4c9,#68abb8,#4f90a6,#3b738f,#2a5674
+  scale_fill_gradient(low = '#d1eeea', high = '#2a5674',
+                      labels = scales::percent_format(accuracy = 1),
+                      limits = c(0, 0.3)) +
+  facet_grid(rows = vars(`Neurological Disease Category`), space = 'free', scale = 'free') +
+  theme(panel.grid = element_blank(),
+        strip.text.y = element_text(angle = 0),
+        axis.text.x = element_text(angle = 90),
+        plot.margin = unit(c(1.5,0.2,0.5,0.5), "lines"),
+        panel.spacing = unit(2, "points")) +
+  NULL
+
+heats <- cowplot::plot_grid(before_code_prev, after_code_prev, ncol = 1,
+                            rel_heights = c(1, 1.15),
+                   labels = c('A. Before admission', 'B. After admission'))
+ggsave('figs/icd_heatmap.png', heats, height = 10, width = 7)
+
+```
+
+```{r}
+icd_time <- diag_ana %>% 
+  filter(SiteID != 'SITE309') %>% 
+  group_by(full_icd, time) %>% 
+  summarise(pats_icd_time = sum(num_patients_icd, na.rm = T), .groups = 'drop') 
+sorted_icds <- icd_time %>% 
+  filter(time == 'After admission') %>% 
+  arrange(pats_icd_time) %>% 
+  pull(full_icd)
+
+total_icd <- icd_time %>% 
+  ggplot(aes(x = pats_icd_time, y = fct_relevel(full_icd, sorted_icds), fill = time)) +
+  scale_fill_carto_d(palette = 4, guide = guide_legend(reverse = TRUE)) +
+  geom_col(position = 'dodge') +
+  theme_minimal() +
+  scale_x_reverse(expand = expansion(add = c(0,0))) +
+  scale_y_discrete(labels = NULL) +
+  theme(legend.position = c(0.25, 0.15),
+        legend.title = element_blank(),
+        legend.key.height = unit(4, 'mm')) +
+  labs(x = 'Total number of patients at all sites', y = NULL)
+
+
+```
+
+
+```{r}
+percent_icd <- code_prevalence %>% 
+  filter(SiteID != 'SITE309') %>% 
+  ggplot(aes(x = percent_pats_site, 
+             y = fct_relevel(full_icd, sorted_icds), 
+             color = time)) +
+  scale_color_carto_d(palette = 4, guide = NULL) +
+  # scale_color_manual(values = c('#2a5674', '#b13f64')) + 
+  geom_boxplot(fill = 'white') + 
+  theme_minimal() +  
+  theme(legend.position = c(0.75, 0.1),
+        legend.title = element_blank(),
+        axis.text.y = element_text(hjust = 0.5)) + 
+  scale_x_continuous(expand = expansion(add = c(0, 0.05)),
+                     labels = scales::percent_format(accuracy = 1)) +
+  labs(x = 'Proportion of patients each site', y = NULL)
+# percent_icd
+icd_prevalence_plots <- cowplot::plot_grid(total_icd, percent_icd, ncol = 2,
+                   rel_widths = c(1, 2.5))
+
+ggsave('figs/icd_prevalence.png', icd_prevalence_plots, height = 5, width = 10)
+```
+
