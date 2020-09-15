@@ -1,21 +1,14 @@
 library(epitools)
 
-my_riskratio <- function (x, y = NULL, conf.level = 0.95, rev = c("neither", 
-                                                                  "rows", "columns", "both"), correction = FALSE, verbose = FALSE) 
+my_riskratio <- function (x, conf.level = 0.95, 
+                          correction = FALSE, verbose = FALSE) 
   # with continuity correction:
   # https://stats.stackexchange.com/questions/21298/confidence-interval-around-the-ratio-of-two-proportions
   # http://www.zen103156.zen.co.uk/rr.pdf
   # https://stats.stackexchange.com/questions/3112/calculation-of-relative-risk-confidence-interval
 {
-  if (is.matrix(x) && !is.null(y)) {
-    stop("y argument should be NULL")
-  }
-  if (is.null(y)) {
-    x <- epitable(x, rev = rev)
-  }
-  else {
-    x <- epitable(x, y, rev = rev)
-  }
+
+  x <- matrix(x, ncol = 2, byrow = TRUE)
   tmx <- table.margins(x)
   p.exposed <- sweep(tmx, 2, tmx["Total", ], "/")
   p.outcome <- sweep(tmx, 1, tmx[, "Total"], "/")
@@ -62,8 +55,9 @@ my_riskratio <- function (x, y = NULL, conf.level = 0.95, rev = c("neither",
              correction = pv$correction)
   rrs <- list(data = tmx, measure = small, p.value = pv$p.value, 
               correction = pv$correction)
-  attr(rr, "method") <- "small sample-adjusted UMLE & normal approx (Wald) CI"
-  attr(rrs, "method") <- "small sample-adjusted UMLE & normal approx (Wald) CI"
+  attr(rr, "method") <-
+    attr(rrs, "method") <- 
+    "small sample-adjusted UMLE & normal approx (Wald) CI"
   if (verbose == FALSE) {
     rrs
   }
@@ -77,10 +71,9 @@ my_fish <- function(df) {
     my_riskratio(correction = TRUE)
   
   res$measure[2, 1:3] %>% 
-    c(p_value = res$p.value[2,2]) %>% 
+    c(p_value = res$p.value[2,2]) %>% # get p-value from fisher exact 
     as.matrix() %>% t() %>% data.frame()
 }
-
 
 heat_theme_top <- function(){
   theme(panel.grid = element_blank(),
@@ -89,7 +82,7 @@ heat_theme_top <- function(){
         legend.text = element_text(color = "white"),
         legend.title = element_text(color = 'white'),
         plot.margin = unit(c(1.5,0.2,1,0.5), "lines"),
-        panel.spacing = unit(2, "points"))
+        panel.spacing = unit(0, "points"))
 }
 
 
