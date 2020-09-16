@@ -542,7 +542,7 @@ enrichment_plot_left <- plot_obs_exp_left  %>%
   theme(
     legend.position = c(0.9, 0.3),
     axis.title = element_text(size = 9),
-    plot.margin = margin(5.5, 2, 5.5, 5.5, unit = 'pt')
+    plot.margin = margin(20, 2, 5.5, 5.5, unit = 'pt')
   ) +
   scale_color_brewer(type = 'qual', palette = 'Set1') +
   scale_x_discrete(position = 'top', labels = NULL) +
@@ -568,7 +568,7 @@ enrichment_plot_right <- plot_obs_exp_right %>%
     legend.background = element_blank(),
     legend.key.height = unit(3, 'mm'),
     legend.key.width = unit(3, 'mm'),
-    plot.margin = margin(5.5, 5.5, 8.5, 2, unit = 'pt')
+    plot.margin = margin(20, 5.5, 8.5, 2, unit = 'pt')
   ) +
   scale_y_sqrt(
     breaks = c(100, 1000, 3000),
@@ -583,10 +583,10 @@ enrichment_plot_right <- plot_obs_exp_right %>%
       filter(full_icd %in% over_severe_icds), 
     nudge_y = 7, aes(label = round(over_sev, 0)), size = 2.5)
 
-enrichment_plot <- cowplot::plot_grid(enrichment_plot_left, enrichment_plot_right,
+enrichment_plot_before <- cowplot::plot_grid(enrichment_plot_left, enrichment_plot_right,
                                 rel_widths = c(1, 2.8))
-enrichment_plot
-ggsave('figs/icd_severe_bef.png', enrichment_plot, width = 9.5, height = 5)
+# enrichment_plot_before
+# ggsave('figs/icd_severe_bef.png', enrichment_plot_before, width = 9.5, height = 5)
 
 ```
 
@@ -685,7 +685,7 @@ plot_obs_exp <- filtered_obs_exp %>%
 ```
 
 
-```{r warning=FALSE, fig.width = 12, fig.height = 6, echo=FALSE}
+```{r warning=FALSE, fig.width = 12, fig.height = 8, echo=FALSE}
 plot_obs_exp_right <- plot_obs_exp %>% filter(subtype == 'Sqrt(number of honorees)') %>% 
   pivot_wider(names_from = type)
 plot_obs_exp_left <- plot_obs_exp %>% filter(subtype != 'Sqrt(number of honorees)') %>%
@@ -706,7 +706,7 @@ enrichment_plot_left <- plot_obs_exp_left  %>%
   theme(
     legend.position = c(0.9, 0.3),
     axis.title = element_text(size = 9),
-    plot.margin = margin(5.5, 2, 5.5, 5.5, unit = 'pt')
+    plot.margin = margin(20, 2, 5.5, 5.5, unit = 'pt')
   ) +
   scale_color_brewer(type = 'qual', palette = 'Set1') +
   scale_x_discrete(position = 'top', labels = NULL) +
@@ -732,7 +732,7 @@ enrichment_plot_right <- plot_obs_exp_right %>%
     legend.background = element_blank(),
     legend.key.height = unit(3, 'mm'),
     legend.key.width = unit(3, 'mm'),
-    plot.margin = margin(5.5, 5.5, 8.5, 2, unit = 'pt')
+    plot.margin = margin(20.5, 5.5, 8.5, 2, unit = 'pt')
   ) +
   scale_y_sqrt(
     breaks = c(100, 1000, 3000),
@@ -747,10 +747,16 @@ enrichment_plot_right <- plot_obs_exp_right %>%
       filter(full_icd %in% over_severe_icds), 
     nudge_y = 7, aes(label = round(over_sev, 0)), size = 2.5)
 
-enrichment_plot <- cowplot::plot_grid(enrichment_plot_left, enrichment_plot_right,
+enrichment_plot_after <- cowplot::plot_grid(enrichment_plot_left, enrichment_plot_right,
                                 rel_widths = c(1, 2.8))
+enrichment_plot <- cowplot::plot_grid(
+  enrichment_plot_before,
+  enrichment_plot_after,
+  ncol = 1, hjust = -0.05,
+  labels = c('A. Before admission', 'B. After admission')
+)
 enrichment_plot
-ggsave('figs/icd_severe_after.png', enrichment_plot, width = 9.5, height = 5)
+ggsave('figs/icd_severe_before_after.png', enrichment_plot, width = 9.5, height = 7)
 
 ```
 
