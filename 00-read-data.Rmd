@@ -1,0 +1,278 @@
+---
+title: "Read in and process data"
+output:
+  html_document:
+    theme: lumen
+    toc: true
+    toc_float: false
+    code_download: true
+    highlight: tango
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "docs") })
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(readr)
+library(readxl)
+library(httr)
+library(purrr)
+library(stringi)
+```
+
+## Download data
+
+```{r message=FALSE}
+github_link <- 'https://raw.githubusercontent.com/covidclinical/Phase1.1AggregateDataPerSite/master/'
+demo_link <- paste0(github_link, 'Demographics_persite_fakeID.csv')
+diag_link <- paste0(github_link, 'Diagnoses_persite_fakeID.csv')
+
+temp_file_1 <- temp_file_2 <- tempfile(fileext = ".csv")
+req <- GET(demo_link, 
+          # authenticate using GITHUB_PAT
+           authenticate(Sys.getenv("GITHUB_PAT"), ""),
+          # write result to disk
+           write_disk(path = temp_file_1))
+demo_all <- read_csv(temp_file_1)
+unlink(temp_file_1)
+
+req <- GET(diag_link, 
+           authenticate(Sys.getenv("GITHUB_PAT"), ""),
+           write_disk(path = temp_file_2))
+diag_all <- read_csv(temp_file_2)
+unlink(temp_file_2)
+```
+
+Notes:
+- `num_patients_ever_severe_icd1`: number of patients having the icd code and ever being severe
+- `num_patients_never_severe_icd1`: number of patients having the icd code and never being severe
+- `num_patients_ever_severe_icd0`: number of patients not having the icd code and ever being severe
+- `num_patients_never_severe_icd0`: number of patients not having the icd code and never being severe
+
+## Read in local files
+
+```{r include=FALSE}
+# site_to_country <- read_csv('data/siteid_Map_Non_Pediatric_3digit_toShare.csv') %>% 
+#   mutate(Country = stringr::str_to_title(Country) %>% 
+#            recode(Usa = 'US', 
+#                   Singapore_spain = 'Singapore/Spain', 
+#                   Uk = 'UK')) %>% 
+#   select(siteid = siteid.new, Country)
+# 
+# # Check for duplicated mapping:
+# site_to_country[duplicated(site_to_country$siteid),]
+```
+
+<!-- Two rows have country SINGAPORE_SPAIN because there is only one site in each one of the countries. -->
+<!-- If this were not combined: data could be known the specific site. -->
+
+<!-- SITE660 was mapped to both US and France? -->
+<!-- SITE309 was mapped to both US and Italy? -->
+```{r}
+icds_of_interest <- read_excel('data/2020-09-10_neuro-icd10.xlsx') %>% 
+  rename('icd' = `ICD-10`)
+```
+
+Notes: 
+
+“-99” indicate masked small numbers (for obfuscation) and “-999" indicate missing, unknown, not applicable, etc.
+
+# Descriptive statistics
+
+`Diagnoses_persite_fakeID.csv` has `length(unique(diag_all$siteid))` unique siteid's.
+`Demographics_persite_fakeID.csv` has `length(unique(demo_all$siteid))` unique siteid's.
+
+
+## Mold data frames
+
+```{r include=FALSE}
+# diag_ana <- diag_all %>% 
+#   mutate(all_nas = is.na(num_patients_ever_severe_icd0) & 
+#            is.na(num_patients_ever_severe_icd1) &
+#            is.na(num_patients_never_severe_icd0)&
+#            is.na(num_patients_never_severe_icd1)) %>% 
+#   filter(!all_nas) %>% 
+#   select(-all_nas) %>% 
+#   mutate(
+#     num_patients_icd = num_patients_ever_severe_icd1 + num_patients_never_severe_icd1,
+#     icd = gsub('icd:', '', icd),
+#     time = recode(time, 
+#                   before_admission = 'Before admission',
+#                   since_admission = 'After admission')) %>% 
+#   # left_join(site_to_country, by = 'siteid') %>% 
+#   right_join(icds_of_interest, by = 'icd') %>% 
+#   distinct() %>% 
+#   mutate(full_icd = paste0(`ICD-10 Description`, ' (', icd, ')')) %>%
+#   {.}
+# site_pats <- demo_ana %>% 
+#   group_by(siteid) %>% 
+#   summarise(num_patients_all = sum(num_patients_all), .groups = 'drop') 
+
+```
+
+```{r}
+demo_ana <- demo_all %>% 
+  filter(race == 'all', age_group == 'all', sex == 'all') %>% 
+  # left_join(site_to_country, by = 'siteid') %>% 
+  select(- c(sex, age_group, race)) %>% 
+  bind_rows(# Compute patients_all for SITE734 manually
+    demo_all %>% 
+      filter(siteid == 'SITE734', race == 'all', age_group == 'all') %>% 
+      group_by(siteid) %>% 
+      summarise(across(c(num_patients_all, num_patients_ever_severe), .fns = sum),
+                .groups = 'drop')
+  ) %>% 
+  mutate(num_patients_never_severe = num_patients_all - num_patients_ever_severe)
+
+
+split_patient_type <- function(x) {
+  temp <- strsplit(sub('(^[^_]+_[^_]+)_(.*)$', '\\1 \\2', stri_reverse(x)), ' ')
+  map(temp, stri_reverse)
+}
+
+diag_ana <- diag_all %>% 
+  mutate(
+    num_patients_never_severe_before_admission = num_patients_all_before_admission - num_patients_ever_severe_before_admission,
+    num_patients_never_severe_since_admission = num_patients_all_since_admission - num_patients_ever_severe_since_admission,
+  ) %>% 
+  pivot_longer(cols = starts_with('num'), names_to = 'patient_type', values_to = 'count') %>% 
+  bind_cols(
+    split_patient_type(.[['patient_type']]) %>% 
+      do.call(rbind, .) %>% 
+      as.data.frame() %>% 
+      `colnames<-`(c('time', 'severe'))
+  ) %>% 
+  mutate(severe = recode(severe, 
+                         num_patients_all = 'num_patients_icd',
+                         num_patients_ever_severe= 'num_patients_ever_severe_icd1',
+                         num_patients_never_severe= 'num_patients_never_severe_icd1'),
+         time = recode(time,
+                       before_admission = 'Before admission',
+                       since_admission = 'After admission')) %>% 
+  rename('icd' = icd_code_3chars) %>% 
+  filter(icd_version == 10) %>% 
+  select(- c(icd_version, patient_type)) %>% 
+  pivot_wider(names_from = severe, values_from = count, values_fill = 0) %>% 
+  right_join(icds_of_interest, by = 'icd') %>% 
+  distinct() %>% 
+  left_join(demo_ana, by = 'siteid') %>% 
+  mutate(full_icd = paste0(`ICD-10 Description`, ' (', icd, ')'),
+         num_patients_never_severe_icd0 = num_patients_never_severe - num_patients_never_severe_icd1,
+         num_patients_ever_severe_icd0 = num_patients_ever_severe - num_patients_ever_severe_icd1,
+  ) %>%
+  drop_na(num_patients_icd) %>% 
+  {.}
+```
+
+Only 40 sites with icd-10 code. 5 sites have icd-9.
+
+## Write data out to .Rdata
+
+```{r}
+save(demo_ana, diag_ana, file = 'data/processed-data.Rdata')
+```
+
+## Quality checks
+
+### Check if 'all' equals to sum of the rest
+```{r}
+
+age_group_check <- demo_all %>% 
+  filter(sex == 'all', race == 'all', age_group != 'all') %>% 
+  group_by(siteid) %>% 
+  summarise(age_group_sum = sum(num_patients_all), .groups = 'drop') %>% 
+  left_join(demo_ana) %>% 
+  mutate(mismatches = num_patients_all - age_group_sum) %>% 
+  filter(mismatches != 0) %>% 
+  {.}
+
+race_check <- demo_all %>% 
+  filter(sex == 'all', race != 'all', age_group == 'all') %>% 
+  group_by(siteid) %>% 
+  summarise(race_sum = sum(num_patients_all), .groups = 'drop') %>% 
+  left_join(demo_ana) %>% 
+  mutate(mismatches = num_patients_all - race_sum) %>% 
+  filter(mismatches != 0) %>% 
+  {.}
+
+sex_check <- demo_all %>% 
+  filter(race == 'all', sex != 'all', age_group == 'all') %>% 
+  group_by(siteid) %>% 
+  summarise(sex_sum = sum(num_patients_all), .groups = 'drop') %>% 
+  left_join(demo_ana) %>% 
+  mutate(mismatches = num_patients_all - sex_sum) %>% 
+  filter(mismatches != 0) %>% 
+  {.}
+
+demo_check <- demo_ana %>% 
+  mutate(perc_severe = num_patients_ever_severe/num_patients_all)
+
+write_csv(race_check, 'data/race_check.csv')
+write_csv(sex_check, 'data/sex_check.csv')
+write_csv(age_group_check, 'data/age_group_check.csv')
+```
+
+
+Check NAs:
+```{r}
+na_diag <- diag_ana %>% 
+  select(siteid, icd, contains('num')) %>% 
+  filter(rowSums(is.na(.)) > 0)
+
+```
+
+<!-- # More quality check: -->
+
+```{r include=FALSE, eval=FALSE}
+# check_all <- demo_all %>% 
+#   filter(race == 'all') 
+
+# check whether the rows with race = all are actual sum of the rest
+# check_race <- demo_all %>%
+#   filter(race != 'all') %>%
+#   group_by(siteid, sex, age_group) %>%
+#   summarise(num_patients_sum = sum(num_patients_all)) %>%
+#   left_join(check_all)
+
+
+# check_na <- check_race %>% 
+#   filter(is.na(num_patients_all)) %>% 
+#   pull(siteid) %>% 
+#   unique()
+
+# length(unique(diag_all$siteid))
+check_diag <- diag_all %>% 
+  filter(!is.na(num_patients_ever_severe_icd1)) %>% 
+  mutate(num_patients_icd = num_patients_ever_severe_icd1 + num_patients_never_severe_icd1,
+         icd = gsub('icd:', '', icd)) %>% 
+  group_by(siteid) %>%
+  summarise(max_icd_pats_all = max(num_patients_icd, na.rm = T), .groups = 'drop') %>%
+  left_join(demo_ana)
+
+check_diag %>% 
+  filter(max_icd_pats_all > num_patients_all)
+```
+
+
+```{r include=FALSE, eval=FALSE}
+# country_pats <- demo_ana %>%
+#   group_by(Country) %>%
+#   summarise(total_patients_per_country = sum(num_patients_all), .groups = 'drop')
+
+# dot_dat <- diag_ana %>%
+#   group_by(siteid, time, icd) %>%
+#   summarise(pats_time_icd_ctry = sum(num_patients_icd), .groups = 'drop') %>%
+#   left_join(site_pats, by = 'siteid') %>%
+#   mutate(percent_pats = pats_time_icd_ctry/num_patients_all)
+# 
+# dot_dat %>%
+#   ggplot(aes(y = forcats::fct_reorder(icd, percent_pats), x = percent_pats, group = icd)) +
+#     geom_point(aes(color = time)) +
+#     geom_line() +
+#     facet_grid(rows = vars(siteid)) +
+#   # scale_y_continuous(breaks = seq(0, 1, 0.1), labels = scales::percent_format(accuracy = 1)) +
+#   scale_color_carto_d(palette = 4) +
+#   labs(x = NULL, y = 'Percent patients')
+    
+```
