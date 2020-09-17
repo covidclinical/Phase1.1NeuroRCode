@@ -121,7 +121,6 @@ Notes:
 ```{r}
 demo_ana <- demo_all %>% 
   filter(race == 'all', age_group == 'all', sex == 'all') %>% 
-  mutate(num_patients_never_severe = num_patients_all - num_patients_ever_severe) %>% 
   # left_join(site_to_country, by = 'siteid') %>% 
   select(- c(sex, age_group, race)) %>% 
   bind_rows(# Compute patients_all for SITE734 manually
@@ -130,7 +129,9 @@ demo_ana <- demo_all %>%
       group_by(siteid) %>% 
       summarise(across(c(num_patients_all, num_patients_ever_severe), .fns = sum),
                 .groups = 'drop')
-  )
+  ) %>% 
+  mutate(num_patients_never_severe = num_patients_all - num_patients_ever_severe)
+
 
 split_patient_type <- function(x) {
   temp <- strsplit(sub('(^[^_]+_[^_]+)_(.*)$', '\\1 \\2', stri_reverse(x)), ' ')
@@ -167,10 +168,19 @@ diag_ana <- diag_all %>%
          num_patients_never_severe_icd0 = num_patients_never_severe - num_patients_never_severe_icd1,
          num_patients_ever_severe_icd0 = num_patients_ever_severe - num_patients_ever_severe_icd1,
   ) %>%
+  drop_na(num_patients_icd) %>% 
   {.}
 ```
 
 Only 40 sites with icd-10 code. 5 sites have icd-9.
+
+Check NAs:
+```{r}
+na_diag <- diag_ana %>% 
+  select(siteid, icd, contains('num')) %>% 
+  filter(rowSums(is.na(.)) > 0)
+
+```
 
 <!-- # More quality check: -->
 
@@ -311,9 +321,20 @@ icd_time <- diag_ana %>%
   filter(siteid != 'SITE309') %>% 
   group_by(full_icd, time) %>% 
   summarise(pats_icd_time = sum(num_patients_icd, na.rm = T), .groups = 'drop') 
-sorted_icds <- icd_time %>% 
-  filter(time == 'After admission') %>% 
-  arrange(pats_icd_time) %>% 
+# sorted_icds <- icd_time %>% 
+#   filter(time == 'After admission') %>% 
+#   arrange(pats_icd_time) %>% 
+#   pull(full_icd)
+sorted_icds <- code_prevalence %>% 
+  ungroup() %>% 
+  select(time, percent_pats_site, full_icd, siteid) %>% 
+  pivot_wider(names_from = time, values_from = percent_pats_site, values_fill = 0) %>% 
+  group_by(full_icd) %>% 
+  summarise(after = mean(`After admission`, na.rm = T),
+         before = mean(`Before admission`, na.rm = T),
+         diff_prev = after - before,
+         .groups = 'drop') %>% 
+  arrange(diff_prev) %>% 
   pull(full_icd)
 
 total_icd <- icd_time %>% 
@@ -323,7 +344,7 @@ total_icd <- icd_time %>%
   theme_minimal() +
   scale_x_reverse(expand = expansion(add = c(0,0))) +
   scale_y_discrete(labels = NULL) +
-  theme(legend.position = c(0.25, 0.15),
+  theme(legend.position = c(0.3, 0.15),
         legend.title = element_blank(),
         legend.key.height = unit(4, 'mm')) +
   labs(x = 'Total number of patients at all sites', y = NULL)
@@ -340,7 +361,7 @@ percent_icd <- code_prevalence %>%
   theme(legend.position = c(0.75, 0.1),
         legend.title = element_blank(),
         axis.text.y = element_text(hjust = 0.5)) + 
-  scale_x_continuous(expand = expansion(add = c(0, 0.05)),
+  scale_x_continuous(expand = expansion(add = c(0, 0.07)),
                      labels = scales::percent_format(accuracy = 1)) +
   labs(x = 'Proportion of patients each site', y = NULL)
 
@@ -419,8 +440,8 @@ The 95% confidence interval of the LOE was estimated using the Poisson model met
 
 ```{r}
 contingency_df <- diag_ana %>% 
-  filter(time == 'Before admission') %>% 
-  group_by(full_icd) %>% 
+  # filter(time == 'Before admission') %>% 
+  group_by(full_icd, time) %>% 
   summarise(across(contains('severe'), .fns = sum, na.rm = T), .groups = 'drop') %>% 
   mutate(Observed = num_patients_ever_severe_icd1, 
          num_non_severe = num_patients_never_severe_icd1 + num_patients_never_severe_icd0,
@@ -430,11 +451,12 @@ contingency_df <- diag_ana %>%
 
 nested_obs_exp <- contingency_df %>%
   select(full_icd, 
+         time,
          num_patients_never_severe_icd0, 
          num_patients_never_severe_icd1, 
          num_patients_ever_severe_icd0, 
          num_patients_ever_severe_icd1) %>% 
-  group_by(full_icd) %>% 
+  group_by(full_icd, time) %>% 
   nest() 
 
 fish_obs_exp <- nested_obs_exp %>% 
@@ -442,6 +464,8 @@ fish_obs_exp <- nested_obs_exp %>%
   dplyr::select(-data) %>% 
   unnest(cols = c(fish)) %>% 
   mutate(upper = ifelse(is.na(upper), Inf, upper))
+fish_obs_exp$`P value (Holm)` <-  p.adjust(fish_obs_exp$p_value, 'holm')
+fish_obs_exp$`P value (FDR)` <- p.adjust(fish_obs_exp$p_value, 'BH')
 ```
 
 While the Warning messages mentioned Chi-squared, the p-values were actually calculated using Fisher's Exact test (see more in `epitools::tab2by2.test()`).
@@ -460,23 +484,26 @@ contingency_df %>%
 The full table with all ICD codes and their corresponding enrichment can be browsed interactively below:
 ```{r}
 library(DT)
-fish_obs_exp %>% 
+fish_tab <- fish_obs_exp %>% 
   mutate(ci = paste0('(', round(log2(lower), 1), ', ', 
                      round(log2(upper), 1), ')'),
          lestimate = log2(estimate)) %>% 
-  left_join(contingency_df, by = 'full_icd') %>% 
-  select(full_icd, Observed, Expected, over_sev,
-         estimate, lestimate, ci, p_value) %>%
+  left_join(contingency_df, by = c('full_icd', 'time')) %>% 
+  select(full_icd, time, Observed, Expected, over_sev,
+         estimate, lestimate, ci, p_value,
+         `P value (Holm)`, `P value (FDR)`) %>% 
   rename('ICD' = 'full_icd',
          'Observed - Expected' = 'over_sev',
          'Enrichment' = 'estimate',
          'Log2(enrichment)' = 'lestimate',
          '95% Confidence interval' = 'ci', 
-         'P value' = 'p_value') %>%
+         'P value (raw)' = 'p_value')
+
+fish_tab %>% 
   datatable(rownames = FALSE) %>% 
   formatRound(c('Observed', 'Expected', 'Observed - Expected',
                 'Enrichment', 'Log2(enrichment)'), 1) %>%
-  formatSignif('P value', 3) %>% 
+  formatSignif(c('P value (raw)', 'P value (Holm)', 'P value (FDR)'), 3) %>% 
   {.}
 ```
 
@@ -492,263 +519,59 @@ We found an excess of *severe patients* with the following ICD codes:
 
 ```{r fig.width = 7, fig.height = 3.5}
 filtered_obs_exp <- contingency_df %>% 
-  left_join(fish_obs_exp, by = 'full_icd') %>% 
+  left_join(fish_obs_exp, by = c('full_icd', 'time')) %>% 
   mutate(
     distance_to_null = case_when(
       lower > 1 ~ lower - 1,
       TRUE ~ upper - 2
     ),
     presentation = case_when(
-      lower > 1 ~ '#ca562c', 
-      upper < 1 ~ '#009392',
+      lower > 1 & `P value (FDR)` < 0.05 ~ '#ca562c', 
+      upper < 1 & `P value (FDR)` < 0.05 ~ '#009392',
       TRUE ~ 'grey20'
-    ),
-    full_icd =  as.factor(full_icd) %>% fct_reorder(num_patients_ever_severe_icd1)) %>% 
-  arrange(desc(num_patients_ever_severe_icd1)) %>%
+    )) %>% 
   {.}
-
-plot_obs_exp <- filtered_obs_exp %>%
-  mutate(lestimate = log2(estimate),
-         llower = log2(lower), 
-         lupper = log2(upper)) %>% 
-  select(full_icd, lestimate, llower, lupper, presentation, over_sev, Observed, Expected) %>% 
-  pivot_longer(- c(full_icd, presentation, over_sev), names_to = 'type') %>% 
-  mutate(subtype = ifelse(type == 'Expected' | type == 'Observed', 
-                          'Sqrt(number of honorees)', 
-                          'Log2 enrichment, 95% CI')) 
-
-
 ```
 
 
 ```{r warning=FALSE, fig.width = 12, fig.height = 6}
-plot_obs_exp_right <- plot_obs_exp %>% filter(subtype == 'Sqrt(number of honorees)') %>% 
-  pivot_wider(names_from = type)
-plot_obs_exp_left <- plot_obs_exp %>% filter(subtype != 'Sqrt(number of honorees)') %>%
-  pivot_wider(names_from = type)
-plot_obs_exp_before <- plot_obs_exp_left
-sorted_icds <- rev(as.character(filtered_obs_exp$full_icd))
-
-enrichment_plot_left <- plot_obs_exp_left  %>% 
-  ggplot(aes(x = fct_relevel(full_icd, sorted_icds))) +
-  geom_hline(aes(yintercept = 0), linetype = 2) +
-  geom_pointrange(
-    aes(y = lestimate, ymin = llower, ymax = lupper, group = full_icd),
-    color = filtered_obs_exp$presentation,
-    stroke = 0.3, fatten = 2
-  ) +
-  coord_flip() +
-  labs(x = NULL, y = bquote(Log[2] ~ 'enrichment, 95% CI')) +
-  theme(
-    legend.position = c(0.9, 0.3),
-    axis.title = element_text(size = 9),
-    plot.margin = margin(20, 2, 5.5, 5.5, unit = 'pt')
-  ) +
-  scale_color_brewer(type = 'qual', palette = 'Set1') +
-  scale_x_discrete(position = 'top', labels = NULL) +
-  scale_y_reverse()
-
-over_severe_icds <- plot_obs_exp_right %>% 
-  filter(over_sev > 0) %>% 
+# plot_obs_exp_before <- plot_obs_exp_left
+# sorted_icds <- rev(as.character(filtered_obs_exp$full_icd))
+sorted_icds <- filtered_obs_exp %>%
+  select(full_icd, time, estimate) %>% 
+  pivot_wider(names_from = time, values_from = estimate) %>% 
+  mutate(diff_est = `After admission` - `Before admission`,
+         full_icd = as.character(full_icd)) %>% 
+  arrange(diff_est) %>% 
   pull(full_icd)
-
-enrichment_plot_right <- plot_obs_exp_right %>%
-  ggplot(aes(x = fct_relevel(full_icd, sorted_icds), y = Observed)) +
-  geom_segment(aes(xend =  fct_relevel(full_icd, sorted_icds), yend = Expected), 
-                color = filtered_obs_exp$presentation) +
-  geom_point(aes(y = Observed), shape = 16, color = 'grey20') +
-  geom_point(aes(y = Expected), shape = 17, color = 'grey20') +
-  labs(x = NULL, y = 'Number of ever severe patients') +
-  theme(
-    axis.title = element_text(size = 9),
-    legend.position = c(0.75 , 0.1),
-    axis.text.y = element_text(
-      color = rev(filtered_obs_exp$presentation),
-      hjust = 0.5),
-    legend.background = element_blank(),
-    legend.key.height = unit(3, 'mm'),
-    legend.key.width = unit(3, 'mm'),
-    plot.margin = margin(20, 5.5, 8.5, 2, unit = 'pt')
-  ) +
-  scale_y_sqrt(
-    breaks = c(100, 1000, 3000),
-    expand = expansion(add = c(0, 10))) +
-  coord_flip() +
-  geom_text(
-    data = . %>% 
-      filter(!(full_icd %in% over_severe_icds)),
-    nudge_y = -7, aes(label = round(over_sev, 0)), size = 2.5) +
-  geom_text(
-    data = . %>% 
-      filter(full_icd %in% over_severe_icds), 
-    nudge_y = 7, aes(label = round(over_sev, 0)), size = 2.5)
-
-enrichment_plot_before <- cowplot::plot_grid(enrichment_plot_left, enrichment_plot_right,
-                                rel_widths = c(1, 2.8))
-# enrichment_plot_before
-# ggsave('figs/icd_severe_bef.png', enrichment_plot_before, width = 9.5, height = 5)
-
-```
-
-
-
-## After admission
-
-```{r echo=FALSE}
-contingency_df <- diag_ana %>% 
-  filter(time == 'After admission') %>% 
-  group_by(full_icd) %>% 
-  summarise(across(contains('severe'), .fns = sum, na.rm = T), .groups = 'drop') %>% 
-  mutate(Observed = num_patients_ever_severe_icd1, 
-         num_non_severe = num_patients_never_severe_icd1 + num_patients_never_severe_icd0,
-         num_severe = num_patients_ever_severe_icd1 + num_patients_ever_severe_icd0,
-         Expected = num_patients_never_severe_icd1/num_non_severe*num_severe,
-         over_sev = Observed - Expected)
-
-nested_obs_exp <- contingency_df %>%
-  select(full_icd, 
-         num_patients_never_severe_icd0, 
-         num_patients_never_severe_icd1, 
-         num_patients_ever_severe_icd0, 
-         num_patients_ever_severe_icd1) %>% 
-  group_by(full_icd) %>% 
-  nest() 
-
-fish_obs_exp <- nested_obs_exp %>% 
-  mutate(fish = map(data, my_fish)) %>% 
-  dplyr::select(-data) %>% 
-  unnest(cols = c(fish)) %>% 
-  mutate(upper = ifelse(is.na(upper), Inf, upper))
-```
-
-
-### Country enrichment table {#enrichment_tab}
-
-The full table with all ICD codes and their corresponding enrichment can be browsed interactively below:
-```{r echo=FALSE}
-fish_obs_exp %>% 
-  mutate(ci = paste0('(', round(log2(lower), 1), ', ', 
-                     round(log2(upper), 1), ')'),
-         lestimate = log2(estimate)) %>% 
-  left_join(contingency_df, by = 'full_icd') %>% 
-  select(full_icd, Observed, Expected, over_sev,
-         estimate, lestimate, ci) %>%
-  rename('ICD' = 'full_icd',
-         'Observed - Expected' = 'over_sev',
-         'Enrichment' = 'estimate',
-         'Log2(enrichment)' = 'lestimate',
-         '95% Confidence interval' = 'ci') %>%
-  datatable(rownames = FALSE) %>% 
-  formatRound(c('Observed', 'Expected', 'Observed - Expected',
-                'Enrichment', 'Log2(enrichment)'), 1) %>%
-  {.}
-```
-
-A positive value of LOE indicates a higher proportion of *severe patients* with that ICD code compared to *non-severe patients*.
-A LOE value of 1 represents a one-fold enrichment (i.e., observed number of *severe patients* is twice as much as expected).
-We found an excess of *severe patients* with the following ICD codes:
-
--
-- 
-- 
-
-### Compute enrichment from proportion comparisons
-
-```{r fig.width = 7, fig.height = 3.5, echo=FALSE}
-filtered_obs_exp <- contingency_df %>% 
-  left_join(fish_obs_exp, by = 'full_icd') %>% 
-  mutate(
-    distance_to_null = case_when(
-      lower > 1 ~ lower - 1,
-      TRUE ~ upper - 2
-    ),
-    presentation = case_when(
-      lower > 1 ~ '#ca562c', 
-      upper < 1 ~ '#009392',
-      TRUE ~ 'grey20'
-    ),
-    full_icd =  as.factor(full_icd) %>% fct_reorder(num_patients_ever_severe_icd1)) %>% 
-  arrange(desc(num_patients_ever_severe_icd1)) %>%
-  {.}
 
 plot_obs_exp <- filtered_obs_exp %>%
   mutate(lestimate = log2(estimate),
          llower = log2(lower), 
          lupper = log2(upper)) %>% 
-  select(full_icd, lestimate, llower, lupper, presentation, over_sev, Observed, Expected) %>% 
-  pivot_longer(- c(full_icd, presentation, over_sev), names_to = 'type') %>% 
+  select(full_icd, time, lestimate, llower, lupper, presentation, over_sev, Observed, Expected) %>% 
+  pivot_longer(- c(full_icd, time, presentation, over_sev), names_to = 'type') %>% 
   mutate(subtype = ifelse(type == 'Expected' | type == 'Observed', 
                           'Sqrt(number of honorees)', 
-                          'Log2 enrichment, 95% CI')) 
+                          'Log2 enrichment, 95% CI')) %>% 
+  pivot_wider(names_from = type) %>% 
+  mutate(presentation = as.factor(presentation),
+         full_icd = fct_relevel(full_icd, sorted_icds))
 
-
+plot_obs_exp_right <- plot_obs_exp %>% filter(subtype == 'Sqrt(number of honorees)') 
+plot_obs_exp_left <- plot_obs_exp %>% filter(subtype != 'Sqrt(number of honorees)') 
 ```
 
 
-```{r warning=FALSE, fig.width = 12, fig.height = 8, echo=FALSE}
-plot_obs_exp_right <- plot_obs_exp %>% filter(subtype == 'Sqrt(number of honorees)') %>% 
-  pivot_wider(names_from = type)
-plot_obs_exp_left <- plot_obs_exp %>% filter(subtype != 'Sqrt(number of honorees)') %>%
-  pivot_wider(names_from = type)
-plot_obs_exp_after <- plot_obs_exp_left
-sorted_icds <- rev(as.character(filtered_obs_exp$full_icd))
+```{r}
+enrichment_plot_before <- plot_enrich(
+  plot_obs_exp_left %>% filter(time == 'Before admission'),
+  plot_obs_exp_right %>% filter(time == 'Before admission') %>% slice(match(sorted_icds, full_icd)))
 
-enrichment_plot_left <- plot_obs_exp_left  %>% 
-  ggplot(aes(x = fct_relevel(full_icd, sorted_icds))) +
-  geom_hline(aes(yintercept = 0), linetype = 2) +
-  geom_pointrange(
-    aes(y = lestimate, ymin = llower, ymax = lupper, group = full_icd),
-    color = filtered_obs_exp$presentation,
-    stroke = 0.3, fatten = 2
-  ) +
-  coord_flip() +
-  labs(x = NULL, y = bquote(Log[2] ~ 'enrichment, 95% CI')) +
-  theme(
-    legend.position = c(0.9, 0.3),
-    axis.title = element_text(size = 9),
-    plot.margin = margin(20, 2, 5.5, 5.5, unit = 'pt')
-  ) +
-  scale_color_brewer(type = 'qual', palette = 'Set1') +
-  scale_x_discrete(position = 'top', labels = NULL) +
-  scale_y_reverse()
+enrichment_plot_after <- plot_enrich(
+  plot_obs_exp_left %>% filter(time == 'After admission'),
+  plot_obs_exp_right %>% filter(time == 'After admission') %>% slice(match(sorted_icds, full_icd)))
 
-over_severe_icds <- plot_obs_exp_right %>% 
-  filter(over_sev > 0) %>% 
-  pull(full_icd)
-
-enrichment_plot_right <- plot_obs_exp_right %>%
-  ggplot(aes(x = fct_relevel(full_icd, sorted_icds), y = Observed)) +
-  geom_segment(aes(xend =  fct_relevel(full_icd, sorted_icds), yend = Expected), 
-                color = filtered_obs_exp$presentation) +
-  geom_point(aes(y = Observed), shape = 16, color = 'grey20') +
-  geom_point(aes(y = Expected), shape = 17, color = 'grey20') +
-  labs(x = NULL, y = 'Number of ever severe patients') +
-  theme(
-    axis.title = element_text(size = 9),
-    legend.position = c(0.75 , 0.1),
-    axis.text.y = element_text(
-      color = rev(filtered_obs_exp$presentation),
-      hjust = 0.5),
-    legend.background = element_blank(),
-    legend.key.height = unit(3, 'mm'),
-    legend.key.width = unit(3, 'mm'),
-    plot.margin = margin(20.5, 5.5, 8.5, 2, unit = 'pt')
-  ) +
-  scale_y_sqrt(
-    breaks = c(100, 1000, 3000),
-    expand = expansion(add = c(0, 10))) +
-  coord_flip() +
-  geom_text(
-    data = . %>% 
-      filter(!(full_icd %in% over_severe_icds)),
-    nudge_y = -7, aes(label = round(over_sev, 0)), size = 2.5) +
-  geom_text(
-    data = . %>% 
-      filter(full_icd %in% over_severe_icds), 
-    nudge_y = 7, aes(label = round(over_sev, 0)), size = 2.5)
-
-enrichment_plot_after <- cowplot::plot_grid(enrichment_plot_left, enrichment_plot_right,
-                                rel_widths = c(1, 2.8))
 enrichment_plot <- cowplot::plot_grid(
   enrichment_plot_before,
   enrichment_plot_after,
@@ -757,8 +580,8 @@ enrichment_plot <- cowplot::plot_grid(
 )
 enrichment_plot
 ggsave('figs/icd_severe_before_after.png', enrichment_plot, width = 9.5, height = 7)
-
 ```
+
 
 Figure caption: 
 Each ICD code's log2 enrichment (LOE) and its 95% confidence interval (left), and the absolute difference between observed (triangle) and expected (circle) number of *severe patients* (right) before admission.
@@ -767,11 +590,7 @@ Neurological ICD codes are ordered based on the number of *severe patients*.
 Difference has been rounded.
 
 ```{r fig.width=9}
-enrichment_time <- plot_obs_exp_before %>%
-  mutate(time = 'Before admission') %>% 
-  bind_rows(plot_obs_exp_after %>% mutate(time = 'After admission'))
-
-plot_enrich_both <- enrichment_time %>% 
+plot_enrich_both <- plot_obs_exp %>% 
   ggplot(aes(y = fct_relevel(full_icd, sorted_icds))) +
   geom_vline(aes(xintercept = 0), linetype = 2) +
   ggstance::geom_pointrangeh(
@@ -784,7 +603,7 @@ plot_enrich_both <- enrichment_time %>%
   ) +
   labs(y = NULL, x = bquote(Log[2] ~ 'enrichment, 95% CI')) +
   theme(
-    legend.position = c(0.8, 0.93),
+    legend.position = c(0.83, 0.1),
     legend.background = element_blank(),
     axis.title = element_text(size = 9),
     plot.margin = margin(5.5, 2, 5.5, 5.5, unit = 'pt')
@@ -795,3 +614,11 @@ plot_enrich_both
 ggsave('figs/icd_severe.png', plot_enrich_both, width = 9, height = 5)
 ```
 
+
+
+
+ICDs:
+```{r}
+icd_10_to_9 <- read_delim('data/neurology10to9.txt', delim = '\t') %>% 
+  distinct()
+```
