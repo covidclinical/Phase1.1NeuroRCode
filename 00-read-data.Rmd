@@ -70,9 +70,40 @@ Notes:
 <!-- SITE660 was mapped to both US and France? -->
 <!-- SITE309 was mapped to both US and Italy? -->
 ```{r}
-icds_of_interest <- read_excel('data/2020-09-10_neuro-icd10.xlsx') %>% 
+neuro_icds_10 <- read_excel('data/2020-09-10_neuro-icd10.xlsx') %>% 
   rename('icd' = `ICD-10`)
+
+neuro_icds_9 <- readxl::read_excel('data/neuroicd10to9withdescript.xlsx') %>% 
+  left_join(neuro_icds_10 %>% select(`Neurological Disease Category`, icd), 
+            by = c('ICD10_CODE' = 'icd')) %>% 
+  select(- c(ICD9_CODE, ICD9_DESCRIPTION, ICD10_CODE)) %>% 
+  rename('icd' = ICD9_THREE_DIGIT) %>% 
+  filter(!is.na(icd)) %>% # ignore ICD10 code G46 and G65 not mapped to any ICD_9 code
+  {.}
 ```
+
+## DISCUSS WITH GROUPS ABOUT THESE MODIFICATION/GROUPINGS
+```{r}
+neuro_icds_9 %>% filter(icd %in% c('V41', '780', '781', '437'))
+
+neuro_icds_9 <- neuro_icds_9 %>% 
+  within(., ICD10_DESCRIPTION[icd == 'V41'] <- 'Problems with vision/smell/taste') %>% 
+  within(., `Neurological Disease Category`[icd == 'V41'] <- 'Vision') %>%
+  within(., ICD10_DESCRIPTION[icd == '781'] <- 'Other symptoms involving cognitive functions') %>% 
+  within(., `Neurological Disease Category`[icd == '781'] <- 'Neuropathy') %>% # and Consciousness
+  within(., ICD10_DESCRIPTION[icd == '437'] <- 'Other cerebrovascular diseases') %>%
+  within(., ICD10_DESCRIPTION[icd == '780'] <- 'Dizziness/Other brain disorders') %>%
+  within(., `Neurological Disease Category`[icd == '780'] <- 'Dizziness/Consciousness') %>%
+  distinct()
+```
+
+
+<!-- > neuro_icds_9 %>% filter(is.na(ICD9_THREE_DIGIT)) -->
+<!-- # A tibble: 2 x 5 -->
+<!--   ICD9_THREE_DIGIT ICD9_CODE ICD9_DESCRIPTION ICD10_CODE ICD10_DESCRIPTION                                       -->
+<!--   <chr>            <chr>     <chr>            <chr>      <chr>                                                   -->
+<!-- 1 NA               NA        NA               G46        Vascular syndromes of brain in cerebrovascular diseases -->
+<!-- 2 NA               NA        NA               G65        Sequelae of inflammatory and toxic polyneuropathies     -->
 
 Notes: 
 
@@ -80,11 +111,11 @@ Notes:
 
 # Descriptive statistics
 
-`Diagnoses_persite_fakeID.csv` has `length(unique(diag_all$siteid))` unique siteid's.
-`Demographics_persite_fakeID.csv` has `length(unique(demo_all$siteid))` unique siteid's.
+`Diagnoses_persite_fakeID.csv` has `r length(unique(diag_all$siteid))` unique siteid's.
+`Demographics_persite_fakeID.csv` has `r length(unique(demo_all$siteid))` unique siteid's.
 
 
-## Mold data frames
+# Mold data frames
 
 ```{r include=FALSE}
 # diag_ana <- diag_all %>% 
@@ -101,7 +132,7 @@ Notes:
 #                   before_admission = 'Before admission',
 #                   since_admission = 'After admission')) %>% 
 #   # left_join(site_to_country, by = 'siteid') %>% 
-#   right_join(icds_of_interest, by = 'icd') %>% 
+#   right_join(neuro_icds_10, by = 'icd') %>% 
 #   distinct() %>% 
 #   mutate(full_icd = paste0(`ICD-10 Description`, ' (', icd, ')')) %>%
 #   {.}
@@ -151,10 +182,15 @@ diag_ana <- diag_all %>%
                        before_admission = 'Before admission',
                        since_admission = 'After admission')) %>% 
   rename('icd' = icd_code_3chars) %>% 
-  filter(icd_version == 10) %>% 
-  select(- c(icd_version, patient_type)) %>% 
-  pivot_wider(names_from = severe, values_from = count, values_fill = 0) %>% 
-  right_join(icds_of_interest, by = 'icd') %>% 
+  select(- patient_type) %>% 
+  drop_na() %>% 
+  {.}
+
+diag_icd_10 <- diag_ana %>% 
+  filter(icd_version == 10) %>%
+  select(- icd_version) %>% 
+  pivot_wider(names_from = severe, values_from = count) %>%
+  right_join(neuro_icds_10, by = 'icd') %>% 
   distinct() %>% 
   left_join(demo_ana, by = 'siteid') %>% 
   mutate(full_icd = paste0(`ICD-10 Description`, ' (', icd, ')'),
@@ -163,19 +199,36 @@ diag_ana <- diag_all %>%
   ) %>%
   drop_na(num_patients_icd) %>% 
   {.}
+
+
+diag_icd_9 <- diag_ana %>% 
+  filter(icd_version == 9) %>%
+  select(- icd_version) %>% 
+  pivot_wider(names_from = severe, values_from = count) %>%
+  right_join(neuro_icds_9, by = 'icd') %>% 
+  distinct() %>% 
+  left_join(demo_ana, by = 'siteid') %>% 
+  mutate(full_icd = paste0(ICD10_DESCRIPTION, ' (', icd, ')'),
+         num_patients_never_severe_icd0 = num_patients_never_severe - num_patients_never_severe_icd1,
+         num_patients_ever_severe_icd0 = num_patients_ever_severe - num_patients_ever_severe_icd1,
+  ) %>%
+  drop_na(num_patients_icd) %>% 
+  {.}
 ```
 
-Only 40 sites with icd-10 code. 5 sites have icd-9.
 
-## Write data out to .Rdata
+`r length(unique(diag_icd_10$siteid))` sites with icd-10 code. 
+`r length(unique(diag_icd_9$siteid))` sites have icd-9.
+
+# Write data out to .Rdata
 
 ```{r}
-save(demo_ana, diag_ana, file = 'data/processed-data.Rdata')
+save(demo_ana, diag_icd_10, diag_icd_9, file = 'data/processed-data.Rdata')
 ```
 
-## Quality checks
+# Quality checks
 
-### Check if 'all' equals to sum of the rest
+## Check if 'all' equals to sum of the rest
 ```{r}
 
 age_group_check <- demo_all %>% 
@@ -219,7 +272,6 @@ Check NAs:
 na_diag <- diag_ana %>% 
   select(siteid, icd, contains('num')) %>% 
   filter(rowSums(is.na(.)) > 0)
-
 ```
 
 <!-- # More quality check: -->
