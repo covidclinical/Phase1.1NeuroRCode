@@ -1,0 +1,436 @@
+---
+title: "Neuro analyses"
+output:
+  html_document:
+    theme: lumen
+    toc: true
+    toc_float: false
+    code_download: true
+    highlight: tango
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "docs") })
+---
+
+```{r warning=FALSE, message=FALSE}
+library(dplyr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(rcartocolor)
+library(forcats)
+library(purrr)
+library(DT)
+
+load('data/processed-data.Rdata')
+theme_set(theme_bw() + theme(legend.title = element_blank()))
+source('utils.R')
+```
+
+## Prevalence analysis
+
+Calculate percentages:
+
+```{r fig.height=9}
+code_prevalence <- diag_icd_9 %>% 
+  group_by(siteid, time, icd, `Neurological Disease Category`, full_icd) %>% 
+  mutate(percent_pats_site = num_patients_icd/num_patients_all,
+         siteid = as.factor(siteid))
+
+before_code_prev <- code_prevalence %>% 
+  filter(time == 'Before admission',
+         siteid != 'SITE309') %>%
+  ggplot(aes(y = icd, x = siteid, fill = percent_pats_site)) +
+  geom_tile() +
+  labs(y = NULL, x = NULL) +
+  #f6d2a9,#f5b78e,#f19c7c,#ea8171,#dd686c,#ca5268,#b13f64
+  scale_fill_gradient(
+    # low = '#f6d2a9', high = '#b13f64',
+    low = '#d1eeea', high = '#2a5674',
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0, 0.3),
+    guide = guide_legend(override.aes = list(fill = "white"))) +
+  scale_x_discrete(drop = F) + 
+  facet_grid(rows = vars(`Neurological Disease Category`), space = 'free', scale = 'free') +
+  heat_theme_top() +
+  NULL
+
+after_code_prev <- code_prevalence %>% 
+  filter(time == 'After admission',
+         siteid != 'SITE309') %>%
+  ggplot(aes(y = icd, x = siteid, fill = percent_pats_site)) +
+  geom_tile() +
+  labs(y = NULL, x = NULL) +
+  scale_x_discrete(drop = F) + 
+  #d1eeea,#a8dbd9,#85c4c9,#68abb8,#4f90a6,#3b738f,#2a5674
+  scale_fill_gradient(low = '#d1eeea', high = '#2a5674',
+                      labels = scales::percent_format(accuracy = 1),
+                      limits = c(0, 0.3)) +
+  facet_grid(rows = vars(`Neurological Disease Category`), space = 'free', scale = 'free') +
+  heat_theme_bottom() +
+  NULL
+
+heats <- cowplot::plot_grid(before_code_prev, after_code_prev, ncol = 1,
+                            rel_heights = c(1, 1.15),
+                   labels = c('A. Before admission', 'B. After admission'))
+heats
+ggsave('figs/icd9_heatmap.png', heats, height = 10, width = 7)
+
+```
+
+
+
+
+```{r fig.height=6}
+diff_code <- code_prevalence %>% 
+  filter(siteid != 'SITE309') %>%
+  pivot_wider(names_from = time, values_from = percent_pats_site, id_cols = c(siteid, icd, `Neurological Disease Category`), values_fill = 0) %>% 
+  mutate(percent_diff = `After admission` - `Before admission`)
+
+diff_heat <- diff_code %>% 
+  ggplot(aes(y = icd, x = siteid, fill = percent_diff)) +
+  geom_tile() +
+  labs(y = NULL, x = NULL, fill = 'After - Before') +
+  scale_x_discrete(drop = F) + 
+  #009392,#39b185,#9ccb86,#e9e29c,#eeb479,#e88471,#cf597e
+  scale_fill_gradient2(
+    low = '#009392',
+    high = '#cf597e',
+    labels = scales::percent_format(accuracy = 1)) +
+  facet_grid(rows = vars(`Neurological Disease Category`), space = 'free', scale = 'free') +
+  heat_theme_bottom() +
+  NULL
+diff_heat
+
+ggsave('figs/icd9_diff_heatmap.png', diff_heat, height = 5.5, width = 7)
+```
+
+```{r}
+na_check <- diag_icd_9 %>% 
+  group_by(icd, time, siteid) %>% 
+  filter(n()>1)
+```
+
+
+```{r fig.width=10, fig.height=5}
+icd_time <- diag_icd_9 %>% 
+  # filter(siteid != 'SITE309') %>% 
+  group_by(full_icd, time) %>% 
+  summarise(pats_icd_time = sum(num_patients_icd, na.rm = T), .groups = 'drop') 
+# sorted_icds <- icd_time %>% 
+#   filter(time == 'After admission') %>% 
+#   arrange(pats_icd_time) %>% 
+#   pull(full_icd)
+sorted_icds <- code_prevalence %>% 
+  ungroup() %>% 
+  select(time, percent_pats_site, full_icd, siteid) %>% 
+  pivot_wider(names_from = time, values_from = percent_pats_site, values_fill = 0) %>% 
+  group_by(full_icd) %>% 
+  summarise(after = mean(`After admission`, na.rm = T),
+         before = mean(`Before admission`, na.rm = T),
+         diff_prev = after - before,
+         .groups = 'drop') %>% 
+  arrange(diff_prev) %>% 
+  pull(full_icd)
+
+total_icd <- icd_time %>% 
+  ggplot(aes(x = pats_icd_time, y = fct_relevel(full_icd, sorted_icds), fill = time)) +
+  scale_fill_carto_d(palette = 4, guide = guide_legend(reverse = TRUE)) +
+  geom_col(position = 'dodge') +
+  theme_minimal() +
+  scale_x_reverse(expand = expansion(add = c(0,0))) +
+  scale_y_discrete(labels = NULL) +
+  theme(legend.position = c(0.3, 0.15),
+        legend.title = element_blank(),
+        legend.key.height = unit(4, 'mm')) +
+  labs(x = 'Total number of patients at all sites', y = NULL)
+
+percent_icd <- code_prevalence %>% 
+  filter(siteid != 'SITE309') %>% 
+  ggplot(aes(x = percent_pats_site, 
+             y = fct_relevel(full_icd, sorted_icds), 
+             color = time)) +
+  scale_color_carto_d(palette = 4, guide = NULL) +
+  # scale_color_manual(values = c('#2a5674', '#b13f64')) + 
+  geom_boxplot(fill = 'white') + 
+  theme_minimal() +  
+  theme(legend.position = c(0.75, 0.1),
+        legend.title = element_blank(),
+        axis.text.y = element_text(hjust = 0.5)) + 
+  scale_x_continuous(expand = expansion(add = c(0, 0.07)),
+                     labels = scales::percent_format(accuracy = 1)) +
+  labs(x = 'Proportion of patients each site', y = NULL)
+
+icd_prevalence_plots <- cowplot::plot_grid(total_icd, percent_icd, ncol = 2,
+                   rel_widths = c(1, 2.5))
+icd_prevalence_plots
+ggsave('figs/icd9_prevalence.png', icd_prevalence_plots, height = 5, width = 10)
+```
+
+# Severity analysis
+
+What ICD code has the most number severe patients?
+Sites with more severe patients?
+
+```{r fig.height=9}
+severe_code <- diag_icd_9 %>% 
+  filter(siteid != 'SITE309') %>%
+  mutate(percent_severe_site = num_patients_ever_severe_icd1/num_patients_icd,
+         siteid = as.factor(siteid))
+
+severe_bef_heat <- severe_code %>% 
+  filter(time == 'Before admission') %>% 
+  ggplot(aes(y = icd, x = siteid, fill = percent_severe_site)) +
+  geom_tile() +
+  labs(y = NULL, x = NULL, fill = 'Severe % per ICD') +
+  #3d5941,#778868,#b5b991,#f6edbd,#edbb8a,#de8a5a,#ca562c
+  scale_fill_gradient(
+    # low = '#f6d2a9', high = '#b13f64',
+    low = 'white', high = '#ca562c',
+    guide = guide_legend(override.aes = list(fill = "white")),
+    ) +
+  scale_x_discrete(drop = F) + 
+  facet_grid(rows = vars(`Neurological Disease Category`), space = 'free', scale = 'free') +
+  heat_theme_top() +
+  NULL
+
+severe_aft_heat <- severe_code %>% 
+  filter(time == 'After admission') %>% 
+  ggplot(aes(y = icd, x = siteid, fill = percent_severe_site)) +
+  geom_tile() +
+  labs(y = NULL, x = NULL, fill = 'Severe % per ICD') +
+  scale_x_discrete(drop = F) + 
+  #3d5941,#778868,#b5b991,#f6edbd,#edbb8a,#de8a5a,#ca562c
+  scale_fill_gradient(
+    low = 'white', high = '#ca562c',
+    labels = scales::percent_format(accuracy = 1)) +
+  facet_grid(rows = vars(`Neurological Disease Category`), space = 'free', scale = 'free') +
+  heat_theme_bottom() +
+  NULL
+
+severe_heats <- cowplot::plot_grid(severe_bef_heat, severe_aft_heat, ncol = 1,
+                            rel_heights = c(1, 1.15),
+                   labels = c('A. Before admission', 'B. After admission'))
+severe_heats
+ggsave('figs/icd9_severe_heatmap.png', severe_heats, height = 10, width = 7)
+
+```
+
+
+
+# Severity enrichment analysis
+
+## Null hypothesis: 
+For each ICD code, the proportion of severe patients who were diagnosed with that ICD code is similar to the proportion of never-severe patients who were diagnosed with that same ICD code.
+
+For the sake of simplicity in this notebook, we're going to denote patients whose symptoms have been categorized as severe (based on respiratory status +/- requiring ICU) at least once as *severe patients*, and patients whose symptoms have NEVER been categorized as severe as *non-severe patients*.
+
+For each ICD code, we computed the expected number of *severe patients* by multiplying the proportion of *non-severe patients* who were diagnosed with that code with the total number of *severe patients*.
+We performed an enrichment analysis to examine the difference of *severe patients* proportions across ICD codes.
+We calculated each ICD code's enrichment by dividing the observed proportion of honorees by the expected proportion of honorees and reported a value of log2 enrichment (LOE) and its 95% confidence intervals.
+The 95% confidence interval of the LOE was estimated using the Poisson model method [@isbn:9780849394447].
+
+Note that several ICD-9 codes have very small sample size (small number of patients associated with these codes).
+Therefore, we should take that into account when interpreting the result of the statistical tests for these codes.
+
+First, remove ICD with very small number of patients across site:
+
+```{r}
+small_icds <- diag_icd_9 %>% 
+  group_by(icd) %>% 
+  summarise(num_pats_icd = sum(num_patients_icd, na.rm = TRUE), .groups = 'drop') %>% 
+  filter(num_pats_icd < 5) %>% 
+  pull(icd)
+
+diag_icd_9 <- diag_icd_9 %>% 
+  filter(!icd %in% small_icds)
+```
+
+## Before and after admission
+
+```{r}
+contingency_df <- diag_icd_9 %>% 
+  # filter(time == 'Before admission') %>% 
+  group_by(full_icd, time) %>% 
+  summarise(across(contains('severe'), .fns = sum, na.rm = T), .groups = 'drop') %>% 
+  mutate(Observed = num_patients_ever_severe_icd1, 
+         num_non_severe = num_patients_never_severe_icd1 + num_patients_never_severe_icd0,
+         num_severe = num_patients_ever_severe_icd1 + num_patients_ever_severe_icd0,
+         Expected = num_patients_never_severe_icd1/num_non_severe*num_severe,
+         over_sev = Observed - Expected)
+
+nested_obs_exp <- contingency_df %>%
+  select(full_icd, 
+         time,
+         num_patients_never_severe_icd0, 
+         num_patients_never_severe_icd1, 
+         num_patients_ever_severe_icd0, 
+         num_patients_ever_severe_icd1) %>% 
+  group_by(full_icd, time) %>% 
+  nest() 
+
+fish_obs_exp <- nested_obs_exp %>% 
+  mutate(fish = map(data, my_fish)) %>% 
+  dplyr::select(-data) %>% 
+  unnest(cols = c(fish)) %>% 
+  mutate(upper = ifelse(is.na(upper), Inf, upper))
+fish_obs_exp$`P value (Holm)` <-  p.adjust(fish_obs_exp$p_value, 'holm')
+fish_obs_exp$`P value (FDR)` <- p.adjust(fish_obs_exp$p_value, 'BH')
+```
+
+While the Warning messages mentioned Chi-squared, the p-values were actually calculated using Fisher's Exact test (see more in `epitools::tab2by2.test()`).
+
+Note: small number of observations for ICD-10 code G04, G03, G65:
+
+```{r}
+contingency_df %>% 
+  filter(grepl('G04|G03|G65', full_icd)) %>% 
+  datatable()
+```
+
+
+### Country enrichment table {#enrichment_tab}
+
+The full table with all ICD codes and their corresponding enrichment can be browsed interactively below:
+```{r}
+library(DT)
+fish_tab <- fish_obs_exp %>% 
+  mutate(ci = paste0('(', round(log2(lower), 1), ', ', 
+                     round(log2(upper), 1), ')'),
+         lestimate = log2(estimate)) %>% 
+  left_join(contingency_df, by = c('full_icd', 'time')) %>% 
+  select(full_icd, time, Observed, Expected, over_sev,
+         estimate, lestimate, ci, p_value,
+         `P value (Holm)`, `P value (FDR)`) %>% 
+  rename('ICD' = 'full_icd',
+         'Observed - Expected' = 'over_sev',
+         'Enrichment' = 'estimate',
+         'Log2(enrichment)' = 'lestimate',
+         '95% Confidence interval' = 'ci', 
+         'P value (raw)' = 'p_value')
+
+fish_tab %>% 
+  datatable(rownames = FALSE) %>% 
+  formatRound(c('Observed', 'Expected', 'Observed - Expected',
+                'Enrichment', 'Log2(enrichment)'), 1) %>%
+  formatSignif(c('P value (raw)', 'P value (Holm)', 'P value (FDR)'), 3) %>% 
+  {.}
+```
+
+A positive value of LOE indicates a higher proportion of *severe patients* with that ICD code compared to *non-severe patients*.
+A LOE value of 1 represents a one-fold enrichment (i.e., observed number of *severe patients* is twice as much as expected).
+We found an excess of *severe patients* with the following ICD codes:
+
+- Other disorders of the brain (G93): 63 more *severe patients* than expected, LOE = [], 95% CI []
+- Other and unspecified myopathies (G72): 38 more *severe patients* than expected, LOE = [], 95% CI []
+- Myositis (M60): 6 more *severe patients* than expected, LOE = [], 95% CI []
+
+### Compute enrichment from proportion comparisons
+
+```{r fig.width = 7, fig.height = 3.5}
+filtered_obs_exp <- contingency_df %>% 
+  left_join(fish_obs_exp, by = c('full_icd', 'time')) %>% 
+  mutate(
+    distance_to_null = case_when(
+      lower > 1 ~ lower - 1,
+      TRUE ~ upper - 2
+    ),
+    presentation = case_when(
+      lower > 1 & `P value (FDR)` < 0.05 ~ '#ca562c', 
+      upper < 1 & `P value (FDR)` < 0.05 ~ '#009392',
+      TRUE ~ 'grey20'
+    )) %>% 
+  {.}
+```
+
+
+```{r warning=FALSE, fig.width = 12, fig.height = 6}
+# plot_obs_exp_before <- plot_obs_exp_left
+# sorted_icds <- rev(as.character(filtered_obs_exp$full_icd))
+sorted_icds <- filtered_obs_exp %>%
+  select(full_icd, time, estimate) %>% 
+  pivot_wider(names_from = time, values_from = estimate) %>% 
+  mutate(diff_est = `After admission` - `Before admission`,
+         full_icd = as.character(full_icd)) %>% 
+  arrange(diff_est) %>% 
+  pull(full_icd)
+
+plot_obs_exp <- filtered_obs_exp %>%
+  mutate(lestimate = log2(estimate),
+         llower = log2(lower), 
+         lupper = log2(upper)) %>% 
+  select(full_icd, time, lestimate, llower, lupper, presentation, over_sev, Observed, Expected) %>% 
+  pivot_longer(- c(full_icd, time, presentation, over_sev), names_to = 'type') %>% 
+  mutate(subtype = ifelse(type == 'Expected' | type == 'Observed', 
+                          'Sqrt(number of honorees)', 
+                          'Log2 enrichment, 95% CI')) %>% 
+  pivot_wider(names_from = type) %>% 
+  mutate(presentation = as.factor(presentation),
+         full_icd = fct_relevel(full_icd, sorted_icds))
+
+plot_obs_exp_right <- plot_obs_exp %>% filter(subtype == 'Sqrt(number of honorees)') 
+plot_obs_exp_left <- plot_obs_exp %>% filter(subtype != 'Sqrt(number of honorees)') 
+```
+
+
+```{r fig.width = 12, fig.height = 6}
+enrichment_plot_before <- plot_enrich(
+  plot_obs_exp_left %>% 
+    filter(time == 'Before admission') %>% 
+    mutate(presentation = droplevels(presentation)),
+  plot_obs_exp_right %>% 
+    filter(time == 'Before admission') %>% 
+    slice(match(sorted_icds, full_icd)) %>% 
+    mutate(presentation = droplevels(presentation)))
+
+enrichment_plot_after <- plot_enrich(
+  plot_obs_exp_left %>% 
+    filter(time == 'After admission') %>% 
+    mutate(presentation = droplevels(presentation)),
+  plot_obs_exp_right %>% 
+    filter(time == 'After admission') %>% 
+    slice(match(sorted_icds, full_icd)) %>% 
+    mutate(presentation = droplevels(presentation)))
+
+enrichment_plot <- cowplot::plot_grid(
+  enrichment_plot_before,
+  enrichment_plot_after,
+  ncol = 1, hjust = -0.05,
+  labels = c('A. Before admission', 'B. After admission')
+)
+enrichment_plot
+ggsave('figs/icd9_severe_before_after.png', enrichment_plot, width = 9.5, height = 7)
+```
+
+
+Figure caption: 
+Each ICD code's log2 enrichment (LOE) and its 95% confidence interval (left), and the absolute difference between observed (triangle) and expected (circle) number of *severe patients* (right) before admission.
+Positive value of LOE indicates a higher proportion of *severe patients* with that ICD code compared to *non-severe patients*.
+Neurological ICD codes are ordered based on the number of *severe patients*.
+Difference has been rounded.
+
+```{r fig.width=9}
+plot_enrich_both <- plot_obs_exp %>% 
+  ggplot(aes(y = fct_relevel(full_icd, sorted_icds))) +
+  geom_vline(aes(xintercept = 0), linetype = 2) +
+  ggstance::geom_pointrangeh(
+    aes(x = lestimate,
+        xmin = llower,
+        xmax = lupper,
+        color = time),
+    position = position_dodge(width = 0.3), 
+    stroke = 0.1, fatten = 3, size = 0.7  
+  ) +
+  labs(y = NULL, x = bquote(Log[2] ~ 'enrichment, 95% CI')) +
+  theme(
+    legend.position = c(0.83, 0.1),
+    legend.background = element_blank(),
+    axis.title = element_text(size = 9),
+    plot.margin = margin(5.5, 2, 5.5, 5.5, unit = 'pt')
+  ) +
+  scale_color_carto_d(palette = 4, guide = guide_legend(reverse = TRUE)) +
+  NULL
+plot_enrich_both
+ggsave('figs/icd9_severe.png', plot_enrich_both, width = 9, height = 5)
+```
+
+

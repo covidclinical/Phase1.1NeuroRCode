@@ -7,7 +7,7 @@ my_riskratio <- function (x, conf.level = 0.95,
   # http://www.zen103156.zen.co.uk/rr.pdf
   # https://stats.stackexchange.com/questions/3112/calculation-of-relative-risk-confidence-interval
 {
-
+  
   x <- matrix(x, ncol = 2, byrow = TRUE)
   tmx <- table.margins(x)
   p.exposed <- sweep(tmx, 2, tmx["Total", ], "/")
@@ -25,7 +25,7 @@ my_riskratio <- function (x, conf.level = 0.95,
     n0 <- a0 + b0
     m0 <- b0 + b1
     m1 <- a0 + a1
-
+    
     est <- (a1/n1)/((a0)/(n0))
     logRR <- log(est)
     
@@ -93,4 +93,63 @@ heat_theme_bottom <- function(){
         axis.text.x = element_text(angle = 90, vjust = 0.5),
         plot.margin = unit(c(1.5,0.2,0.5,0.5), "lines"),
         panel.spacing = unit(0, "points"))
+}
+
+plot_enrich <- function(
+  plot_obs_exp_left, plot_obs_exp_right, nudge = 3){
+  
+  enrichment_plot_left <- plot_obs_exp_left %>%
+    ggplot(aes(x = full_icd)) +
+    geom_hline(aes(yintercept = 0), linetype = 2) +
+    geom_pointrange(
+      aes(y = lestimate, ymin = llower, ymax = lupper, group = full_icd, color = presentation),
+      stroke = 0.3, fatten = 2
+    ) +
+    coord_flip() +
+    scale_color_manual(values = levels(plot_obs_exp_left$presentation),
+                       guide = FALSE) +
+    labs(x = NULL, y = bquote(Log[2] ~ 'enrichment, 95% CI')) +
+    theme(axis.title = element_text(size = 9),
+          plot.margin = margin(20, 2, 5.5, 5.5, unit = 'pt')) +
+    scale_x_discrete(position = 'top', labels = NULL) +
+    scale_y_reverse()
+  
+  over_severe_icds <- plot_obs_exp_right %>% 
+    filter(over_sev > 0) %>% 
+    pull(full_icd)
+  
+  enrichment_plot_right <- plot_obs_exp_right %>%
+    ggplot(aes(x = full_icd, y = Observed)) +
+    geom_segment(aes(xend =  full_icd, yend = Expected, color = presentation)) +
+    scale_color_manual(values = levels(plot_obs_exp_right$presentation),
+                       guide = FALSE) +
+    geom_point(data = . %>% pivot_longer(c(Observed, Expected), names_to = 'OE'),
+               aes(y = value, shape = OE), color = 'grey20') +
+    labs(x = NULL, y = 'Number of ever severe patients') +
+    coord_flip() +
+    theme(
+      axis.title = element_text(size = 9),
+      legend.position = c(0.78 , 0.1),
+      axis.text.y = element_text(
+        color = as.character(plot_obs_exp_right$presentation),
+        hjust = 0.5),
+      legend.background = element_blank(),
+      legend.key.height = unit(3, 'mm'),
+      legend.key.width = unit(3, 'mm'),
+      plot.margin = margin(20, 5.5, 8.5, 2, unit = 'pt')
+    ) +
+    scale_y_sqrt(
+      breaks = c(100, 1000, 3000),
+      expand = expansion(add = c(0, 10))) +
+    geom_text(
+      data = . %>% filter(!(full_icd %in% over_severe_icds)),
+      nudge_y = - nudge, aes(label = round(over_sev, 0)), size = 2.5) +
+    geom_text(
+      data = . %>% filter(full_icd %in% over_severe_icds), 
+      nudge_y = nudge, aes(label = round(over_sev, 0)), size = 2.5)
+  
+  enrichment_plot <- cowplot::plot_grid(enrichment_plot_left, enrichment_plot_right,
+                                        rel_widths = c(1, 2.8))
+  enrichment_plot
+  
 }
