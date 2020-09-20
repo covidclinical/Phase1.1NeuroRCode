@@ -222,8 +222,6 @@ ggsave('figs/icd9_severe_heatmap.png', severe_heats, height = 10, width = 7)
 ## Null hypothesis: 
 For each ICD code, the proportion of severe patients who were diagnosed with that ICD code is similar to the proportion of never-severe patients who were diagnosed with that same ICD code.
 
-**Is "enrichment" the right word to use here?**
-
 For the sake of simplicity in this notebook, we're going to denote patients whose symptoms have been categorized as severe (based on respiratory status +/- requiring ICU) at least once as *severe patients*, and patients whose symptoms have NEVER been categorized as severe as *non-severe patients*.
 
 For each ICD code, we computed the expected number of *severe patients* by multiplying the proportion of *non-severe patients* who were diagnosed with that code with the total number of *severe patients*.
@@ -231,6 +229,8 @@ We performed an enrichment analysis to examine the difference of *severe patient
 We calculated each ICD code's enrichment by dividing the observed proportion of honorees by the expected proportion of honorees and reported a value of log2 enrichment (LOE) and its 95% confidence intervals.
 The 95% confidence interval of the LOE was estimated using the Poisson model method [@isbn:9780849394447].
 
+Note that several ICD-9 codes have very small sample size (small number of patients associated with these codes).
+Therefore, we should take that into account when interpreting the result of the statistical tests for these codes.
 
 First, remove ICD with very small number of patients across site:
 
@@ -374,12 +374,22 @@ plot_obs_exp_left <- plot_obs_exp %>% filter(subtype != 'Sqrt(number of honorees
 
 ```{r fig.width = 12, fig.height = 6}
 enrichment_plot_before <- plot_enrich(
-  plot_obs_exp_left %>% filter(time == 'Before admission'),
-  plot_obs_exp_right %>% filter(time == 'Before admission') %>% slice(match(sorted_icds, full_icd)))
+  plot_obs_exp_left %>% 
+    filter(time == 'Before admission') %>% 
+    mutate(presentation = droplevels(presentation)),
+  plot_obs_exp_right %>% 
+    filter(time == 'Before admission') %>% 
+    slice(match(sorted_icds, full_icd)) %>% 
+    mutate(presentation = droplevels(presentation)))
 
 enrichment_plot_after <- plot_enrich(
-  plot_obs_exp_left %>% filter(time == 'After admission'),
-  plot_obs_exp_right %>% filter(time == 'After admission') %>% slice(match(sorted_icds, full_icd)))
+  plot_obs_exp_left %>% 
+    filter(time == 'After admission') %>% 
+    mutate(presentation = droplevels(presentation)),
+  plot_obs_exp_right %>% 
+    filter(time == 'After admission') %>% 
+    slice(match(sorted_icds, full_icd)) %>% 
+    mutate(presentation = droplevels(presentation)))
 
 enrichment_plot <- cowplot::plot_grid(
   enrichment_plot_before,
