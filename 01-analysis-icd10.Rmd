@@ -20,6 +20,7 @@ library(rcartocolor)
 library(forcats)
 library(purrr)
 library(DT)
+library(cowplot)
 
 load('data/processed-data.Rdata')
 theme_set(theme_bw() + theme(legend.title = element_blank()))
@@ -77,16 +78,16 @@ ggsave('figs/icd_heatmap.png', heats, height = 10, width = 7)
 
 ```
 
-
-
-
-```{r fig.height=6}
+```{r fig.height=5}
 diff_code <- code_prevalence %>% 
   # filter(siteid != 'SITE309') %>%
-  pivot_wider(names_from = time, values_from = percent_pats_site, id_cols = c(siteid, icd, `Neurological Disease Category`), values_fill = 0) %>% 
+  pivot_wider(names_from = time, values_from = percent_pats_site, 
+              id_cols = c(siteid, icd, `Neurological Disease Category`), 
+              values_fill = 0) %>% 
   mutate(percent_diff = `After admission` - `Before admission`)
 
 diff_heat <- diff_code %>% 
+  mutate(siteid = tolower(siteid)) %>%
   ggplot(aes(y = icd, x = siteid, fill = percent_diff)) +
   geom_tile() +
   labs(y = NULL, x = NULL, fill = 'After - Before') +
@@ -98,11 +99,69 @@ diff_heat <- diff_code %>%
     labels = scales::percent_format(accuracy = 1)) +
   facet_grid(rows = vars(`Neurological Disease Category`), space = 'free', scale = 'free') +
   heat_theme_bottom() +
+  theme(plot.margin = unit(c(1,0.2,0.5,5), "lines")) +
   NULL
 diff_heat
 
-ggsave('figs/icd_diff_heatmap.png', diff_heat, height = 5.5, width = 7)
+ggsave('figs/icd_diff_heatmap.png', diff_heat, height = 4, width = 8)
 ```
+
+### Hypothesis testing
+
+```{r}
+my_t <- function(icdi){
+  diff_icd <- diff_code %>% filter(icd == icdi)
+  data.frame(
+    icd = icdi,
+    t.test(diff_icd$`After admission`, diff_icd$`Before admission`) %>% 
+    broom::tidy()
+  )
+}
+prevalence_stats <- unique(diff_code$icd) %>% 
+  lapply(my_t) %>% 
+  bind_rows()
+prevalence_stats$p_value_holm <-  p.adjust(prevalence_stats$p.value, 'holm')
+prevalence_stats$p_value_bh <- p.adjust(prevalence_stats$p.value, 'BH')
+prevalence_stats %>% 
+  filter(p_value_bh < 0.05)
+
+```
+
+
+### Prevalence change table
+
+```{r}
+prevalence_stats %>% 
+  arrange(desc(estimate)) %>% 
+  mutate(ci = paste0('(', round(conf.low, 1), ', ', 
+                     round(conf.high, 1), ')')) %>% 
+  select(- c(estimate1, estimate2, parameter, method, alternative, conf.low, conf.high)) %>% 
+  datatable(rownames = FALSE) %>% 
+  formatRound(c('statistic'), 1) %>%
+  formatPercentage('estimate', 1) %>% 
+  formatSignif(c('p.value', 'p_value_holm', 'p_value_bh'), 3) %>%
+  {.}
+```
+
+
+### Compute confidence inverval 
+of the mean proportion of patients diagnosed with each ICD
+
+```{r}
+alpha_threshold <- qnorm(0.975)
+
+ci_prevalence <- code_prevalence %>% 
+  group_by(time, full_icd) %>%
+  add_count() %>%
+  summarise(
+    mean_prop = mean(percent_pats_site, na.rm = T),
+    sd_prob = sd(percent_pats_site, na.rm = T),
+    n = mean(n),
+    me_prop = alpha_threshold * sd_prob / sqrt(n)
+  ) %>%
+  ungroup()
+```
+
 
 
 ```{r fig.width=10, fig.height=5}
@@ -135,32 +194,65 @@ total_icd <- icd_time %>%
   scale_y_discrete(labels = NULL) +
   theme(legend.position = c(0.3, 0.15),
         legend.title = element_blank(),
-        legend.key.height = unit(4, 'mm')) +
+        legend.key.height = unit(4, 'mm'),
+        plot.margin = margin(t = 1, r = 0.5, unit = 'lines')) + 
   labs(x = 'Total number of patients at all sites', y = NULL)
 
-percent_icd <- code_prevalence %>% 
-  # filter(siteid != 'SITE309') %>% 
-  ggplot(aes(x = percent_pats_site, 
-             y = fct_relevel(full_icd, sorted_icds), 
-             color = time)) +
+percent_icd <- 
+  ci_prevalence %>% 
+  ggplot(aes(group = time)) +
+  ggstance::geom_pointrangeh(
+    aes(x = mean_prop,
+        y = fct_relevel(full_icd, sorted_icds),
+        xmin = mean_prop - me_prop,
+        xmax = mean_prop + me_prop,
+        color = time),
+    position = position_dodge(width = 0.3), 
+    stroke = 0.1, fatten = 3, size = 0.7  
+  ) +
   scale_color_carto_d(palette = 4, guide = NULL) +
-  # scale_color_manual(values = c('#2a5674', '#b13f64')) + 
-  geom_boxplot(fill = 'white') + 
   theme_minimal() +  
   theme(legend.position = c(0.75, 0.1),
         legend.title = element_blank(),
-        axis.text.y = element_text(hjust = 0.5)) + 
-  scale_x_continuous(expand = expansion(add = c(0, 0.07)),
+        axis.text.y = element_text(hjust = 0.5),
+        plot.margin = margin(t = 1, unit = 'lines')) + 
+  scale_x_continuous(expand = expansion(add = c(0, 0.03)),
                      labels = scales::percent_format(accuracy = 1)) +
   labs(x = 'Proportion of patients each site', y = NULL)
 
 icd_prevalence_plots <- cowplot::plot_grid(total_icd, percent_icd, ncol = 2,
-                   rel_widths = c(1, 2.5))
+                                           rel_widths = c(1, 3))
 icd_prevalence_plots
 ggsave('figs/icd_prevalence.png', icd_prevalence_plots, height = 5, width = 10)
 ```
 
-# Severity analysis
+```{r}
+plot_grid(diff_heat, icd_prevalence_plots, rel_heights = c(1, 0.9),
+          ncol = 1, labels = 'AUTO') %>%
+  ggsave('figs/icd_prevalence_AB.png', ., height = 7, width = 9.4)
+```
+
+
+
+```{r}
+diff_code %>% 
+  filter(icd == 'R41') %>% 
+  ungroup() %>% 
+  count(percent_diff > 0)
+
+diff_code %>% 
+  filter(icd == 'G93') %>% 
+  ungroup() %>% 
+  count(percent_diff > 0)
+
+diff_code %>% 
+  filter(icd == 'R42') %>% 
+  ungroup() %>% 
+  count(percent_diff > 0)
+```
+
+
+# Severity descriptive statistics
 
 What ICD code has the most number severe patients?
 Sites with more severe patients?
@@ -213,7 +305,7 @@ ggsave('figs/icd_severe_heatmap.png', severe_heats, height = 10, width = 7)
 
 # Severity enrichment analysis
 
-## Null hypothesis: 
+## Null hypothesis 
 For each ICD code, the proportion of severe patients who were diagnosed with that ICD code is similar to the proportion of never-severe patients who were diagnosed with that same ICD code.
 
 **Is "enrichment" the right word to use here?**
@@ -281,6 +373,7 @@ fish_tab <- fish_obs_exp %>%
   select(full_icd, time, Observed, Expected, over_sev,
          estimate, lestimate, ci, p_value,
          `P value (Holm)`, `P value (FDR)`) %>% 
+  arrange(desc(over_sev)) %>% 
   rename('ICD' = 'full_icd',
          'Observed - Expected' = 'over_sev',
          'Enrichment' = 'estimate',
@@ -329,7 +422,8 @@ filtered_obs_exp <- contingency_df %>%
 sorted_icds <- filtered_obs_exp %>%
   select(full_icd, time, estimate) %>% 
   pivot_wider(names_from = time, values_from = estimate) %>% 
-  mutate(diff_est = `After admission` - `Before admission`,
+  mutate(diff_est = log2(`After admission`) - log2(`Before admission`),
+         diff_est = ifelse(is.na(diff_est), -Inf, diff_est),
          full_icd = as.character(full_icd)) %>% 
   arrange(diff_est) %>% 
   pull(full_icd)
