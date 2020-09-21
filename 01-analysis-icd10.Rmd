@@ -28,6 +28,22 @@ source('utils.R')
 ```
 
 ## Prevalence analysis
+```{r include=FALSE, eval=FALSE}
+sum(is.na(diag_icd_10))
+check_time_site <- diag_icd_10 %>% 
+  distinct(siteid, time) %>% 
+  add_count(siteid) %>% 
+  filter(n == 2)
+
+diag_all %>% 
+  group_by(siteid) %>%
+  summarise(num_site_time = sum(num_patients_all_since_admission), .groups = 'drop')
+
+diag_all %>% 
+  group_by(siteid) %>%
+  summarise(num_site_time = sum(num_patients_all_before_admission), .groups = 'drop')
+```
+
 
 Calculate percentages:
 
@@ -113,7 +129,7 @@ my_t <- function(icdi){
   diff_icd <- diff_code %>% filter(icd == icdi)
   data.frame(
     icd = icdi,
-    t.test(diff_icd$`After admission`, diff_icd$`Before admission`) %>% 
+    t.test(diff_icd$`After admission`, diff_icd$`Before admission`, paired = TRUE) %>% 
     broom::tidy()
   )
 }
@@ -135,7 +151,7 @@ prevalence_stats %>%
   arrange(desc(estimate)) %>% 
   mutate(ci = paste0('(', round(conf.low, 1), ', ', 
                      round(conf.high, 1), ')')) %>% 
-  select(- c(estimate1, estimate2, parameter, method, alternative, conf.low, conf.high)) %>% 
+  select(- c(parameter, method, alternative, conf.low, conf.high)) %>% 
   datatable(rownames = FALSE) %>% 
   formatRound(c('statistic'), 1) %>%
   formatPercentage('estimate', 1) %>% 
