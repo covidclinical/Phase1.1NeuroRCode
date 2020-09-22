@@ -28,22 +28,6 @@ source('utils.R')
 ```
 
 ## Prevalence analysis
-```{r include=FALSE, eval=FALSE}
-sum(is.na(diag_icd_10))
-check_time_site <- diag_icd_10 %>% 
-  distinct(siteid, time) %>% 
-  add_count(siteid) %>% 
-  filter(n == 2)
-
-diag_all %>% 
-  group_by(siteid) %>%
-  summarise(num_site_time = sum(num_patients_all_since_admission), .groups = 'drop')
-
-diag_all %>% 
-  group_by(siteid) %>%
-  summarise(num_site_time = sum(num_patients_all_before_admission), .groups = 'drop')
-```
-
 
 Calculate percentages:
 
@@ -94,7 +78,7 @@ ggsave('figs/icd_heatmap.png', heats, height = 10, width = 7)
 
 ```
 
-```{r fig.height=5}
+```{r fig.height=4, fig.width=8}
 diff_code <- code_prevalence %>% 
   # filter(siteid != 'SITE309') %>%
   pivot_wider(names_from = time, values_from = percent_pats_site, 
@@ -110,7 +94,7 @@ diff_heat <- diff_code %>%
   scale_x_discrete(drop = F) + 
   #009392,#39b185,#9ccb86,#e9e29c,#eeb479,#e88471,#cf597e
   scale_fill_gradient2(
-    low = '#009392',
+    low = '#798234',
     high = '#cf597e',
     labels = scales::percent_format(accuracy = 1)) +
   facet_grid(rows = vars(`Neurological Disease Category`), space = 'free', scale = 'free') +
@@ -119,7 +103,7 @@ diff_heat <- diff_code %>%
   NULL
 diff_heat
 
-ggsave('figs/icd_diff_heatmap.png', diff_heat, height = 4, width = 8)
+# ggsave('figs/icd_diff_heatmap.png', diff_heat, height = 4, width = 8)
 ```
 
 ### Hypothesis testing
@@ -324,8 +308,6 @@ ggsave('figs/icd_severe_heatmap.png', severe_heats, height = 10, width = 7)
 ## Null hypothesis 
 For each ICD code, the proportion of severe patients who were diagnosed with that ICD code is similar to the proportion of never-severe patients who were diagnosed with that same ICD code.
 
-**Is "enrichment" the right word to use here?**
-
 For the sake of simplicity in this notebook, we're going to denote patients whose symptoms have been categorized as severe (based on respiratory status +/- requiring ICU) at least once as *severe patients*, and patients whose symptoms have NEVER been categorized as severe as *non-severe patients*.
 
 For each ICD code, we computed the expected number of *severe patients* by multiplying the proportion of *non-severe patients* who were diagnosed with that code with the total number of *severe patients*.
@@ -424,24 +406,27 @@ filtered_obs_exp <- contingency_df %>%
       TRUE ~ upper - 2
     ),
     presentation = case_when(
-      lower > 1 & `P value (FDR)` < 0.05 ~ '#ca562c', 
-      upper < 1 & `P value (FDR)` < 0.05 ~ '#009392',
+      lower > 1 & `P value (FDR)` < 0.05 ~ '#d46780', 
+      upper < 1 & `P value (FDR)` < 0.05 ~ '#798234',
       TRUE ~ 'grey20'
     )) %>% 
   {.}
 ```
 
-
 ```{r warning=FALSE}
 # plot_obs_exp_before <- plot_obs_exp_left
 # sorted_icds <- rev(as.character(filtered_obs_exp$full_icd))
-sorted_icds <- filtered_obs_exp %>%
-  select(full_icd, time, estimate) %>% 
-  pivot_wider(names_from = time, values_from = estimate) %>% 
-  mutate(diff_est = log2(`After admission`) - log2(`Before admission`),
-         diff_est = ifelse(is.na(diff_est), -Inf, diff_est),
-         full_icd = as.character(full_icd)) %>% 
-  arrange(diff_est) %>% 
+# sorted_icds <- filtered_obs_exp %>%
+#   select(full_icd, time, estimate) %>% 
+#   pivot_wider(names_from = time, values_from = estimate) %>% 
+#   mutate(diff_est = log2(`After admission`) - log2(`Before admission`),
+#          diff_est = ifelse(is.na(diff_est), -Inf, diff_est),
+#          full_icd = as.character(full_icd)) %>% 
+#   arrange(diff_est) %>% 
+#   pull(full_icd)
+sorted_icds <- filtered_obs_exp %>% 
+  filter(time == 'After admission') %>% 
+  arrange(Expected) %>% 
   pull(full_icd)
 
 plot_obs_exp <- filtered_obs_exp %>%
@@ -465,11 +450,14 @@ plot_obs_exp_left <- plot_obs_exp %>% filter(subtype != 'Sqrt(number of honorees
 ```{r fig.width = 12, fig.height = 6}
 enrichment_plot_before <- plot_enrich(
   plot_obs_exp_left %>% filter(time == 'Before admission'),
-  plot_obs_exp_right %>% filter(time == 'Before admission') %>% slice(match(sorted_icds, full_icd)))
+  plot_obs_exp_right %>% filter(time == 'Before admission') %>% 
+    slice(match(sorted_icds, full_icd)),
+  nudge = 2.5)
 
 enrichment_plot_after <- plot_enrich(
   plot_obs_exp_left %>% filter(time == 'After admission'),
-  plot_obs_exp_right %>% filter(time == 'After admission') %>% slice(match(sorted_icds, full_icd)))
+  plot_obs_exp_right %>% filter(time == 'After admission') %>% slice(match(sorted_icds, full_icd)),
+  nudge = 4)
 
 enrichment_plot <- cowplot::plot_grid(
   enrichment_plot_before,

@@ -19,6 +19,8 @@ library(readxl)
 library(httr)
 library(purrr)
 library(stringi)
+library(gt)
+library(gtsummary)
 ```
 
 ## Download data
@@ -52,18 +54,6 @@ Notes:
 
 ## Read in local files
 
-```{r include=FALSE}
-# site_to_country <- read_csv('data/siteid_Map_Non_Pediatric_3digit_toShare.csv') %>% 
-#   mutate(Country = stringr::str_to_title(Country) %>% 
-#            recode(Usa = 'US', 
-#                   Singapore_spain = 'Singapore/Spain', 
-#                   Uk = 'UK')) %>% 
-#   select(siteid = siteid.new, Country)
-# 
-# # Check for duplicated mapping:
-# site_to_country[duplicated(site_to_country$siteid),]
-```
-
 <!-- Two rows have country SINGAPORE_SPAIN because there is only one site in each one of the countries. -->
 <!-- If this were not combined: data could be known the specific site. -->
 
@@ -76,34 +66,44 @@ neuro_icds_10 <- read_excel('data/2020-09-10_neuro-icd10.xlsx') %>%
 neuro_icds_9 <- readxl::read_excel('data/neuroicd10to9withdescript.xlsx') %>% 
   left_join(neuro_icds_10 %>% select(`Neurological Disease Category`, icd), 
             by = c('ICD10_CODE' = 'icd')) %>% 
-  select(- c(ICD9_CODE, ICD9_DESCRIPTION, ICD10_CODE)) %>% 
+  # select(- c(ICD9_CODE, ICD9_DESCRIPTION, ICD10_CODE)) %>% 
   rename('icd' = ICD9_THREE_DIGIT) %>% 
   filter(!is.na(icd)) %>% # ignore ICD10 code G46 and G65 not mapped to any ICD_9 code
   {.}
+
+neuro_icds_9 %>% 
+  distinct(icd, ICD10_CODE) %>% 
+  count(icd) %>%
+  filter(n > 1)
 ```
 
-## DISCUSS WITH GROUPS ABOUT THESE MODIFICATION/GROUPINGS
+## Manual grouping of four ICD-9 codes
+
+For the two codes with non-specific description (780 and 781), we can include (in the Methods, Figure legend or supplementary material) the descriptions of all subcodes for each.
+See link here <http://dbmi-ncats-test01.dbmi.pitt.edu/webclient/>: no login required, and also the link below each code.
+I added the disease groups in parentheses for these four codes.
+The only group that is not consistent with the grouping based on ICD10 codes is vision/smell/taste.
+(For ICD10 codes, we separate vision and neuropathy, the latter of which includes smell and taste).
+V41 Problems with special senses and other special functions (vision/smell/taste)
+437 Other and ill-defined cerebrovascular disease (vascular)
+780 General symptoms (Other)
+https://icd.codes/icd9cm/780
+781 Symptoms involving nervous and musculoskeletal systems (Other)
+https://icd.codes/icd9cm/781
+
 ```{r}
 neuro_icds_9 %>% filter(icd %in% c('V41', '780', '781', '437'))
 
 neuro_icds_9 <- neuro_icds_9 %>% 
-  within(., ICD10_DESCRIPTION[icd == 'V41'] <- 'Problems with vision/smell/taste') %>% 
+  within(., ICD10_DESCRIPTION[icd == 'V41'] <- 'Problems with special senses and other special functions') %>% 
   within(., `Neurological Disease Category`[icd == 'V41'] <- 'Vision') %>%
-  within(., ICD10_DESCRIPTION[icd == '781'] <- 'Other symptoms involving cognitive functions') %>% 
+  within(., ICD10_DESCRIPTION[icd == '781'] <- 'Symptoms involving nervous and musculoskeletal systems') %>% 
   within(., `Neurological Disease Category`[icd == '781'] <- 'Neuropathy') %>% # and Consciousness
-  within(., ICD10_DESCRIPTION[icd == '437'] <- 'Other cerebrovascular diseases') %>%
-  within(., ICD10_DESCRIPTION[icd == '780'] <- 'Dizziness/Other brain disorders') %>%
-  within(., `Neurological Disease Category`[icd == '780'] <- 'Dizziness/Consciousness') %>%
+  within(., ICD10_DESCRIPTION[icd == '437'] <- 'Other and ill-defined cerebrovascular disease') %>%
+  within(., ICD10_DESCRIPTION[icd == '780'] <- 'General symptoms') %>%
+  within(., `Neurological Disease Category`[icd == '780'] <- 'Other') %>%
   distinct()
 ```
-
-
-<!-- > neuro_icds_9 %>% filter(is.na(ICD9_THREE_DIGIT)) -->
-<!-- # A tibble: 2 x 5 -->
-<!--   ICD9_THREE_DIGIT ICD9_CODE ICD9_DESCRIPTION ICD10_CODE ICD10_DESCRIPTION                                       -->
-<!--   <chr>            <chr>     <chr>            <chr>      <chr>                                                   -->
-<!-- 1 NA               NA        NA               G46        Vascular syndromes of brain in cerebrovascular diseases -->
-<!-- 2 NA               NA        NA               G65        Sequelae of inflammatory and toxic polyneuropathies     -->
 
 Notes: 
 
@@ -116,31 +116,6 @@ Notes:
 
 
 # Mold data frames
-
-```{r include=FALSE}
-# diag_ana <- diag_all %>% 
-#   mutate(all_nas = is.na(num_patients_ever_severe_icd0) & 
-#            is.na(num_patients_ever_severe_icd1) &
-#            is.na(num_patients_never_severe_icd0)&
-#            is.na(num_patients_never_severe_icd1)) %>% 
-#   filter(!all_nas) %>% 
-#   select(-all_nas) %>% 
-#   mutate(
-#     num_patients_icd = num_patients_ever_severe_icd1 + num_patients_never_severe_icd1,
-#     icd = gsub('icd:', '', icd),
-#     time = recode(time, 
-#                   before_admission = 'Before admission',
-#                   since_admission = 'After admission')) %>% 
-#   # left_join(site_to_country, by = 'siteid') %>% 
-#   right_join(neuro_icds_10, by = 'icd') %>% 
-#   distinct() %>% 
-#   mutate(full_icd = paste0(`ICD-10 Description`, ' (', icd, ')')) %>%
-#   {.}
-# site_pats <- demo_ana %>% 
-#   group_by(siteid) %>% 
-#   summarise(num_patients_all = sum(num_patients_all), .groups = 'drop') 
-
-```
 
 ```{r}
 demo_ana <- demo_all %>% 
@@ -205,7 +180,7 @@ diag_icd_9 <- diag_ana %>%
   filter(icd_version == 9) %>%
   select(- icd_version) %>% 
   pivot_wider(names_from = severe, values_from = count) %>%
-  right_join(neuro_icds_9, by = 'icd') %>% 
+  right_join(neuro_icds_9 %>% select(- c(ICD10_CODE, ICD9_CODE, ICD9_DESCRIPTION)), by = 'icd') %>% 
   distinct() %>% 
   left_join(demo_ana, by = 'siteid') %>% 
   mutate(full_icd = paste0(ICD10_DESCRIPTION, ' (', icd, ')'),
@@ -216,7 +191,6 @@ diag_icd_9 <- diag_ana %>%
   {.}
 ```
 
-
 `r length(unique(diag_icd_10$siteid))` sites with icd-10 code. 
 `r length(unique(diag_icd_9$siteid))` sites have icd-9.
 
@@ -226,18 +200,55 @@ diag_icd_9 <- diag_ana %>%
 save(demo_ana, diag_icd_10, diag_icd_9, file = 'data/processed-data.Rdata')
 ```
 
+## Generate characteristics table
+
+```{r}
+sum_sum <- sym(paste('N =', sum(demo_ana$num_patients_all)))
+age_group_desc <- demo_all %>% 
+  filter(sex == 'all', race == 'all', age_group != 'all') %>% 
+  group_by(age_group) %>% 
+  summarise(!!sum_sum := sum(num_patients_all), .groups = 'drop') %>% 
+  mutate(category = 'Age group') %>% 
+  rename('Characteristics' = age_group)
+
+sex_desc <- demo_all %>% 
+  filter(sex != 'all', race == 'all', age_group == 'all') %>% 
+  group_by(sex) %>% 
+  summarise(!!sum_sum := sum(num_patients_all), .groups = 'drop') %>% 
+  mutate(category = 'Sex') %>% 
+  rename('Characteristics' = sex)
+
+race_desc <- demo_all %>% 
+  filter(sex == 'all', race != 'all', age_group == 'all') %>% 
+  group_by(race) %>% 
+  summarise(!!sum_sum := sum(num_patients_all), .groups = 'drop') %>% 
+  mutate(category = 'Race/Ethnicity') %>% 
+  rename('Characteristics' = race)
+
+bind_rows(age_group_desc, sex_desc, race_desc) %>% 
+  group_by(category) %>% 
+  gt() %>% 
+  tab_footnote(
+    footnote = "Obfuscation at each site may affect the total counts.",
+    locations = cells_column_labels(
+      columns = 2)
+  ) %>% 
+  {.}
+```
+
 # Quality checks
 
 ## Check if 'all' equals to sum of the rest
 ```{r}
-
 age_group_check <- demo_all %>% 
   filter(sex == 'all', race == 'all', age_group != 'all') %>% 
   group_by(siteid) %>% 
   summarise(age_group_sum = sum(num_patients_all), .groups = 'drop') %>% 
   left_join(demo_ana) %>% 
   mutate(mismatches = num_patients_all - age_group_sum) %>% 
-  filter(mismatches != 0) %>% 
+  filter(abs(mismatches) != 0) %>% 
+  select(-contains('severe')) %>% 
+  arrange(desc(abs(mismatches))) %>% 
   {.}
 
 race_check <- demo_all %>% 
@@ -246,7 +257,9 @@ race_check <- demo_all %>%
   summarise(race_sum = sum(num_patients_all), .groups = 'drop') %>% 
   left_join(demo_ana) %>% 
   mutate(mismatches = num_patients_all - race_sum) %>% 
-  filter(mismatches != 0) %>% 
+  filter(abs(mismatches) != 0) %>% 
+  select(-contains('severe')) %>% 
+  arrange(desc(abs(mismatches))) %>% 
   {.}
 
 sex_check <- demo_all %>% 
@@ -256,6 +269,8 @@ sex_check <- demo_all %>%
   left_join(demo_ana) %>% 
   mutate(mismatches = num_patients_all - sex_sum) %>% 
   filter(mismatches != 0) %>% 
+  select(-contains('severe')) %>% 
+  arrange(desc(abs(mismatches))) %>% 
   {.}
 
 demo_check <- demo_ana %>% 
