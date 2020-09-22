@@ -232,7 +232,7 @@ percent_icd <-
 icd9_prevalence_plots <- cowplot::plot_grid(total_icd, percent_icd, ncol = 2,
                                            rel_widths = c(1, 3))
 icd9_prevalence_plots
-ggsave('figs/icd9_prevalence.png', icd9_prevalence_plots, height = 5, width = 10)
+# ggsave('figs/icd9_prevalence.png', icd9_prevalence_plots, height = 5, width = 10)
 ```
 
 ```{r}
