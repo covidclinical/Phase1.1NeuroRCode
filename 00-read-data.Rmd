@@ -96,7 +96,7 @@ neuro_icds_9 %>% filter(icd %in% c('V41', '780', '781', '437'))
 
 neuro_icds_9 <- neuro_icds_9 %>% 
   within(., ICD10_DESCRIPTION[icd == 'V41'] <- 'Problems with special senses and other special functions') %>% 
-  within(., `Neurological Disease Category`[icd == 'V41'] <- 'Vision') %>%
+  within(., `Neurological Disease Category`[icd == 'V41'] <- 'Vision/smell/taste') %>%
   within(., ICD10_DESCRIPTION[icd == '781'] <- 'Symptoms involving nervous and musculoskeletal systems') %>% 
   within(., `Neurological Disease Category`[icd == '781'] <- 'Neuropathy') %>% # and Consciousness
   within(., ICD10_DESCRIPTION[icd == '437'] <- 'Other and ill-defined cerebrovascular disease') %>%
