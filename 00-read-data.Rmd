@@ -105,6 +105,15 @@ neuro_icds_9 <- neuro_icds_9 %>%
   distinct()
 ```
 
+
+```{r}
+colnames(neuro_icds_9)
+neuro_icds_9 %>% 
+  select(`Neurological Disease Category`, icd, ICD10_DESCRIPTION) %>% 
+  distinct() %>% 
+  DT::datatable(rownames = FALSE)
+```
+
 Notes: 
 
 “-99” indicate masked small numbers (for obfuscation) and “-999" indicate missing, unknown, not applicable, etc.

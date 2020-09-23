@@ -151,11 +151,14 @@ prevalence_stats %>%
   mutate(ci = paste0('(', round(conf.low, 1), ', ', 
                      round(conf.high, 1), ')')) %>% 
   select(- c(parameter, method, alternative, conf.low, conf.high)) %>% 
-  datatable(rownames = FALSE) %>% 
+  datatable(rownames = FALSE, filter = 'top') %>% 
   formatRound(c('statistic'), 1) %>%
   formatPercentage('estimate', 1) %>% 
   formatSignif(c('p.value', 'p_value_holm', 'p_value_bh'), 3) %>%
   {.}
+
+prevalence_stats %>% 
+  write_csv('results/icd9_prevalence_stats')
 ```
 
 
@@ -405,11 +408,14 @@ fish_tab <- fish_obs_exp %>%
          'P value (raw)' = 'p_value')
 
 fish_tab %>% 
-  datatable(rownames = FALSE) %>% 
+  datatable(rownames = FALSE, filter = 'top') %>% 
   formatRound(c('Observed', 'Expected', 'Observed - Expected',
                 'Enrichment', 'Log2(enrichment)'), 1) %>%
   formatSignif(c('P value (raw)', 'P value (Holm)', 'P value (FDR)'), 3) %>% 
   {.}
+
+fish_tab %>% 
+  write_csv('results/icd9_fish_tab.csv')
 ```
 
 A positive value of LOE indicates a higher proportion of *severe patients* with that ICD code compared to *non-severe patients*.
