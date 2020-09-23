@@ -198,7 +198,7 @@ total_icd <- icd_time %>%
   theme(legend.position = c(0.3, 0.15),
         legend.title = element_blank(),
         legend.key.height = unit(4, 'mm'),
-        plot.margin = margin(t = 1, r = 0.5, unit = 'lines')) + 
+        plot.margin = margin(t = 1, r = 0.5, l = 0.5, unit = 'lines')) + 
   labs(x = 'Total number of patients at all sites', y = NULL)
 
 percent_icd <- 
@@ -232,10 +232,8 @@ icd_prevalence_plots
 ```{r}
 plot_grid(diff_heat, icd_prevalence_plots, rel_heights = c(1, 0.9),
           ncol = 1, labels = 'AUTO') %>%
-  ggsave('figs/icd_prevalence_AB.png', ., height = 7, width = 9.4)
+  ggsave('figs/icd_prevalence_AB.png', ., height = 7, width = 9.7)
 ```
-
-
 
 ```{r}
 diff_code %>% 
