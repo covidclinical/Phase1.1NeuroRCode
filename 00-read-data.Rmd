@@ -76,6 +76,8 @@ neuro_icds_9 %>%
   count(icd) %>%
   filter(n > 1)
 ```
+`
+
 
 ## Manual grouping of four ICD-9 codes
 
@@ -92,26 +94,34 @@ https://icd.codes/icd9cm/780
 https://icd.codes/icd9cm/781
 
 ```{r}
-neuro_icds_9 %>% filter(icd %in% c('V41', '780', '781', '437'))
 
-neuro_icds_9 <- neuro_icds_9 %>% 
-  within(., ICD10_DESCRIPTION[icd == 'V41'] <- 'Problems with special senses and other special functions') %>% 
-  within(., `Neurological Disease Category`[icd == 'V41'] <- 'Vision/smell/taste') %>%
-  within(., ICD10_DESCRIPTION[icd == '781'] <- 'Symptoms involving nervous and musculoskeletal systems') %>% 
-  within(., `Neurological Disease Category`[icd == '781'] <- 'Neuropathy') %>% # and Consciousness
-  within(., ICD10_DESCRIPTION[icd == '437'] <- 'Other and ill-defined cerebrovascular disease') %>%
-  within(., ICD10_DESCRIPTION[icd == '780'] <- 'General symptoms') %>%
-  within(., `Neurological Disease Category`[icd == '780'] <- 'Other') %>%
-  distinct()
 ```
 
 
 ```{r}
-colnames(neuro_icds_9)
+phecode_icd9 <- read_csv('data/phecode_icd9_rolled.csv') %>% 
+  select(icd = ICD9, icd9_desc = `ICD9 String`)
+
+neuro_icds_9 <- neuro_icds_9 %>% 
+  left_join(phecode_icd9, by = 'icd')
+
+neuro_icds_9 %>% filter(icd %in% c('V41', '780', '781', '437'))
+
+neuro_icds_9 <- neuro_icds_9 %>% 
+  within(., icd9_desc[icd == 'V41'] <- 'Problems with special senses and other special functions') %>% 
+  within(., `Neurological Disease Category`[icd == 'V41'] <- 'Vision/smell/taste') %>%
+  within(., icd9_desc[icd == '781'] <- 'Symptoms involving nervous and musculoskeletal systems') %>% 
+  within(., `Neurological Disease Category`[icd == '781'] <- 'Neuropathy') %>% # and Consciousness
+  within(., icd9_desc[icd == '437'] <- 'Other and ill-defined cerebrovascular disease') %>%
+  within(., icd9_desc[icd == '780'] <- 'General symptoms') %>%
+  within(., `Neurological Disease Category`[icd == '780'] <- 'Other') %>%
+  distinct()
+
 neuro_icds_9 %>% 
-  select(`Neurological Disease Category`, icd, ICD10_DESCRIPTION) %>% 
+  select(`Neurological Disease Category`, icd, icd9_desc) %>% 
   distinct() %>% 
-  DT::datatable(rownames = FALSE)
+  arrange(icd) %>% 
+  write_csv('results/icd9_tab.csv')
 ```
 
 Notes: 

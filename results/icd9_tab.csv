@@ -1,0 +1,30 @@
+Neurological Disease Category,icd,icd9_desc
+Muscle,040,Other bacterial diseases
+Psychiatric,298,Other nonorganic psychoses
+Headache,307,"Special symptoms or syndromes, not elsewhere classified"
+Inflammatory,320,Bacterial meningitis
+Inflammatory,321,Meningitis due to other organisms
+Inflammatory,322,Meningitis of unspecified cause
+Inflammatory,323,"Encephalitis, myelitis, and encephalomyelitis"
+Other,330,Cerebral degenerations usually manifest in childhood
+Other,331,Other cerebral degenerations
+Headache,339,Other headache syndromes
+Seizure,345,Epilepsy and recurrent seizures
+Other,348,Other conditions of brain
+Neuropathy,357,Inflammatory and toxic neuropathy
+Muscle,359,Muscular dystrophies and other myopathies
+Vision,369,Blindness and low vision
+Vascular,430,Subarachnoid hemorrhage
+Vascular,431,Intracerebral hemorrhage
+Vascular,432,Other and unspecified intracranial hemorrhage
+Vascular,435,Transient cerebral ischemia
+Vascular,436,"Acute, but ill-defined cerebrovascular disease"
+Vascular,437,Other and ill-defined cerebrovascular disease
+Muscle,728,"Disorders of muscle, ligament, and fascia"
+Muscle,729,Other disorders of soft tissues
+Other,780,General symptoms
+Neuropathy,781,Symptoms involving nervous and musculoskeletal systems
+Headache,784,Symptoms involving head and neck
+Consciousness,797,Senility without mention of psychosis
+Consciousness,799,Other ill-defined and unknown causes of morbidity and mortality
+Vision/smell/taste,V41,Problems with special senses and other special functions
