@@ -133,8 +133,8 @@ prevalence_stats %>%
 ```{r}
 prevalence_stats %>% 
   arrange(desc(estimate)) %>% 
-  mutate(ci = paste0('(', round(conf.low, 1), ', ', 
-                     round(conf.high, 1), ')')) %>% 
+  mutate(ci = paste0('(', round(conf.low*100, 2), '%, ', 
+                     round(conf.high*100, 2), '%)')) %>% 
   select(- c(parameter, method, alternative, conf.low, conf.high)) %>% 
   datatable(rownames = FALSE, filter = 'top') %>% 
   formatRound(c('statistic'), 1) %>%
@@ -143,7 +143,7 @@ prevalence_stats %>%
   {.}
 
 prevalence_stats %>% 
-  write_csv('results/icd10_prevalence_stats')
+  write_csv('results/icd10_prevalence_stats.csv')
 ```
 
 

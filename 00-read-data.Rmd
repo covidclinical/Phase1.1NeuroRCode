@@ -124,6 +124,11 @@ neuro_icds_9 %>%
   write_csv('results/icd9_tab.csv')
 ```
 
+```{r}
+check <- demo_all %>% 
+  filter(!race %in% c('other', 'all'))
+```
+
 Notes: 
 
 “-99” indicate masked small numbers (for obfuscation) and “-999" indicate missing, unknown, not applicable, etc.
