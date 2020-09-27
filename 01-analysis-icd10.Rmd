@@ -41,7 +41,7 @@ code_prevalence <- diag_icd_10 %>%
          siteid = as.factor(siteid)) %>% 
   ungroup() %>% 
   group_by(Country, time, icd, `Neurological Disease Category`, full_icd) %>% 
-  mutate(percent_pats_country = sum(num_patients_icd)/sum(num_patients_all)) %>% 
+  mutate(percent_pats_country = sum(num_patients_icd)/all_pats_country) %>% 
   ungroup()
 
 before_code_prev <- code_prevalence %>% 
@@ -84,6 +84,14 @@ ggsave('figs/icd_heatmap.png', heats, height = 10, width = 7)
 ```
 
 ```{r fig.height=4, fig.width=8}
+diff_code <- code_prevalence %>% 
+  select(location = siteid, icd, `Neurological Disease Category`, time, percent_pats_site) %>% 
+  pivot_wider(names_from = time, values_from = percent_pats_site, 
+              id_cols = c(location, icd, `Neurological Disease Category`), 
+              values_fill = 0) %>% 
+  mutate(percent_diff = `After admission` - `Before admission`,
+         loc_type = 'Site', location = tolower(location), .keep = 'unused')
+
 diff_code_country <- code_prevalence %>% 
   select(location = Country, icd, `Neurological Disease Category`, time, percent_pats_country) %>% 
   distinct() %>% 
@@ -93,17 +101,10 @@ diff_code_country <- code_prevalence %>%
   mutate(percent_diff = `After admission` - `Before admission`,
          loc_type = 'Country', .keep = 'unused')
 
-diff_code <- code_prevalence %>% 
-  select(location = siteid, icd, `Neurological Disease Category`, time, percent_pats_site) %>% 
-  pivot_wider(names_from = time, values_from = percent_pats_site, 
-              id_cols = c(location, icd, `Neurological Disease Category`), 
-              values_fill = 0) %>% 
-  mutate(percent_diff = `After admission` - `Before admission`,
-         loc_type = 'Site', location = tolower(location), .keep = 'unused') %>% 
+diff_code_loc <- diff_code %>% 
   bind_rows(diff_code_country)
 
-diff_heat <- diff_code %>% 
-  mutate() %>%
+diff_heat <- diff_code_loc %>% 
   ggplot(aes(y = icd, x = location, fill = percent_diff)) +
   geom_tile() +
   labs(y = NULL, x = NULL, fill = 'After - Before') +
@@ -134,7 +135,7 @@ my_t <- function(icdi){
   diff_icd <- diff_code %>% filter(icd == icdi)
   data.frame(
     icd = icdi,
-    t.test(diff_icd$`After admission`, diff_icd$`Before admission`, paired = TRUE) %>% 
+    t.test(diff_icd$percent_diff) %>% 
     broom::tidy()
   )
 }
@@ -148,6 +149,14 @@ prevalence_stats %>%
 
 ```
 
+```{r}
+check = diff_code %>% 
+  filter(loc_type == 'Site', icd == 'G93') %>% 
+  left_join(diag_icd_10 %>% select(siteid, Country) %>% distinct() %>% mutate(siteid = tolower(siteid)),
+            by = c('location' = 'siteid'))
+check %>% group_by(Country) %>% 
+  summarise(country_diff = mean(percent_diff), .groups = 'drop')
+```
 
 ### Prevalence change table
 
@@ -251,9 +260,9 @@ icd_prevalence_plots
 ```
 
 ```{r}
-plot_grid(diff_heat, icd_prevalence_plots, rel_heights = c(1, 0.9),
+plot_grid(diff_heat, icd_prevalence_plots, rel_heights = c(1, 0.85),
           ncol = 1, labels = 'AUTO') %>%
-  ggsave('figs/icd_prevalence_AB.png', ., height = 7.5, width = 9.7)
+  ggsave('figs/icd_prevalence_AB.png', ., height = 8, width = 9.7)
 ```
 
 

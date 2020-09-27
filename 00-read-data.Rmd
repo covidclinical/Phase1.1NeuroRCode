@@ -119,12 +119,12 @@ neuro_icds_9 <- neuro_icds_9 %>%
   within(., icd9_desc[icd == '437'] <- 'Other and ill-defined cerebrovascular disease') %>%
   within(., icd9_desc[icd == '780'] <- 'General symptoms') %>%
   within(., `Neurological Disease Category`[icd == '780'] <- 'Other') %>%
-  distinct()
-
-neuro_icds_9 %>% 
+  distinct() %>% 
   select(`Neurological Disease Category`, icd, icd9_desc) %>% 
   distinct() %>% 
-  arrange(icd) %>% 
+  arrange(icd)
+
+neuro_icds_9 %>% 
   write_csv('results/icd9_tab.csv')
 ```
 
@@ -209,10 +209,10 @@ diag_icd_9 <- diag_ana %>%
   filter(icd_version == 9) %>%
   select(- icd_version) %>% 
   pivot_wider(names_from = severe, values_from = count) %>%
-  right_join(neuro_icds_9 %>% select(- c(ICD10_CODE, ICD9_CODE, ICD9_DESCRIPTION)), by = 'icd') %>% 
+  right_join(neuro_icds_9, by = 'icd') %>% 
   distinct() %>% 
   left_join(demo_ana, by = 'siteid') %>% 
-  mutate(full_icd = paste0(ICD10_DESCRIPTION, ' (', icd, ')'),
+  mutate(full_icd = paste0(icd9_desc, ' (', icd, ')'),
          num_patients_never_severe_icd0 = num_patients_never_severe - num_patients_never_severe_icd1,
          num_patients_ever_severe_icd0 = num_patients_ever_severe - num_patients_ever_severe_icd1,
   ) %>%
@@ -222,6 +222,27 @@ diag_icd_9 <- diag_ana %>%
 
 `r length(unique(diag_icd_10$siteid))` sites with icd-10 code. 
 `r length(unique(diag_icd_9$siteid))` sites have icd-9.
+
+```{r}
+country_sum_icd10 <- diag_icd_10 %>% 
+  select(siteid, Country, num_patients_all) %>% 
+  distinct() %>% 
+  group_by(Country) %>% 
+  summarise(all_pats_country = sum(num_patients_all), .groups = 'drop')
+
+country_sum_icd9 <- diag_icd_9 %>% 
+  select(siteid, Country, num_patients_all) %>% 
+  distinct() %>% 
+  group_by(Country) %>% 
+  summarise(all_pats_country = sum(num_patients_all), .groups = 'drop')
+
+diag_icd_10 <- diag_icd_10 %>% 
+  merge(country_sum_icd10, by = 'Country')
+
+diag_icd_9 <- diag_icd_9 %>% 
+  merge(country_sum_icd9, by = 'Country')
+```
+
 
 # Write data out to .Rdata
 
@@ -306,7 +327,7 @@ sex_desc <- demo_all %>%
   mutate(unknown_other = other + num_patients_all - sex_sum) %>% 
   {.}
 
-race_desc <- demo_all %>% C
+race_desc <- demo_all %>%
   filter(sex == 'all', race != 'all', age_group == 'all') %>% 
   group_by(race, siteid) %>% 
   summarise(size = sum(num_patients_all, na.rm = T), .groups = 'drop') %>% 

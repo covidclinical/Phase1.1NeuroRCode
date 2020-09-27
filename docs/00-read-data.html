@@ -556,11 +556,10 @@ summary {
 <li><a href="#manual-grouping-of-four-icd-9-codes">Manual grouping of four ICD-9 codes</a></li>
 <li><a href="#descriptive-statistics">Descriptive statistics</a></li>
 <li><a href="#mold-data-frames">Mold data frames</a></li>
-<li><a href="#write-data-out-to-.rdata">Write data out to .Rdata</a><ul>
-<li><a href="#generate-characteristics-table">Generate characteristics table</a></li>
-</ul></li>
+<li><a href="#write-data-out-to-.rdata">Write data out to .Rdata</a></li>
 <li><a href="#quality-checks">Quality checks</a><ul>
 <li><a href="#check-if-all-equals-to-sum-of-the-rest">Check if ‘all’ equals to sum of the rest</a></li>
+<li><a href="#generate-characteristics-table">Generate characteristics table</a></li>
 </ul></li>
 </ul>
 </div>
@@ -588,50 +587,60 @@ summary {
 <pre><code>## Warning: package &#39;gt&#39; was built under R version 4.0.2</code></pre>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">library</span>(gtsummary)</span></code></pre></div>
 <pre><code>## Warning: package &#39;gtsummary&#39; was built under R version 4.0.2</code></pre>
-<pre><code>## #BlackLivesMatter</code></pre>
 <div id="download-data" class="section level2">
 <h2>Download data</h2>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>github_link &lt;-<span class="st"> &#39;https://raw.githubusercontent.com/covidclinical/Phase1.1AggregateDataPerSite/master/&#39;</span></span>
-<span id="cb17-2"><a href="#cb17-2"></a>demo_link &lt;-<span class="st"> </span><span class="kw">paste0</span>(github_link, <span class="st">&#39;Demographics_persite_fakeID.csv&#39;</span>)</span>
-<span id="cb17-3"><a href="#cb17-3"></a>diag_link &lt;-<span class="st"> </span><span class="kw">paste0</span>(github_link, <span class="st">&#39;Diagnoses_persite_fakeID.csv&#39;</span>)</span>
-<span id="cb17-4"><a href="#cb17-4"></a></span>
-<span id="cb17-5"><a href="#cb17-5"></a>temp_file_<span class="dv">1</span> &lt;-<span class="st"> </span>temp_file_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">tempfile</span>(<span class="dt">fileext =</span> <span class="st">&quot;.csv&quot;</span>)</span>
-<span id="cb17-6"><a href="#cb17-6"></a>req &lt;-<span class="st"> </span><span class="kw">GET</span>(demo_link, </span>
-<span id="cb17-7"><a href="#cb17-7"></a>          <span class="co"># authenticate using GITHUB_PAT</span></span>
-<span id="cb17-8"><a href="#cb17-8"></a>           <span class="kw">authenticate</span>(<span class="kw">Sys.getenv</span>(<span class="st">&quot;GITHUB_PAT&quot;</span>), <span class="st">&quot;&quot;</span>),</span>
-<span id="cb17-9"><a href="#cb17-9"></a>          <span class="co"># write result to disk</span></span>
-<span id="cb17-10"><a href="#cb17-10"></a>           <span class="kw">write_disk</span>(<span class="dt">path =</span> temp_file_<span class="dv">1</span>))</span>
-<span id="cb17-11"><a href="#cb17-11"></a>demo_all &lt;-<span class="st"> </span><span class="kw">read_csv</span>(temp_file_<span class="dv">1</span>)</span>
-<span id="cb17-12"><a href="#cb17-12"></a><span class="kw">unlink</span>(temp_file_<span class="dv">1</span>)</span>
-<span id="cb17-13"><a href="#cb17-13"></a></span>
-<span id="cb17-14"><a href="#cb17-14"></a>req &lt;-<span class="st"> </span><span class="kw">GET</span>(diag_link, </span>
-<span id="cb17-15"><a href="#cb17-15"></a>           <span class="kw">authenticate</span>(<span class="kw">Sys.getenv</span>(<span class="st">&quot;GITHUB_PAT&quot;</span>), <span class="st">&quot;&quot;</span>),</span>
-<span id="cb17-16"><a href="#cb17-16"></a>           <span class="kw">write_disk</span>(<span class="dt">path =</span> temp_file_<span class="dv">2</span>))</span>
-<span id="cb17-17"><a href="#cb17-17"></a>diag_all &lt;-<span class="st"> </span><span class="kw">read_csv</span>(temp_file_<span class="dv">2</span>)</span>
-<span id="cb17-18"><a href="#cb17-18"></a><span class="kw">unlink</span>(temp_file_<span class="dv">2</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a>github_link &lt;-<span class="st"> &#39;https://raw.githubusercontent.com/covidclinical/Phase1.1AggregateDataPerSite/master/&#39;</span></span>
+<span id="cb16-2"><a href="#cb16-2"></a>demo_link &lt;-<span class="st"> </span><span class="kw">paste0</span>(github_link, <span class="st">&#39;Demographics_persite_fakeID.csv&#39;</span>)</span>
+<span id="cb16-3"><a href="#cb16-3"></a>diag_link &lt;-<span class="st"> </span><span class="kw">paste0</span>(github_link, <span class="st">&#39;Diagnoses_persite_fakeID.csv&#39;</span>)</span>
+<span id="cb16-4"><a href="#cb16-4"></a></span>
+<span id="cb16-5"><a href="#cb16-5"></a>temp_file_<span class="dv">1</span> &lt;-<span class="st"> </span>temp_file_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">tempfile</span>(<span class="dt">fileext =</span> <span class="st">&quot;.csv&quot;</span>)</span>
+<span id="cb16-6"><a href="#cb16-6"></a>req &lt;-<span class="st"> </span><span class="kw">GET</span>(demo_link, </span>
+<span id="cb16-7"><a href="#cb16-7"></a>          <span class="co"># authenticate using GITHUB_PAT</span></span>
+<span id="cb16-8"><a href="#cb16-8"></a>           <span class="kw">authenticate</span>(<span class="kw">Sys.getenv</span>(<span class="st">&quot;GITHUB_PAT&quot;</span>), <span class="st">&quot;&quot;</span>),</span>
+<span id="cb16-9"><a href="#cb16-9"></a>          <span class="co"># write result to disk</span></span>
+<span id="cb16-10"><a href="#cb16-10"></a>           <span class="kw">write_disk</span>(<span class="dt">path =</span> temp_file_<span class="dv">1</span>))</span>
+<span id="cb16-11"><a href="#cb16-11"></a>demo_all &lt;-<span class="st"> </span><span class="kw">read_csv</span>(temp_file_<span class="dv">1</span>)</span>
+<span id="cb16-12"><a href="#cb16-12"></a><span class="kw">unlink</span>(temp_file_<span class="dv">1</span>)</span>
+<span id="cb16-13"><a href="#cb16-13"></a></span>
+<span id="cb16-14"><a href="#cb16-14"></a>req &lt;-<span class="st"> </span><span class="kw">GET</span>(diag_link, </span>
+<span id="cb16-15"><a href="#cb16-15"></a>           <span class="kw">authenticate</span>(<span class="kw">Sys.getenv</span>(<span class="st">&quot;GITHUB_PAT&quot;</span>), <span class="st">&quot;&quot;</span>),</span>
+<span id="cb16-16"><a href="#cb16-16"></a>           <span class="kw">write_disk</span>(<span class="dt">path =</span> temp_file_<span class="dv">2</span>))</span>
+<span id="cb16-17"><a href="#cb16-17"></a>diag_all &lt;-<span class="st"> </span><span class="kw">read_csv</span>(temp_file_<span class="dv">2</span>)</span>
+<span id="cb16-18"><a href="#cb16-18"></a><span class="kw">unlink</span>(temp_file_<span class="dv">2</span>)</span></code></pre></div>
 <p>Notes: - <code>num_patients_ever_severe_icd1</code>: number of patients having the icd code and ever being severe - <code>num_patients_never_severe_icd1</code>: number of patients having the icd code and never being severe - <code>num_patients_ever_severe_icd0</code>: number of patients not having the icd code and ever being severe - <code>num_patients_never_severe_icd0</code>: number of patients not having the icd code and never being severe</p>
 </div>
 <div id="read-in-local-files" class="section level2">
 <h2>Read in local files</h2>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>site_country &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&#39;data/SiteID_Map_Non_Pediatric_3digit_toshare.csv&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-2"><a href="#cb17-2"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>Peds.only) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-3"><a href="#cb17-3"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">Country =</span> <span class="kw">case_when</span>(</span>
+<span id="cb17-4"><a href="#cb17-4"></a>    Country <span class="op">==</span><span class="st"> &#39;USA&#39;</span> <span class="op">~</span><span class="st"> </span>Country,</span>
+<span id="cb17-5"><a href="#cb17-5"></a>    <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span>stringr<span class="op">::</span><span class="kw">str_to_title</span>(Country)))</span></code></pre></div>
+<pre><code>## Parsed with column specification:
+## cols(
+##   Country = col_character(),
+##   SiteID.new = col_character(),
+##   Peds.only = col_character()
+## )</code></pre>
 <!-- Two rows have country SINGAPORE_SPAIN because there is only one site in each one of the countries. -->
 <!-- If this were not combined: data could be known the specific site. -->
 <!-- SITE660 was mapped to both US and France? -->
 <!-- SITE309 was mapped to both US and Italy? -->
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>neuro_icds_<span class="dv">10</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&#39;data/2020-09-10_neuro-icd10.xlsx&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb18-2"><a href="#cb18-2"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;icd&#39;</span> =<span class="st"> `</span><span class="dt">ICD-10</span><span class="st">`</span>)</span>
-<span id="cb18-3"><a href="#cb18-3"></a></span>
-<span id="cb18-4"><a href="#cb18-4"></a>neuro_icds_<span class="dv">9</span> &lt;-<span class="st"> </span>readxl<span class="op">::</span><span class="kw">read_excel</span>(<span class="st">&#39;data/neuroicd10to9withdescript.xlsx&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb18-5"><a href="#cb18-5"></a><span class="st">  </span><span class="kw">left_join</span>(neuro_icds_<span class="dv">10</span> <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>, icd), </span>
-<span id="cb18-6"><a href="#cb18-6"></a>            <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;ICD10_CODE&#39;</span> =<span class="st"> &#39;icd&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb18-7"><a href="#cb18-7"></a><span class="st">  </span><span class="co"># select(- c(ICD9_CODE, ICD9_DESCRIPTION, ICD10_CODE)) %&gt;% </span></span>
-<span id="cb18-8"><a href="#cb18-8"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;icd&#39;</span> =<span class="st"> </span>ICD9_THREE_DIGIT) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb18-9"><a href="#cb18-9"></a><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">is.na</span>(icd)) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># ignore ICD10 code G46 and G65 not mapped to any ICD_9 code</span></span>
-<span id="cb18-10"><a href="#cb18-10"></a><span class="st">  </span>{.}</span>
-<span id="cb18-11"><a href="#cb18-11"></a></span>
-<span id="cb18-12"><a href="#cb18-12"></a>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb18-13"><a href="#cb18-13"></a><span class="st">  </span><span class="kw">distinct</span>(icd, ICD10_CODE) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb18-14"><a href="#cb18-14"></a><span class="st">  </span><span class="kw">count</span>(icd) <span class="op">%&gt;%</span></span>
-<span id="cb18-15"><a href="#cb18-15"></a><span class="st">  </span><span class="kw">filter</span>(n <span class="op">&gt;</span><span class="st"> </span><span class="dv">1</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>neuro_icds_<span class="dv">10</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&#39;data/2020-09-10_neuro-icd10.xlsx&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-2"><a href="#cb19-2"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;icd&#39;</span> =<span class="st"> `</span><span class="dt">ICD-10</span><span class="st">`</span>)</span>
+<span id="cb19-3"><a href="#cb19-3"></a></span>
+<span id="cb19-4"><a href="#cb19-4"></a>neuro_icds_<span class="dv">9</span> &lt;-<span class="st"> </span>readxl<span class="op">::</span><span class="kw">read_excel</span>(<span class="st">&#39;data/neuroicd10to9withdescript.xlsx&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-5"><a href="#cb19-5"></a><span class="st">  </span><span class="kw">left_join</span>(neuro_icds_<span class="dv">10</span> <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>, icd), </span>
+<span id="cb19-6"><a href="#cb19-6"></a>            <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;ICD10_CODE&#39;</span> =<span class="st"> &#39;icd&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-7"><a href="#cb19-7"></a><span class="st">  </span><span class="co"># select(- c(ICD9_CODE, ICD9_DESCRIPTION, ICD10_CODE)) %&gt;% </span></span>
+<span id="cb19-8"><a href="#cb19-8"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;icd&#39;</span> =<span class="st"> </span>ICD9_THREE_DIGIT) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-9"><a href="#cb19-9"></a><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">is.na</span>(icd)) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># ignore ICD10 code G46 and G65 not mapped to any ICD_9 code</span></span>
+<span id="cb19-10"><a href="#cb19-10"></a><span class="st">  </span>{.}</span>
+<span id="cb19-11"><a href="#cb19-11"></a></span>
+<span id="cb19-12"><a href="#cb19-12"></a>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-13"><a href="#cb19-13"></a><span class="st">  </span><span class="kw">distinct</span>(icd, ICD10_CODE) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-14"><a href="#cb19-14"></a><span class="st">  </span><span class="kw">count</span>(icd) <span class="op">%&gt;%</span></span>
+<span id="cb19-15"><a href="#cb19-15"></a><span class="st">  </span><span class="kw">filter</span>(n <span class="op">&gt;</span><span class="st"> </span><span class="dv">1</span>)</span></code></pre></div>
 <pre><code>## # A tibble: 4 x 2
 ##   icd       n
 ##   &lt;chr&gt; &lt;int&gt;
@@ -639,12 +648,29 @@ summary {
 ## 2 780       3
 ## 3 781       3
 ## 4 V41       2</code></pre>
+<p>`</p>
 </div>
 <div id="manual-grouping-of-four-icd-9-codes" class="section level2">
 <h2>Manual grouping of four ICD-9 codes</h2>
 <p>For the two codes with non-specific description (780 and 781), we can include (in the Methods, Figure legend or supplementary material) the descriptions of all subcodes for each. See link here <a href="http://dbmi-ncats-test01.dbmi.pitt.edu/webclient/" class="uri">http://dbmi-ncats-test01.dbmi.pitt.edu/webclient/</a>: no login required, and also the link below each code. I added the disease groups in parentheses for these four codes. The only group that is not consistent with the grouping based on ICD10 codes is vision/smell/taste. (For ICD10 codes, we separate vision and neuropathy, the latter of which includes smell and taste). V41 Problems with special senses and other special functions (vision/smell/taste) 437 Other and ill-defined cerebrovascular disease (vascular) 780 General symptoms (Other) <a href="https://icd.codes/icd9cm/780" class="uri">https://icd.codes/icd9cm/780</a> 781 Symptoms involving nervous and musculoskeletal systems (Other) <a href="https://icd.codes/icd9cm/781" class="uri">https://icd.codes/icd9cm/781</a></p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(icd <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;V41&#39;</span>, <span class="st">&#39;780&#39;</span>, <span class="st">&#39;781&#39;</span>, <span class="st">&#39;437&#39;</span>))</span></code></pre></div>
-<pre><code>## # A tibble: 19 x 6
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>phecode_icd9 &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&#39;data/phecode_icd9_rolled.csv&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-2"><a href="#cb21-2"></a><span class="st">  </span><span class="kw">select</span>(<span class="dt">icd =</span> ICD9, <span class="dt">icd9_desc =</span> <span class="st">`</span><span class="dt">ICD9 String</span><span class="st">`</span>)</span></code></pre></div>
+<pre><code>## Parsed with column specification:
+## cols(
+##   ICD9 = col_character(),
+##   `ICD9 String` = col_character(),
+##   PheCode = col_character(),
+##   Phenotype = col_character(),
+##   `Excl. Phecodes` = col_character(),
+##   `Excl. Phenotypes` = col_character(),
+##   Rollup = col_double(),
+##   Leaf = col_double()
+## )</code></pre>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>neuro_icds_<span class="dv">9</span> &lt;-<span class="st"> </span>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb23-2"><a href="#cb23-2"></a><span class="st">  </span><span class="kw">left_join</span>(phecode_icd9, <span class="dt">by =</span> <span class="st">&#39;icd&#39;</span>)</span>
+<span id="cb23-3"><a href="#cb23-3"></a></span>
+<span id="cb23-4"><a href="#cb23-4"></a>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(icd <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;V41&#39;</span>, <span class="st">&#39;780&#39;</span>, <span class="st">&#39;781&#39;</span>, <span class="st">&#39;437&#39;</span>))</span></code></pre></div>
+<pre><code>## # A tibble: 19 x 7
 ##    icd   ICD9_CODE ICD9_DESCRIPTION ICD10_CODE ICD10_DESCRIPTI… `Neurological D…
 ##    &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt;            &lt;chr&gt;      &lt;chr&gt;            &lt;chr&gt;           
 ##  1 437   437.7     Transient globa… G45        Transient cereb… Vascular        
@@ -665,18 +691,27 @@ summary {
 ## 16 781   781.8     Neurologic negl… R41        Other symptoms … Consciousness   
 ## 17 780   780.4     Dizziness and g… R42        Dizziness and g… Dizziness       
 ## 18 781   781.1     Disturbances of… R43        Disturbances of… Neuropathy      
-## 19 V41   V41.5     Problems with s… R43        Disturbances of… Neuropathy</code></pre>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a>neuro_icds_<span class="dv">9</span> &lt;-<span class="st"> </span>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb22-2"><a href="#cb22-2"></a><span class="st">  </span><span class="kw">within</span>(., ICD10_DESCRIPTION[icd <span class="op">==</span><span class="st"> &#39;V41&#39;</span>] &lt;-<span class="st"> &#39;Problems with special senses and other special functions&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb22-3"><a href="#cb22-3"></a><span class="st">  </span><span class="kw">within</span>(., <span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>[icd <span class="op">==</span><span class="st"> &#39;V41&#39;</span>] &lt;-<span class="st"> &#39;Vision/smell/taste&#39;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb22-4"><a href="#cb22-4"></a><span class="st">  </span><span class="kw">within</span>(., ICD10_DESCRIPTION[icd <span class="op">==</span><span class="st"> &#39;781&#39;</span>] &lt;-<span class="st"> &#39;Symptoms involving nervous and musculoskeletal systems&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb22-5"><a href="#cb22-5"></a><span class="st">  </span><span class="kw">within</span>(., <span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>[icd <span class="op">==</span><span class="st"> &#39;781&#39;</span>] &lt;-<span class="st"> &#39;Neuropathy&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># and Consciousness</span></span>
-<span id="cb22-6"><a href="#cb22-6"></a><span class="st">  </span><span class="kw">within</span>(., ICD10_DESCRIPTION[icd <span class="op">==</span><span class="st"> &#39;437&#39;</span>] &lt;-<span class="st"> &#39;Other and ill-defined cerebrovascular disease&#39;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb22-7"><a href="#cb22-7"></a><span class="st">  </span><span class="kw">within</span>(., ICD10_DESCRIPTION[icd <span class="op">==</span><span class="st"> &#39;780&#39;</span>] &lt;-<span class="st"> &#39;General symptoms&#39;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb22-8"><a href="#cb22-8"></a><span class="st">  </span><span class="kw">within</span>(., <span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>[icd <span class="op">==</span><span class="st"> &#39;780&#39;</span>] &lt;-<span class="st"> &#39;Other&#39;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb22-9"><a href="#cb22-9"></a><span class="st">  </span><span class="kw">distinct</span>()</span></code></pre></div>
+## 19 V41   V41.5     Problems with s… R43        Disturbances of… Neuropathy      
+## # … with 1 more variable: icd9_desc &lt;chr&gt;</code></pre>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a>neuro_icds_<span class="dv">9</span> &lt;-<span class="st"> </span>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb25-2"><a href="#cb25-2"></a><span class="st">  </span><span class="kw">within</span>(., icd9_desc[icd <span class="op">==</span><span class="st"> &#39;V41&#39;</span>] &lt;-<span class="st"> &#39;Problems with special senses and other special functions&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb25-3"><a href="#cb25-3"></a><span class="st">  </span><span class="kw">within</span>(., <span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>[icd <span class="op">==</span><span class="st"> &#39;V41&#39;</span>] &lt;-<span class="st"> &#39;Vision/smell/taste&#39;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb25-4"><a href="#cb25-4"></a><span class="st">  </span><span class="kw">within</span>(., icd9_desc[icd <span class="op">==</span><span class="st"> &#39;781&#39;</span>] &lt;-<span class="st"> &#39;Symptoms involving nervous and musculoskeletal systems&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb25-5"><a href="#cb25-5"></a><span class="st">  </span><span class="kw">within</span>(., <span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>[icd <span class="op">==</span><span class="st"> &#39;781&#39;</span>] &lt;-<span class="st"> &#39;Neuropathy&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># and Consciousness</span></span>
+<span id="cb25-6"><a href="#cb25-6"></a><span class="st">  </span><span class="kw">within</span>(., icd9_desc[icd <span class="op">==</span><span class="st"> &#39;437&#39;</span>] &lt;-<span class="st"> &#39;Other and ill-defined cerebrovascular disease&#39;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb25-7"><a href="#cb25-7"></a><span class="st">  </span><span class="kw">within</span>(., icd9_desc[icd <span class="op">==</span><span class="st"> &#39;780&#39;</span>] &lt;-<span class="st"> &#39;General symptoms&#39;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb25-8"><a href="#cb25-8"></a><span class="st">  </span><span class="kw">within</span>(., <span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>[icd <span class="op">==</span><span class="st"> &#39;780&#39;</span>] &lt;-<span class="st"> &#39;Other&#39;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb25-9"><a href="#cb25-9"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb25-10"><a href="#cb25-10"></a><span class="st">  </span><span class="kw">select</span>(<span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>, icd, icd9_desc) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb25-11"><a href="#cb25-11"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb25-12"><a href="#cb25-12"></a><span class="st">  </span><span class="kw">arrange</span>(icd)</span>
+<span id="cb25-13"><a href="#cb25-13"></a></span>
+<span id="cb25-14"><a href="#cb25-14"></a>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb25-15"><a href="#cb25-15"></a><span class="st">  </span><span class="kw">write_csv</span>(<span class="st">&#39;results/icd9_tab.csv&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a>check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb26-2"><a href="#cb26-2"></a><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span>race <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;other&#39;</span>, <span class="st">&#39;all&#39;</span>))</span></code></pre></div>
 <p>Notes:</p>
-<p>“-99” indicate masked small numbers (for obfuscation) and “-999” indicate missing, unknown, not applicable, etc.</p>
+<p>“-99” indicate masked small numbers (for obfuscation) and “-999” indicate missing, mismatches, not applicable, etc.</p>
 </div>
 <div id="descriptive-statistics" class="section level1">
 <h1>Descriptive statistics</h1>
@@ -684,620 +719,221 @@ summary {
 </div>
 <div id="mold-data-frames" class="section level1">
 <h1>Mold data frames</h1>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>demo_ana &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-2"><a href="#cb23-2"></a><span class="st">  </span><span class="kw">filter</span>(race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-3"><a href="#cb23-3"></a><span class="st">  </span><span class="co"># left_join(site_to_country, by = &#39;siteid&#39;) %&gt;% </span></span>
-<span id="cb23-4"><a href="#cb23-4"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span><span class="kw">c</span>(sex, age_group, race)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-5"><a href="#cb23-5"></a><span class="st">  </span><span class="kw">bind_rows</span>(<span class="co"># Compute patients_all for SITE734 manually</span></span>
-<span id="cb23-6"><a href="#cb23-6"></a>    demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-7"><a href="#cb23-7"></a><span class="st">      </span><span class="kw">filter</span>(siteid <span class="op">==</span><span class="st"> &#39;SITE734&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-8"><a href="#cb23-8"></a><span class="st">      </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-9"><a href="#cb23-9"></a><span class="st">      </span><span class="kw">summarise</span>(<span class="kw">across</span>(<span class="kw">c</span>(num_patients_all, num_patients_ever_severe), <span class="dt">.fns =</span> sum),</span>
-<span id="cb23-10"><a href="#cb23-10"></a>                <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>)</span>
-<span id="cb23-11"><a href="#cb23-11"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-12"><a href="#cb23-12"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">num_patients_never_severe =</span> num_patients_all <span class="op">-</span><span class="st"> </span>num_patients_ever_severe)</span>
-<span id="cb23-13"><a href="#cb23-13"></a></span>
-<span id="cb23-14"><a href="#cb23-14"></a></span>
-<span id="cb23-15"><a href="#cb23-15"></a>split_patient_type &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</span>
-<span id="cb23-16"><a href="#cb23-16"></a>  temp &lt;-<span class="st"> </span><span class="kw">strsplit</span>(<span class="kw">sub</span>(<span class="st">&#39;(^[^_]+_[^_]+)_(.*)$&#39;</span>, <span class="st">&#39;</span><span class="ch">\\</span><span class="st">1 </span><span class="ch">\\</span><span class="st">2&#39;</span>, <span class="kw">stri_reverse</span>(x)), <span class="st">&#39; &#39;</span>)</span>
-<span id="cb23-17"><a href="#cb23-17"></a>  <span class="kw">map</span>(temp, stri_reverse)</span>
-<span id="cb23-18"><a href="#cb23-18"></a>}</span>
-<span id="cb23-19"><a href="#cb23-19"></a></span>
-<span id="cb23-20"><a href="#cb23-20"></a>diag_ana &lt;-<span class="st"> </span>diag_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-21"><a href="#cb23-21"></a><span class="st">  </span><span class="kw">mutate</span>(</span>
-<span id="cb23-22"><a href="#cb23-22"></a>    <span class="dt">num_patients_never_severe_before_admission =</span> num_patients_all_before_admission <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_before_admission,</span>
-<span id="cb23-23"><a href="#cb23-23"></a>    <span class="dt">num_patients_never_severe_since_admission =</span> num_patients_all_since_admission <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_since_admission,</span>
-<span id="cb23-24"><a href="#cb23-24"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-25"><a href="#cb23-25"></a><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="kw">starts_with</span>(<span class="st">&#39;num&#39;</span>), <span class="dt">names_to =</span> <span class="st">&#39;patient_type&#39;</span>, <span class="dt">values_to =</span> <span class="st">&#39;count&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-26"><a href="#cb23-26"></a><span class="st">  </span><span class="kw">bind_cols</span>(</span>
-<span id="cb23-27"><a href="#cb23-27"></a>    <span class="kw">split_patient_type</span>(.[[<span class="st">&#39;patient_type&#39;</span>]]) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-28"><a href="#cb23-28"></a><span class="st">      </span><span class="kw">do.call</span>(rbind, .) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-29"><a href="#cb23-29"></a><span class="st">      </span><span class="kw">as.data.frame</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-30"><a href="#cb23-30"></a><span class="st">      `</span><span class="dt">colnames&lt;-</span><span class="st">`</span>(<span class="kw">c</span>(<span class="st">&#39;time&#39;</span>, <span class="st">&#39;severe&#39;</span>))</span>
-<span id="cb23-31"><a href="#cb23-31"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-32"><a href="#cb23-32"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">severe =</span> <span class="kw">recode</span>(severe, </span>
-<span id="cb23-33"><a href="#cb23-33"></a>                         <span class="dt">num_patients_all =</span> <span class="st">&#39;num_patients_icd&#39;</span>,</span>
-<span id="cb23-34"><a href="#cb23-34"></a>                         <span class="dt">num_patients_ever_severe=</span> <span class="st">&#39;num_patients_ever_severe_icd1&#39;</span>,</span>
-<span id="cb23-35"><a href="#cb23-35"></a>                         <span class="dt">num_patients_never_severe=</span> <span class="st">&#39;num_patients_never_severe_icd1&#39;</span>),</span>
-<span id="cb23-36"><a href="#cb23-36"></a>         <span class="dt">time =</span> <span class="kw">recode</span>(time,</span>
-<span id="cb23-37"><a href="#cb23-37"></a>                       <span class="dt">before_admission =</span> <span class="st">&#39;Before admission&#39;</span>,</span>
-<span id="cb23-38"><a href="#cb23-38"></a>                       <span class="dt">since_admission =</span> <span class="st">&#39;After admission&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-39"><a href="#cb23-39"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;icd&#39;</span> =<span class="st"> </span>icd_code_3chars) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-40"><a href="#cb23-40"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>patient_type) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-41"><a href="#cb23-41"></a><span class="st">  </span><span class="kw">drop_na</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-42"><a href="#cb23-42"></a><span class="st">  </span>{.}</span>
-<span id="cb23-43"><a href="#cb23-43"></a></span>
-<span id="cb23-44"><a href="#cb23-44"></a>diag_icd_<span class="dv">10</span> &lt;-<span class="st"> </span>diag_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-45"><a href="#cb23-45"></a><span class="st">  </span><span class="kw">filter</span>(icd_version <span class="op">==</span><span class="st"> </span><span class="dv">10</span>) <span class="op">%&gt;%</span></span>
-<span id="cb23-46"><a href="#cb23-46"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>icd_version) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-47"><a href="#cb23-47"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> severe, <span class="dt">values_from =</span> count) <span class="op">%&gt;%</span></span>
-<span id="cb23-48"><a href="#cb23-48"></a><span class="st">  </span><span class="kw">right_join</span>(neuro_icds_<span class="dv">10</span>, <span class="dt">by =</span> <span class="st">&#39;icd&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-49"><a href="#cb23-49"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-50"><a href="#cb23-50"></a><span class="st">  </span><span class="kw">left_join</span>(demo_ana, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-51"><a href="#cb23-51"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">full_icd =</span> <span class="kw">paste0</span>(<span class="st">`</span><span class="dt">ICD-10 Description</span><span class="st">`</span>, <span class="st">&#39; (&#39;</span>, icd, <span class="st">&#39;)&#39;</span>),</span>
-<span id="cb23-52"><a href="#cb23-52"></a>         <span class="dt">num_patients_never_severe_icd0 =</span> num_patients_never_severe <span class="op">-</span><span class="st"> </span>num_patients_never_severe_icd1,</span>
-<span id="cb23-53"><a href="#cb23-53"></a>         <span class="dt">num_patients_ever_severe_icd0 =</span> num_patients_ever_severe <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_icd1,</span>
-<span id="cb23-54"><a href="#cb23-54"></a>  ) <span class="op">%&gt;%</span></span>
-<span id="cb23-55"><a href="#cb23-55"></a><span class="st">  </span><span class="kw">drop_na</span>(num_patients_icd) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-56"><a href="#cb23-56"></a><span class="st">  </span>{.}</span>
-<span id="cb23-57"><a href="#cb23-57"></a></span>
-<span id="cb23-58"><a href="#cb23-58"></a></span>
-<span id="cb23-59"><a href="#cb23-59"></a>diag_icd_<span class="dv">9</span> &lt;-<span class="st"> </span>diag_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-60"><a href="#cb23-60"></a><span class="st">  </span><span class="kw">filter</span>(icd_version <span class="op">==</span><span class="st"> </span><span class="dv">9</span>) <span class="op">%&gt;%</span></span>
-<span id="cb23-61"><a href="#cb23-61"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>icd_version) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-62"><a href="#cb23-62"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> severe, <span class="dt">values_from =</span> count) <span class="op">%&gt;%</span></span>
-<span id="cb23-63"><a href="#cb23-63"></a><span class="st">  </span><span class="kw">right_join</span>(neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span><span class="kw">c</span>(ICD10_CODE, ICD9_CODE, ICD9_DESCRIPTION)), <span class="dt">by =</span> <span class="st">&#39;icd&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-64"><a href="#cb23-64"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-65"><a href="#cb23-65"></a><span class="st">  </span><span class="kw">left_join</span>(demo_ana, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-66"><a href="#cb23-66"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">full_icd =</span> <span class="kw">paste0</span>(ICD10_DESCRIPTION, <span class="st">&#39; (&#39;</span>, icd, <span class="st">&#39;)&#39;</span>),</span>
-<span id="cb23-67"><a href="#cb23-67"></a>         <span class="dt">num_patients_never_severe_icd0 =</span> num_patients_never_severe <span class="op">-</span><span class="st"> </span>num_patients_never_severe_icd1,</span>
-<span id="cb23-68"><a href="#cb23-68"></a>         <span class="dt">num_patients_ever_severe_icd0 =</span> num_patients_ever_severe <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_icd1,</span>
-<span id="cb23-69"><a href="#cb23-69"></a>  ) <span class="op">%&gt;%</span></span>
-<span id="cb23-70"><a href="#cb23-70"></a><span class="st">  </span><span class="kw">drop_na</span>(num_patients_icd) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-71"><a href="#cb23-71"></a><span class="st">  </span>{.}</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a>demo_ana &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-2"><a href="#cb27-2"></a><span class="st">  </span><span class="kw">filter</span>(race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-3"><a href="#cb27-3"></a><span class="st">  </span><span class="co"># left_join(site_to_country, by = &#39;siteid&#39;) %&gt;% </span></span>
+<span id="cb27-4"><a href="#cb27-4"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span><span class="kw">c</span>(sex, age_group, race)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-5"><a href="#cb27-5"></a><span class="st">  </span><span class="kw">bind_rows</span>(<span class="co"># Compute patients_all for SITE734 manually</span></span>
+<span id="cb27-6"><a href="#cb27-6"></a>    demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-7"><a href="#cb27-7"></a><span class="st">      </span><span class="kw">filter</span>(siteid <span class="op">==</span><span class="st"> &#39;SITE734&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-8"><a href="#cb27-8"></a><span class="st">      </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-9"><a href="#cb27-9"></a><span class="st">      </span><span class="kw">summarise</span>(<span class="kw">across</span>(<span class="kw">c</span>(num_patients_all, num_patients_ever_severe), <span class="dt">.fns =</span> sum),</span>
+<span id="cb27-10"><a href="#cb27-10"></a>                <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>)</span>
+<span id="cb27-11"><a href="#cb27-11"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-12"><a href="#cb27-12"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">num_patients_never_severe =</span> num_patients_all <span class="op">-</span><span class="st"> </span>num_patients_ever_severe)</span>
+<span id="cb27-13"><a href="#cb27-13"></a></span>
+<span id="cb27-14"><a href="#cb27-14"></a></span>
+<span id="cb27-15"><a href="#cb27-15"></a>split_patient_type &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</span>
+<span id="cb27-16"><a href="#cb27-16"></a>  temp &lt;-<span class="st"> </span><span class="kw">strsplit</span>(<span class="kw">sub</span>(<span class="st">&#39;(^[^_]+_[^_]+)_(.*)$&#39;</span>, <span class="st">&#39;</span><span class="ch">\\</span><span class="st">1 </span><span class="ch">\\</span><span class="st">2&#39;</span>, <span class="kw">stri_reverse</span>(x)), <span class="st">&#39; &#39;</span>)</span>
+<span id="cb27-17"><a href="#cb27-17"></a>  <span class="kw">map</span>(temp, stri_reverse)</span>
+<span id="cb27-18"><a href="#cb27-18"></a>}</span>
+<span id="cb27-19"><a href="#cb27-19"></a></span>
+<span id="cb27-20"><a href="#cb27-20"></a>diag_ana &lt;-<span class="st"> </span>diag_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-21"><a href="#cb27-21"></a><span class="st">  </span><span class="kw">mutate</span>(</span>
+<span id="cb27-22"><a href="#cb27-22"></a>    <span class="dt">num_patients_never_severe_before_admission =</span> num_patients_all_before_admission <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_before_admission,</span>
+<span id="cb27-23"><a href="#cb27-23"></a>    <span class="dt">num_patients_never_severe_since_admission =</span> num_patients_all_since_admission <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_since_admission,</span>
+<span id="cb27-24"><a href="#cb27-24"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-25"><a href="#cb27-25"></a><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="kw">starts_with</span>(<span class="st">&#39;num&#39;</span>), <span class="dt">names_to =</span> <span class="st">&#39;patient_type&#39;</span>, <span class="dt">values_to =</span> <span class="st">&#39;count&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-26"><a href="#cb27-26"></a><span class="st">  </span><span class="kw">bind_cols</span>(</span>
+<span id="cb27-27"><a href="#cb27-27"></a>    <span class="kw">split_patient_type</span>(.[[<span class="st">&#39;patient_type&#39;</span>]]) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-28"><a href="#cb27-28"></a><span class="st">      </span><span class="kw">do.call</span>(rbind, .) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-29"><a href="#cb27-29"></a><span class="st">      </span><span class="kw">as.data.frame</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-30"><a href="#cb27-30"></a><span class="st">      `</span><span class="dt">colnames&lt;-</span><span class="st">`</span>(<span class="kw">c</span>(<span class="st">&#39;time&#39;</span>, <span class="st">&#39;severe&#39;</span>))</span>
+<span id="cb27-31"><a href="#cb27-31"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-32"><a href="#cb27-32"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">severe =</span> <span class="kw">recode</span>(severe, </span>
+<span id="cb27-33"><a href="#cb27-33"></a>                         <span class="dt">num_patients_all =</span> <span class="st">&#39;num_patients_icd&#39;</span>,</span>
+<span id="cb27-34"><a href="#cb27-34"></a>                         <span class="dt">num_patients_ever_severe=</span> <span class="st">&#39;num_patients_ever_severe_icd1&#39;</span>,</span>
+<span id="cb27-35"><a href="#cb27-35"></a>                         <span class="dt">num_patients_never_severe=</span> <span class="st">&#39;num_patients_never_severe_icd1&#39;</span>),</span>
+<span id="cb27-36"><a href="#cb27-36"></a>         <span class="dt">time =</span> <span class="kw">recode</span>(time,</span>
+<span id="cb27-37"><a href="#cb27-37"></a>                       <span class="dt">before_admission =</span> <span class="st">&#39;Before admission&#39;</span>,</span>
+<span id="cb27-38"><a href="#cb27-38"></a>                       <span class="dt">since_admission =</span> <span class="st">&#39;After admission&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-39"><a href="#cb27-39"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;icd&#39;</span> =<span class="st"> </span>icd_code_3chars) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-40"><a href="#cb27-40"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>patient_type) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-41"><a href="#cb27-41"></a><span class="st">  </span><span class="kw">drop_na</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-42"><a href="#cb27-42"></a><span class="st">  </span><span class="kw">left_join</span>(site_country, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;siteid&#39;</span> =<span class="st"> &#39;SiteID.new&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-43"><a href="#cb27-43"></a><span class="st">  </span>{.}</span>
+<span id="cb27-44"><a href="#cb27-44"></a></span>
+<span id="cb27-45"><a href="#cb27-45"></a>diag_icd_<span class="dv">10</span> &lt;-<span class="st"> </span>diag_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-46"><a href="#cb27-46"></a><span class="st">  </span><span class="kw">filter</span>(icd_version <span class="op">==</span><span class="st"> </span><span class="dv">10</span>) <span class="op">%&gt;%</span></span>
+<span id="cb27-47"><a href="#cb27-47"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>icd_version) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-48"><a href="#cb27-48"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> severe, <span class="dt">values_from =</span> count) <span class="op">%&gt;%</span></span>
+<span id="cb27-49"><a href="#cb27-49"></a><span class="st">  </span><span class="kw">right_join</span>(neuro_icds_<span class="dv">10</span>, <span class="dt">by =</span> <span class="st">&#39;icd&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-50"><a href="#cb27-50"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-51"><a href="#cb27-51"></a><span class="st">  </span><span class="kw">left_join</span>(demo_ana, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-52"><a href="#cb27-52"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">full_icd =</span> <span class="kw">paste0</span>(<span class="st">`</span><span class="dt">ICD-10 Description</span><span class="st">`</span>, <span class="st">&#39; (&#39;</span>, icd, <span class="st">&#39;)&#39;</span>),</span>
+<span id="cb27-53"><a href="#cb27-53"></a>         <span class="dt">num_patients_never_severe_icd0 =</span> num_patients_never_severe <span class="op">-</span><span class="st"> </span>num_patients_never_severe_icd1,</span>
+<span id="cb27-54"><a href="#cb27-54"></a>         <span class="dt">num_patients_ever_severe_icd0 =</span> num_patients_ever_severe <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_icd1,</span>
+<span id="cb27-55"><a href="#cb27-55"></a>  ) <span class="op">%&gt;%</span></span>
+<span id="cb27-56"><a href="#cb27-56"></a><span class="st">  </span><span class="kw">drop_na</span>(num_patients_icd) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-57"><a href="#cb27-57"></a><span class="st">  </span>{.}</span>
+<span id="cb27-58"><a href="#cb27-58"></a></span>
+<span id="cb27-59"><a href="#cb27-59"></a></span>
+<span id="cb27-60"><a href="#cb27-60"></a>diag_icd_<span class="dv">9</span> &lt;-<span class="st"> </span>diag_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-61"><a href="#cb27-61"></a><span class="st">  </span><span class="kw">filter</span>(icd_version <span class="op">==</span><span class="st"> </span><span class="dv">9</span>) <span class="op">%&gt;%</span></span>
+<span id="cb27-62"><a href="#cb27-62"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>icd_version) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-63"><a href="#cb27-63"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> severe, <span class="dt">values_from =</span> count) <span class="op">%&gt;%</span></span>
+<span id="cb27-64"><a href="#cb27-64"></a><span class="st">  </span><span class="kw">right_join</span>(neuro_icds_<span class="dv">9</span>, <span class="dt">by =</span> <span class="st">&#39;icd&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-65"><a href="#cb27-65"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-66"><a href="#cb27-66"></a><span class="st">  </span><span class="kw">left_join</span>(demo_ana, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-67"><a href="#cb27-67"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">full_icd =</span> <span class="kw">paste0</span>(icd9_desc, <span class="st">&#39; (&#39;</span>, icd, <span class="st">&#39;)&#39;</span>),</span>
+<span id="cb27-68"><a href="#cb27-68"></a>         <span class="dt">num_patients_never_severe_icd0 =</span> num_patients_never_severe <span class="op">-</span><span class="st"> </span>num_patients_never_severe_icd1,</span>
+<span id="cb27-69"><a href="#cb27-69"></a>         <span class="dt">num_patients_ever_severe_icd0 =</span> num_patients_ever_severe <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_icd1,</span>
+<span id="cb27-70"><a href="#cb27-70"></a>  ) <span class="op">%&gt;%</span></span>
+<span id="cb27-71"><a href="#cb27-71"></a><span class="st">  </span><span class="kw">drop_na</span>(num_patients_icd) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-72"><a href="#cb27-72"></a><span class="st">  </span>{.}</span></code></pre></div>
 <p>40 sites with icd-10 code. 11 sites have icd-9.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a>country_sum_icd10 &lt;-<span class="st"> </span>diag_icd_<span class="dv">10</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb28-2"><a href="#cb28-2"></a><span class="st">  </span><span class="kw">select</span>(siteid, Country, num_patients_all) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb28-3"><a href="#cb28-3"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb28-4"><a href="#cb28-4"></a><span class="st">  </span><span class="kw">group_by</span>(Country) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb28-5"><a href="#cb28-5"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">all_pats_country =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>)</span>
+<span id="cb28-6"><a href="#cb28-6"></a></span>
+<span id="cb28-7"><a href="#cb28-7"></a>country_sum_icd9 &lt;-<span class="st"> </span>diag_icd_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb28-8"><a href="#cb28-8"></a><span class="st">  </span><span class="kw">select</span>(siteid, Country, num_patients_all) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb28-9"><a href="#cb28-9"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb28-10"><a href="#cb28-10"></a><span class="st">  </span><span class="kw">group_by</span>(Country) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb28-11"><a href="#cb28-11"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">all_pats_country =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>)</span>
+<span id="cb28-12"><a href="#cb28-12"></a></span>
+<span id="cb28-13"><a href="#cb28-13"></a>diag_icd_<span class="dv">10</span> &lt;-<span class="st"> </span>diag_icd_<span class="dv">10</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb28-14"><a href="#cb28-14"></a><span class="st">  </span><span class="kw">merge</span>(country_sum_icd10, <span class="dt">by =</span> <span class="st">&#39;Country&#39;</span>)</span>
+<span id="cb28-15"><a href="#cb28-15"></a></span>
+<span id="cb28-16"><a href="#cb28-16"></a>diag_icd_<span class="dv">9</span> &lt;-<span class="st"> </span>diag_icd_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb28-17"><a href="#cb28-17"></a><span class="st">  </span><span class="kw">merge</span>(country_sum_icd9, <span class="dt">by =</span> <span class="st">&#39;Country&#39;</span>)</span></code></pre></div>
 </div>
 <div id="write-data-out-to-.rdata" class="section level1">
 <h1>Write data out to .Rdata</h1>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="kw">save</span>(demo_ana, diag_icd_<span class="dv">10</span>, diag_icd_<span class="dv">9</span>, <span class="dt">file =</span> <span class="st">&#39;data/processed-data.Rdata&#39;</span>)</span></code></pre></div>
-<div id="generate-characteristics-table" class="section level2">
-<h2>Generate characteristics table</h2>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a>sum_sum &lt;-<span class="st"> </span><span class="kw">sym</span>(<span class="kw">paste</span>(<span class="st">&#39;N =&#39;</span>, <span class="kw">sum</span>(demo_ana<span class="op">$</span>num_patients_all)))</span>
-<span id="cb25-2"><a href="#cb25-2"></a>age_group_desc &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-3"><a href="#cb25-3"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-4"><a href="#cb25-4"></a><span class="st">  </span><span class="kw">group_by</span>(age_group) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-5"><a href="#cb25-5"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="op">!!</span><span class="dt">sum_sum :=</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-6"><a href="#cb25-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">category =</span> <span class="st">&#39;Age group&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-7"><a href="#cb25-7"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;Characteristics&#39;</span> =<span class="st"> </span>age_group)</span>
-<span id="cb25-8"><a href="#cb25-8"></a></span>
-<span id="cb25-9"><a href="#cb25-9"></a>sex_desc &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-10"><a href="#cb25-10"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-11"><a href="#cb25-11"></a><span class="st">  </span><span class="kw">group_by</span>(sex) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-12"><a href="#cb25-12"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="op">!!</span><span class="dt">sum_sum :=</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-13"><a href="#cb25-13"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">category =</span> <span class="st">&#39;Sex&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-14"><a href="#cb25-14"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;Characteristics&#39;</span> =<span class="st"> </span>sex)</span>
-<span id="cb25-15"><a href="#cb25-15"></a></span>
-<span id="cb25-16"><a href="#cb25-16"></a>race_desc &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-17"><a href="#cb25-17"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-18"><a href="#cb25-18"></a><span class="st">  </span><span class="kw">group_by</span>(race) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-19"><a href="#cb25-19"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="op">!!</span><span class="dt">sum_sum :=</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-20"><a href="#cb25-20"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">category =</span> <span class="st">&#39;Race/Ethnicity&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-21"><a href="#cb25-21"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;Characteristics&#39;</span> =<span class="st"> </span>race)</span>
-<span id="cb25-22"><a href="#cb25-22"></a></span>
-<span id="cb25-23"><a href="#cb25-23"></a><span class="kw">bind_rows</span>(age_group_desc, sex_desc, race_desc) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-24"><a href="#cb25-24"></a><span class="st">  </span><span class="kw">group_by</span>(category) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-25"><a href="#cb25-25"></a><span class="st">  </span><span class="kw">gt</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-26"><a href="#cb25-26"></a><span class="st">  </span><span class="kw">tab_footnote</span>(</span>
-<span id="cb25-27"><a href="#cb25-27"></a>    <span class="dt">footnote =</span> <span class="st">&quot;Obfuscation at each site may affect the total counts.&quot;</span>,</span>
-<span id="cb25-28"><a href="#cb25-28"></a>    <span class="dt">locations =</span> <span class="kw">cells_column_labels</span>(</span>
-<span id="cb25-29"><a href="#cb25-29"></a>      <span class="dt">columns =</span> <span class="dv">2</span>)</span>
-<span id="cb25-30"><a href="#cb25-30"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-31"><a href="#cb25-31"></a><span class="st">  </span>{.}</span></code></pre></div>
-<style>html {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
-}
-
-#vwgbqziasn .gt_table {
-  display: table;
-  border-collapse: collapse;
-  margin-left: auto;
-  margin-right: auto;
-  color: #333333;
-  font-size: 16px;
-  font-weight: normal;
-  font-style: normal;
-  background-color: #FFFFFF;
-  width: auto;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #A8A8A8;
-  border-right-style: none;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #A8A8A8;
-  border-left-style: none;
-  border-left-width: 2px;
-  border-left-color: #D3D3D3;
-}
-
-#vwgbqziasn .gt_heading {
-  background-color: #FFFFFF;
-  text-align: center;
-  border-bottom-color: #FFFFFF;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-}
-
-#vwgbqziasn .gt_title {
-  color: #333333;
-  font-size: 125%;
-  font-weight: initial;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  border-bottom-color: #FFFFFF;
-  border-bottom-width: 0;
-}
-
-#vwgbqziasn .gt_subtitle {
-  color: #333333;
-  font-size: 85%;
-  font-weight: initial;
-  padding-top: 0;
-  padding-bottom: 4px;
-  border-top-color: #FFFFFF;
-  border-top-width: 0;
-}
-
-#vwgbqziasn .gt_bottom_border {
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-}
-
-#vwgbqziasn .gt_col_headings {
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-}
-
-#vwgbqziasn .gt_col_heading {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: normal;
-  text-transform: inherit;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-  vertical-align: bottom;
-  padding-top: 5px;
-  padding-bottom: 6px;
-  padding-left: 5px;
-  padding-right: 5px;
-  overflow-x: hidden;
-}
-
-#vwgbqziasn .gt_column_spanner_outer {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: normal;
-  text-transform: inherit;
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-left: 4px;
-  padding-right: 4px;
-}
-
-#vwgbqziasn .gt_column_spanner_outer:first-child {
-  padding-left: 0;
-}
-
-#vwgbqziasn .gt_column_spanner_outer:last-child {
-  padding-right: 0;
-}
-
-#vwgbqziasn .gt_column_spanner {
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  vertical-align: bottom;
-  padding-top: 5px;
-  padding-bottom: 6px;
-  overflow-x: hidden;
-  display: inline-block;
-  width: 100%;
-}
-
-#vwgbqziasn .gt_group_heading {
-  padding: 8px;
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  text-transform: inherit;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-  vertical-align: middle;
-}
-
-#vwgbqziasn .gt_empty_group_heading {
-  padding: 0.5px;
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  vertical-align: middle;
-}
-
-#vwgbqziasn .gt_from_md > :first-child {
-  margin-top: 0;
-}
-
-#vwgbqziasn .gt_from_md > :last-child {
-  margin-bottom: 0;
-}
-
-#vwgbqziasn .gt_row {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  margin: 10px;
-  border-top-style: solid;
-  border-top-width: 1px;
-  border-top-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-  vertical-align: middle;
-  overflow-x: hidden;
-}
-
-#vwgbqziasn .gt_stub {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  text-transform: inherit;
-  border-right-style: solid;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-  padding-left: 12px;
-}
-
-#vwgbqziasn .gt_summary_row {
-  color: #333333;
-  background-color: #FFFFFF;
-  text-transform: inherit;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#vwgbqziasn .gt_first_summary_row {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-}
-
-#vwgbqziasn .gt_grand_summary_row {
-  color: #333333;
-  background-color: #FFFFFF;
-  text-transform: inherit;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#vwgbqziasn .gt_first_grand_summary_row {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-top-style: double;
-  border-top-width: 6px;
-  border-top-color: #D3D3D3;
-}
-
-#vwgbqziasn .gt_striped {
-  background-color: rgba(128, 128, 128, 0.05);
-}
-
-#vwgbqziasn .gt_table_body {
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-}
-
-#vwgbqziasn .gt_footnotes {
-  color: #333333;
-  background-color: #FFFFFF;
-  border-bottom-style: none;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 2px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-}
-
-#vwgbqziasn .gt_footnote {
-  margin: 0px;
-  font-size: 90%;
-  padding: 4px;
-}
-
-#vwgbqziasn .gt_sourcenotes {
-  color: #333333;
-  background-color: #FFFFFF;
-  border-bottom-style: none;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 2px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-}
-
-#vwgbqziasn .gt_sourcenote {
-  font-size: 90%;
-  padding: 4px;
-}
-
-#vwgbqziasn .gt_left {
-  text-align: left;
-}
-
-#vwgbqziasn .gt_center {
-  text-align: center;
-}
-
-#vwgbqziasn .gt_right {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-#vwgbqziasn .gt_font_normal {
-  font-weight: normal;
-}
-
-#vwgbqziasn .gt_font_bold {
-  font-weight: bold;
-}
-
-#vwgbqziasn .gt_font_italic {
-  font-style: italic;
-}
-
-#vwgbqziasn .gt_super {
-  font-size: 65%;
-}
-
-#vwgbqziasn .gt_footnote_marks {
-  font-style: italic;
-  font-size: 65%;
-}
-</style>
-<div id="vwgbqziasn" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
-  
-  <thead class="gt_col_headings">
-    <tr>
-      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">Characteristics</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1">N = 35177<sup class="gt_footnote_marks">1</sup></th>
-    </tr>
-  </thead>
-  <tbody class="gt_table_body">
-    <tr class="gt_group_heading_row">
-      <td colspan="2" class="gt_group_heading">Age group</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">00to02</td>
-      <td class="gt_row gt_right">283</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">03to05</td>
-      <td class="gt_row gt_right">55</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">06to11</td>
-      <td class="gt_row gt_right">97</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">12to17</td>
-      <td class="gt_row gt_right">117</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">18to25</td>
-      <td class="gt_row gt_right">686</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">26to49</td>
-      <td class="gt_row gt_right">6007</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">50to69</td>
-      <td class="gt_row gt_right">12162</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">70to79</td>
-      <td class="gt_row gt_right">6657</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">80plus</td>
-      <td class="gt_row gt_right">6939</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">other</td>
-      <td class="gt_row gt_right">135</td>
-    </tr>
-    <tr class="gt_group_heading_row">
-      <td colspan="2" class="gt_group_heading">Sex</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">female</td>
-      <td class="gt_row gt_right">13837</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">male</td>
-      <td class="gt_row gt_right">21135</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">other</td>
-      <td class="gt_row gt_right">102</td>
-    </tr>
-    <tr class="gt_group_heading_row">
-      <td colspan="2" class="gt_group_heading">Race/Ethnicity</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">american_indian</td>
-      <td class="gt_row gt_right">33</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">asian</td>
-      <td class="gt_row gt_right">462</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">black</td>
-      <td class="gt_row gt_right">5989</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">hawaiian_pacific_islander</td>
-      <td class="gt_row gt_right">9</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">hispanic_latino</td>
-      <td class="gt_row gt_right">1929</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">other</td>
-      <td class="gt_row gt_right">14322</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">white</td>
-      <td class="gt_row gt_right">8536</td>
-    </tr>
-  </tbody>
-  
-  <tfoot>
-    <tr class="gt_footnotes">
-      <td colspan="2">
-        <p class="gt_footnote">
-          <sup class="gt_footnote_marks">
-            <em>1</em>
-          </sup>
-           
-          Obfuscation at each site may affect the total counts.
-          <br />
-        </p>
-      </td>
-    </tr>
-  </tfoot>
-</table></div>
-</div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a><span class="kw">save</span>(demo_ana, diag_icd_<span class="dv">10</span>, diag_icd_<span class="dv">9</span>, <span class="dt">file =</span> <span class="st">&#39;data/processed-data.Rdata&#39;</span>)</span></code></pre></div>
 </div>
 <div id="quality-checks" class="section level1">
 <h1>Quality checks</h1>
 <div id="check-if-all-equals-to-sum-of-the-rest" class="section level2">
 <h2>Check if ‘all’ equals to sum of the rest</h2>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a>age_group_check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb26-2"><a href="#cb26-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb26-3"><a href="#cb26-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb26-4"><a href="#cb26-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">age_group_sum =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb26-5"><a href="#cb26-5"></a><span class="st">  </span><span class="kw">left_join</span>(demo_ana) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb26-6"><a href="#cb26-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mismatches =</span> num_patients_all <span class="op">-</span><span class="st"> </span>age_group_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb26-7"><a href="#cb26-7"></a><span class="st">  </span><span class="kw">filter</span>(<span class="kw">abs</span>(mismatches) <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb26-8"><a href="#cb26-8"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="kw">contains</span>(<span class="st">&#39;severe&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb26-9"><a href="#cb26-9"></a><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(<span class="kw">abs</span>(mismatches))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb26-10"><a href="#cb26-10"></a><span class="st">  </span>{.}</span></code></pre></div>
-<pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a>race_check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb28-2"><a href="#cb28-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb28-3"><a href="#cb28-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb28-4"><a href="#cb28-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">race_sum =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb28-5"><a href="#cb28-5"></a><span class="st">  </span><span class="kw">left_join</span>(demo_ana) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb28-6"><a href="#cb28-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mismatches =</span> num_patients_all <span class="op">-</span><span class="st"> </span>race_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb28-7"><a href="#cb28-7"></a><span class="st">  </span><span class="kw">filter</span>(<span class="kw">abs</span>(mismatches) <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb28-8"><a href="#cb28-8"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="kw">contains</span>(<span class="st">&#39;severe&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb28-9"><a href="#cb28-9"></a><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(<span class="kw">abs</span>(mismatches))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb28-10"><a href="#cb28-10"></a><span class="st">  </span>{.}</span></code></pre></div>
-<pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a>sex_check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-2"><a href="#cb30-2"></a><span class="st">  </span><span class="kw">filter</span>(race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a>age_group_check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb30-2"><a href="#cb30-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb30-3"><a href="#cb30-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-4"><a href="#cb30-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">sex_sum =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-5"><a href="#cb30-5"></a><span class="st">  </span><span class="kw">left_join</span>(demo_ana) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-6"><a href="#cb30-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mismatches =</span> num_patients_all <span class="op">-</span><span class="st"> </span>sex_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-7"><a href="#cb30-7"></a><span class="st">  </span><span class="kw">filter</span>(mismatches <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb30-4"><a href="#cb30-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">age_group_sum =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb30-5"><a href="#cb30-5"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb30-6"><a href="#cb30-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mismatches =</span> num_patients_all <span class="op">-</span><span class="st"> </span>age_group_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb30-7"><a href="#cb30-7"></a><span class="st">  </span><span class="co"># filter(abs(mismatches) != 0) %&gt;% </span></span>
 <span id="cb30-8"><a href="#cb30-8"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="kw">contains</span>(<span class="st">&#39;severe&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb30-9"><a href="#cb30-9"></a><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(<span class="kw">abs</span>(mismatches))) <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb30-10"><a href="#cb30-10"></a><span class="st">  </span>{.}</span></code></pre></div>
 <pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1"></a>demo_check &lt;-<span class="st"> </span>demo_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb32-2"><a href="#cb32-2"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">perc_severe =</span> num_patients_ever_severe<span class="op">/</span>num_patients_all)</span>
-<span id="cb32-3"><a href="#cb32-3"></a></span>
-<span id="cb32-4"><a href="#cb32-4"></a><span class="kw">write_csv</span>(race_check, <span class="st">&#39;data/race_check.csv&#39;</span>)</span>
-<span id="cb32-5"><a href="#cb32-5"></a><span class="kw">write_csv</span>(sex_check, <span class="st">&#39;data/sex_check.csv&#39;</span>)</span>
-<span id="cb32-6"><a href="#cb32-6"></a><span class="kw">write_csv</span>(age_group_check, <span class="st">&#39;data/age_group_check.csv&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1"></a>race_check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb32-2"><a href="#cb32-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb32-3"><a href="#cb32-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb32-4"><a href="#cb32-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">race_sum =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb32-5"><a href="#cb32-5"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb32-6"><a href="#cb32-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mismatches =</span> num_patients_all <span class="op">-</span><span class="st"> </span>race_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb32-7"><a href="#cb32-7"></a><span class="st">  </span><span class="co"># filter(abs(mismatches) != 0) %&gt;% </span></span>
+<span id="cb32-8"><a href="#cb32-8"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="kw">contains</span>(<span class="st">&#39;severe&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb32-9"><a href="#cb32-9"></a><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(<span class="kw">abs</span>(mismatches))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb32-10"><a href="#cb32-10"></a><span class="st">  </span>{.}</span></code></pre></div>
+<pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1"></a>sex_check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb34-2"><a href="#cb34-2"></a><span class="st">  </span><span class="kw">filter</span>(race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb34-3"><a href="#cb34-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb34-4"><a href="#cb34-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">sex_sum =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb34-5"><a href="#cb34-5"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb34-6"><a href="#cb34-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mismatches =</span> num_patients_all <span class="op">-</span><span class="st"> </span>sex_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb34-7"><a href="#cb34-7"></a><span class="st">  </span><span class="co"># filter(mismatches != 0) %&gt;% </span></span>
+<span id="cb34-8"><a href="#cb34-8"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="kw">contains</span>(<span class="st">&#39;severe&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb34-9"><a href="#cb34-9"></a><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(<span class="kw">abs</span>(mismatches))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb34-10"><a href="#cb34-10"></a><span class="st">  </span>{.}</span></code></pre></div>
+<pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1"></a>demo_check &lt;-<span class="st"> </span>demo_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb36-2"><a href="#cb36-2"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">perc_severe =</span> num_patients_ever_severe<span class="op">/</span>num_patients_all)</span>
+<span id="cb36-3"><a href="#cb36-3"></a></span>
+<span id="cb36-4"><a href="#cb36-4"></a><span class="kw">write_csv</span>(race_check, <span class="st">&#39;data/race_check.csv&#39;</span>)</span>
+<span id="cb36-5"><a href="#cb36-5"></a><span class="kw">write_csv</span>(sex_check, <span class="st">&#39;data/sex_check.csv&#39;</span>)</span>
+<span id="cb36-6"><a href="#cb36-6"></a><span class="kw">write_csv</span>(age_group_check, <span class="st">&#39;data/age_group_check.csv&#39;</span>)</span></code></pre></div>
+</div>
+<div id="generate-characteristics-table" class="section level2">
+<h2>Generate characteristics table</h2>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1"></a>sum_sum &lt;-<span class="st"> </span><span class="kw">sym</span>(<span class="kw">paste</span>(<span class="st">&#39;N =&#39;</span>, <span class="kw">sum</span>(demo_ana<span class="op">$</span>num_patients_all)))</span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1"></a>age_group_desc &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb38-2"><a href="#cb38-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb38-3"><a href="#cb38-3"></a><span class="st">  </span><span class="kw">group_by</span>(age_group, siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb38-4"><a href="#cb38-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all, <span class="dt">na.rm =</span> T), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb38-5"><a href="#cb38-5"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> age_group, <span class="dt">values_from =</span> size, <span class="dt">values_fill =</span> <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb38-6"><a href="#cb38-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">sum_age_cols =</span> <span class="kw">rowSums</span>(.[, <span class="dv">-1</span>])) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb38-7"><a href="#cb38-7"></a><span class="st">  </span><span class="kw">right_join</span>(age_group_check) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb38-8"><a href="#cb38-8"></a><span class="st">  </span><span class="kw">replace</span>(<span class="kw">is.na</span>(.), <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb38-9"><a href="#cb38-9"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">unknown_other =</span> other <span class="op">+</span><span class="st"> </span>num_patients_all <span class="op">-</span><span class="st"> </span>age_group_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb38-10"><a href="#cb38-10"></a><span class="st">  </span>{.}</span></code></pre></div>
+<pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1"></a>sex_desc &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-2"><a href="#cb40-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-3"><a href="#cb40-3"></a><span class="st">  </span><span class="kw">group_by</span>(sex, siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-4"><a href="#cb40-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all, <span class="dt">na.rm =</span> T), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-5"><a href="#cb40-5"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> sex, <span class="dt">values_from =</span> size, <span class="dt">values_fill =</span> <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-6"><a href="#cb40-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">sum_sex_cols =</span> <span class="kw">rowSums</span>(.[, <span class="dv">-1</span>])) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-7"><a href="#cb40-7"></a><span class="st">  </span><span class="kw">right_join</span>(sex_check) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-8"><a href="#cb40-8"></a><span class="st">  </span><span class="kw">replace</span>(<span class="kw">is.na</span>(.), <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-9"><a href="#cb40-9"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">unknown_other =</span> other <span class="op">+</span><span class="st"> </span>num_patients_all <span class="op">-</span><span class="st"> </span>sex_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-10"><a href="#cb40-10"></a><span class="st">  </span>{.}</span></code></pre></div>
+<pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1"></a>race_desc &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span></span>
+<span id="cb42-2"><a href="#cb42-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb42-3"><a href="#cb42-3"></a><span class="st">  </span><span class="kw">group_by</span>(race, siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb42-4"><a href="#cb42-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all, <span class="dt">na.rm =</span> T), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb42-5"><a href="#cb42-5"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> race, <span class="dt">values_from =</span> size, <span class="dt">values_fill =</span> <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb42-6"><a href="#cb42-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">sum_race_cols =</span> <span class="kw">rowSums</span>(.[, <span class="dv">-1</span>])) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb42-7"><a href="#cb42-7"></a><span class="st">  </span><span class="kw">right_join</span>(race_check) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb42-8"><a href="#cb42-8"></a><span class="st">  </span><span class="kw">replace</span>(<span class="kw">is.na</span>(.), <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb42-9"><a href="#cb42-9"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">unknown_other_race =</span> other <span class="op">+</span><span class="st"> </span>num_patients_all <span class="op">-</span><span class="st"> </span>race_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb42-10"><a href="#cb42-10"></a><span class="st">  </span>{.}</span></code></pre></div>
+<pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1"></a>demo_desc &lt;-<span class="st"> </span><span class="kw">left_join</span>(sex_desc, age_group_desc, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>, <span class="dt">suffix =</span> <span class="kw">c</span>(<span class="st">&quot;_sex&quot;</span>, <span class="st">&quot;_age_group&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb44-2"><a href="#cb44-2"></a><span class="st">  </span><span class="kw">left_join</span>(race_desc, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb44-3"><a href="#cb44-3"></a><span class="st">  </span><span class="co"># Reduce(function(...) left_join(..., by = &#39;siteid&#39;, , &#39;_race&#39;)), </span></span>
+<span id="cb44-4"><a href="#cb44-4"></a><span class="st">  </span><span class="co">#                   list(, race_desc), ) %&gt;% </span></span>
+<span id="cb44-5"><a href="#cb44-5"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span><span class="kw">c</span>(<span class="kw">contains</span>(<span class="st">&#39;um&#39;</span>), <span class="kw">contains</span>(<span class="st">&#39;mismatches&#39;</span>)))</span>
+<span id="cb44-6"><a href="#cb44-6"></a></span>
+<span id="cb44-7"><a href="#cb44-7"></a>demo_desc <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">write_csv</span>(<span class="st">&#39;results/demo_prelim.csv&#39;</span>)</span>
+<span id="cb44-8"><a href="#cb44-8"></a><span class="co"># some NAs are because there are just not a row for with that value</span></span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1"></a><span class="co"># sex_desc &lt;- demo_all %&gt;% </span></span>
+<span id="cb45-2"><a href="#cb45-2"></a><span class="co">#   filter(sex != &#39;all&#39;, race == &#39;all&#39;, age_group == &#39;all&#39;) %&gt;% </span></span>
+<span id="cb45-3"><a href="#cb45-3"></a><span class="co">#   group_by(sex) %&gt;% </span></span>
+<span id="cb45-4"><a href="#cb45-4"></a><span class="co">#   summarise(!!sum_sum := sum(num_patients_all), .groups = &#39;drop&#39;) %&gt;% </span></span>
+<span id="cb45-5"><a href="#cb45-5"></a><span class="co">#   mutate(category = &#39;Sex&#39;) %&gt;% </span></span>
+<span id="cb45-6"><a href="#cb45-6"></a><span class="co">#   rename(&#39;Characteristics&#39; = sex)</span></span>
+<span id="cb45-7"><a href="#cb45-7"></a><span class="co"># </span></span>
+<span id="cb45-8"><a href="#cb45-8"></a><span class="co"># race_desc &lt;- demo_all %&gt;% </span></span>
+<span id="cb45-9"><a href="#cb45-9"></a><span class="co">#   filter(sex == &#39;all&#39;, race != &#39;all&#39;, age_group == &#39;all&#39;) %&gt;% </span></span>
+<span id="cb45-10"><a href="#cb45-10"></a><span class="co">#   group_by(race) %&gt;% </span></span>
+<span id="cb45-11"><a href="#cb45-11"></a><span class="co">#   summarise(!!sum_sum := sum(num_patients_all), .groups = &#39;drop&#39;) %&gt;% </span></span>
+<span id="cb45-12"><a href="#cb45-12"></a><span class="co">#   mutate(category = &#39;Race/Ethnicity&#39;) %&gt;% </span></span>
+<span id="cb45-13"><a href="#cb45-13"></a><span class="co">#   rename(&#39;Characteristics&#39; = race)</span></span>
+<span id="cb45-14"><a href="#cb45-14"></a><span class="co"># </span></span>
+<span id="cb45-15"><a href="#cb45-15"></a><span class="co"># bind_rows(age_group_desc, sex_desc, race_desc) %&gt;% </span></span>
+<span id="cb45-16"><a href="#cb45-16"></a><span class="co">#   group_by(category) %&gt;% </span></span>
+<span id="cb45-17"><a href="#cb45-17"></a><span class="co">#   gt() %&gt;% </span></span>
+<span id="cb45-18"><a href="#cb45-18"></a><span class="co">#   tab_footnote(</span></span>
+<span id="cb45-19"><a href="#cb45-19"></a><span class="co">#     footnote = &quot;Obfuscation at each site may affect the total counts.&quot;,</span></span>
+<span id="cb45-20"><a href="#cb45-20"></a><span class="co">#     locations = cells_column_labels(</span></span>
+<span id="cb45-21"><a href="#cb45-21"></a><span class="co">#       columns = 2)</span></span>
+<span id="cb45-22"><a href="#cb45-22"></a><span class="co">#   ) %&gt;% </span></span>
+<span id="cb45-23"><a href="#cb45-23"></a><span class="co">#   {.}</span></span></code></pre></div>
 <p>Check NAs:</p>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1"></a>na_diag &lt;-<span class="st"> </span>diag_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb33-2"><a href="#cb33-2"></a><span class="st">  </span><span class="kw">select</span>(siteid, icd, <span class="kw">contains</span>(<span class="st">&#39;num&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb33-3"><a href="#cb33-3"></a><span class="st">  </span><span class="kw">filter</span>(<span class="kw">rowSums</span>(<span class="kw">is.na</span>(.)) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1"></a>na_diag &lt;-<span class="st"> </span>diag_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb46-2"><a href="#cb46-2"></a><span class="st">  </span><span class="kw">select</span>(siteid, icd, <span class="kw">contains</span>(<span class="st">&#39;num&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb46-3"><a href="#cb46-3"></a><span class="st">  </span><span class="kw">filter</span>(<span class="kw">rowSums</span>(<span class="kw">is.na</span>(.)) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</span></code></pre></div>
 <!-- # More quality check: -->
 </div>
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiUmVhZCBpbiBhbmQgcHJvY2VzcyBkYXRhIgpvdXRwdXQ6CiAgaHRtbF9kb2N1bWVudDoKICAgIHRoZW1lOiBsdW1lbgogICAgdG9jOiB0cnVlCiAgICB0b2NfZmxvYXQ6IGZhbHNlCiAgICBjb2RlX2Rvd25sb2FkOiB0cnVlCiAgICBoaWdobGlnaHQ6IHRhbmdvCmtuaXQ6IChmdW5jdGlvbihpbnB1dEZpbGUsIGVuY29kaW5nKSB7CiAgcm1hcmtkb3duOjpyZW5kZXIoaW5wdXRGaWxlLCBlbmNvZGluZyA9IGVuY29kaW5nLCBvdXRwdXRfZGlyID0gImRvY3MiKSB9KQotLS0KCmBgYHtyfQpsaWJyYXJ5KGRwbHlyKQpsaWJyYXJ5KHRpZHlyKQpsaWJyYXJ5KHJlYWRyKQpsaWJyYXJ5KHJlYWR4bCkKbGlicmFyeShodHRyKQpsaWJyYXJ5KHB1cnJyKQpsaWJyYXJ5KHN0cmluZ2kpCmxpYnJhcnkoZ3QpCmxpYnJhcnkoZ3RzdW1tYXJ5KQpgYGAKCiMjIERvd25sb2FkIGRhdGEKCmBgYHtyIG1lc3NhZ2U9RkFMU0V9CmdpdGh1Yl9saW5rIDwtICdodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vY292aWRjbGluaWNhbC9QaGFzZTEuMUFnZ3JlZ2F0ZURhdGFQZXJTaXRlL21hc3Rlci8nCmRlbW9fbGluayA8LSBwYXN0ZTAoZ2l0aHViX2xpbmssICdEZW1vZ3JhcGhpY3NfcGVyc2l0ZV9mYWtlSUQuY3N2JykKZGlhZ19saW5rIDwtIHBhc3RlMChnaXRodWJfbGluaywgJ0RpYWdub3Nlc19wZXJzaXRlX2Zha2VJRC5jc3YnKQoKdGVtcF9maWxlXzEgPC0gdGVtcF9maWxlXzIgPC0gdGVtcGZpbGUoZmlsZWV4dCA9ICIuY3N2IikKcmVxIDwtIEdFVChkZW1vX2xpbmssIAogICAgICAgICAgIyBhdXRoZW50aWNhdGUgdXNpbmcgR0lUSFVCX1BBVAogICAgICAgICAgIGF1dGhlbnRpY2F0ZShTeXMuZ2V0ZW52KCJHSVRIVUJfUEFUIiksICIiKSwKICAgICAgICAgICMgd3JpdGUgcmVzdWx0IHRvIGRpc2sKICAgICAgICAgICB3cml0ZV9kaXNrKHBhdGggPSB0ZW1wX2ZpbGVfMSkpCmRlbW9fYWxsIDwtIHJlYWRfY3N2KHRlbXBfZmlsZV8xKQp1bmxpbmsodGVtcF9maWxlXzEpCgpyZXEgPC0gR0VUKGRpYWdfbGluaywgCiAgICAgICAgICAgYXV0aGVudGljYXRlKFN5cy5nZXRlbnYoIkdJVEhVQl9QQVQiKSwgIiIpLAogICAgICAgICAgIHdyaXRlX2Rpc2socGF0aCA9IHRlbXBfZmlsZV8yKSkKZGlhZ19hbGwgPC0gcmVhZF9jc3YodGVtcF9maWxlXzIpCnVubGluayh0ZW1wX2ZpbGVfMikKYGBgCgpOb3RlczoKLSBgbnVtX3BhdGllbnRzX2V2ZXJfc2V2ZXJlX2ljZDFgOiBudW1iZXIgb2YgcGF0aWVudHMgaGF2aW5nIHRoZSBpY2QgY29kZSBhbmQgZXZlciBiZWluZyBzZXZlcmUKLSBgbnVtX3BhdGllbnRzX25ldmVyX3NldmVyZV9pY2QxYDogbnVtYmVyIG9mIHBhdGllbnRzIGhhdmluZyB0aGUgaWNkIGNvZGUgYW5kIG5ldmVyIGJlaW5nIHNldmVyZQotIGBudW1fcGF0aWVudHNfZXZlcl9zZXZlcmVfaWNkMGA6IG51bWJlciBvZiBwYXRpZW50cyBub3QgaGF2aW5nIHRoZSBpY2QgY29kZSBhbmQgZXZlciBiZWluZyBzZXZlcmUKLSBgbnVtX3BhdGllbnRzX25ldmVyX3NldmVyZV9pY2QwYDogbnVtYmVyIG9mIHBhdGllbnRzIG5vdCBoYXZpbmcgdGhlIGljZCBjb2RlIGFuZCBuZXZlciBiZWluZyBzZXZlcmUKCiMjIFJlYWQgaW4gbG9jYWwgZmlsZXMKCjwhLS0gVHdvIHJvd3MgaGF2ZSBjb3VudHJ5IFNJTkdBUE9SRV9TUEFJTiBiZWNhdXNlIHRoZXJlIGlzIG9ubHkgb25lIHNpdGUgaW4gZWFjaCBvbmUgb2YgdGhlIGNvdW50cmllcy4gLS0+CjwhLS0gSWYgdGhpcyB3ZXJlIG5vdCBjb21iaW5lZDogZGF0YSBjb3VsZCBiZSBrbm93biB0aGUgc3BlY2lmaWMgc2l0ZS4gLS0+Cgo8IS0tIFNJVEU2NjAgd2FzIG1hcHBlZCB0byBib3RoIFVTIGFuZCBGcmFuY2U/IC0tPgo8IS0tIFNJVEUzMDkgd2FzIG1hcHBlZCB0byBib3RoIFVTIGFuZCBJdGFseT8gLS0+CmBgYHtyfQpuZXVyb19pY2RzXzEwIDwtIHJlYWRfZXhjZWwoJ2RhdGEvMjAyMC0wOS0xMF9uZXVyby1pY2QxMC54bHN4JykgJT4lIAogIHJlbmFtZSgnaWNkJyA9IGBJQ0QtMTBgKQoKbmV1cm9faWNkc185IDwtIHJlYWR4bDo6cmVhZF9leGNlbCgnZGF0YS9uZXVyb2ljZDEwdG85d2l0aGRlc2NyaXB0Lnhsc3gnKSAlPiUgCiAgbGVmdF9qb2luKG5ldXJvX2ljZHNfMTAgJT4lIHNlbGVjdChgTmV1cm9sb2dpY2FsIERpc2Vhc2UgQ2F0ZWdvcnlgLCBpY2QpLCAKICAgICAgICAgICAgYnkgPSBjKCdJQ0QxMF9DT0RFJyA9ICdpY2QnKSkgJT4lIAogICMgc2VsZWN0KC0gYyhJQ0Q5X0NPREUsIElDRDlfREVTQ1JJUFRJT04sIElDRDEwX0NPREUpKSAlPiUgCiAgcmVuYW1lKCdpY2QnID0gSUNEOV9USFJFRV9ESUdJVCkgJT4lIAogIGZpbHRlcighaXMubmEoaWNkKSkgJT4lICMgaWdub3JlIElDRDEwIGNvZGUgRzQ2IGFuZCBHNjUgbm90IG1hcHBlZCB0byBhbnkgSUNEXzkgY29kZQogIHsufQoKbmV1cm9faWNkc185ICU+JSAKICBkaXN0aW5jdChpY2QsIElDRDEwX0NPREUpICU+JSAKICBjb3VudChpY2QpICU+JQogIGZpbHRlcihuID4gMSkKYGBgCgojIyBNYW51YWwgZ3JvdXBpbmcgb2YgZm91ciBJQ0QtOSBjb2RlcwoKRm9yIHRoZSB0d28gY29kZXMgd2l0aCBub24tc3BlY2lmaWMgZGVzY3JpcHRpb24gKDc4MCBhbmQgNzgxKSwgd2UgY2FuIGluY2x1ZGUgKGluIHRoZSBNZXRob2RzLCBGaWd1cmUgbGVnZW5kIG9yIHN1cHBsZW1lbnRhcnkgbWF0ZXJpYWwpIHRoZSBkZXNjcmlwdGlvbnMgb2YgYWxsIHN1YmNvZGVzIGZvciBlYWNoLgpTZWUgbGluayBoZXJlIDxodHRwOi8vZGJtaS1uY2F0cy10ZXN0MDEuZGJtaS5waXR0LmVkdS93ZWJjbGllbnQvPjogbm8gbG9naW4gcmVxdWlyZWQsIGFuZCBhbHNvIHRoZSBsaW5rIGJlbG93IGVhY2ggY29kZS4KSSBhZGRlZCB0aGUgZGlzZWFzZSBncm91cHMgaW4gcGFyZW50aGVzZXMgZm9yIHRoZXNlIGZvdXIgY29kZXMuClRoZSBvbmx5IGdyb3VwIHRoYXQgaXMgbm90IGNvbnNpc3RlbnQgd2l0aCB0aGUgZ3JvdXBpbmcgYmFzZWQgb24gSUNEMTAgY29kZXMgaXMgdmlzaW9uL3NtZWxsL3Rhc3RlLgooRm9yIElDRDEwIGNvZGVzLCB3ZSBzZXBhcmF0ZSB2aXNpb24gYW5kIG5ldXJvcGF0aHksIHRoZSBsYXR0ZXIgb2Ygd2hpY2ggaW5jbHVkZXMgc21lbGwgYW5kIHRhc3RlKS4KVjQxIFByb2JsZW1zIHdpdGggc3BlY2lhbCBzZW5zZXMgYW5kIG90aGVyIHNwZWNpYWwgZnVuY3Rpb25zICh2aXNpb24vc21lbGwvdGFzdGUpCjQzNyBPdGhlciBhbmQgaWxsLWRlZmluZWQgY2VyZWJyb3Zhc2N1bGFyIGRpc2Vhc2UgKHZhc2N1bGFyKQo3ODAgR2VuZXJhbCBzeW1wdG9tcyAoT3RoZXIpCmh0dHBzOi8vaWNkLmNvZGVzL2ljZDljbS83ODAKNzgxIFN5bXB0b21zIGludm9sdmluZyBuZXJ2b3VzIGFuZCBtdXNjdWxvc2tlbGV0YWwgc3lzdGVtcyAoT3RoZXIpCmh0dHBzOi8vaWNkLmNvZGVzL2ljZDljbS83ODEKCmBgYHtyfQpuZXVyb19pY2RzXzkgJT4lIGZpbHRlcihpY2QgJWluJSBjKCdWNDEnLCAnNzgwJywgJzc4MScsICc0MzcnKSkKCm5ldXJvX2ljZHNfOSA8LSBuZXVyb19pY2RzXzkgJT4lIAogIHdpdGhpbiguLCBJQ0QxMF9ERVNDUklQVElPTltpY2QgPT0gJ1Y0MSddIDwtICdQcm9ibGVtcyB3aXRoIHNwZWNpYWwgc2Vuc2VzIGFuZCBvdGhlciBzcGVjaWFsIGZ1bmN0aW9ucycpICU+JSAKICB3aXRoaW4oLiwgYE5ldXJvbG9naWNhbCBEaXNlYXNlIENhdGVnb3J5YFtpY2QgPT0gJ1Y0MSddIDwtICdWaXNpb24vc21lbGwvdGFzdGUnKSAlPiUKICB3aXRoaW4oLiwgSUNEMTBfREVTQ1JJUFRJT05baWNkID09ICc3ODEnXSA8LSAnU3ltcHRvbXMgaW52b2x2aW5nIG5lcnZvdXMgYW5kIG11c2N1bG9za2VsZXRhbCBzeXN0ZW1zJykgJT4lIAogIHdpdGhpbiguLCBgTmV1cm9sb2dpY2FsIERpc2Vhc2UgQ2F0ZWdvcnlgW2ljZCA9PSAnNzgxJ10gPC0gJ05ldXJvcGF0aHknKSAlPiUgIyBhbmQgQ29uc2Npb3VzbmVzcwogIHdpdGhpbiguLCBJQ0QxMF9ERVNDUklQVElPTltpY2QgPT0gJzQzNyddIDwtICdPdGhlciBhbmQgaWxsLWRlZmluZWQgY2VyZWJyb3Zhc2N1bGFyIGRpc2Vhc2UnKSAlPiUKICB3aXRoaW4oLiwgSUNEMTBfREVTQ1JJUFRJT05baWNkID09ICc3ODAnXSA8LSAnR2VuZXJhbCBzeW1wdG9tcycpICU+JQogIHdpdGhpbiguLCBgTmV1cm9sb2dpY2FsIERpc2Vhc2UgQ2F0ZWdvcnlgW2ljZCA9PSAnNzgwJ10gPC0gJ090aGVyJykgJT4lCiAgZGlzdGluY3QoKQpgYGAKCk5vdGVzOiAKCuKAnC05OeKAnSBpbmRpY2F0ZSBtYXNrZWQgc21hbGwgbnVtYmVycyAoZm9yIG9iZnVzY2F0aW9uKSBhbmQg4oCcLTk5OSIgaW5kaWNhdGUgbWlzc2luZywgdW5rbm93biwgbm90IGFwcGxpY2FibGUsIGV0Yy4KCiMgRGVzY3JpcHRpdmUgc3RhdGlzdGljcwoKYERpYWdub3Nlc19wZXJzaXRlX2Zha2VJRC5jc3ZgIGhhcyBgciBsZW5ndGgodW5pcXVlKGRpYWdfYWxsJHNpdGVpZCkpYCB1bmlxdWUgc2l0ZWlkJ3MuCmBEZW1vZ3JhcGhpY3NfcGVyc2l0ZV9mYWtlSUQuY3N2YCBoYXMgYHIgbGVuZ3RoKHVuaXF1ZShkZW1vX2FsbCRzaXRlaWQpKWAgdW5pcXVlIHNpdGVpZCdzLgoKCiMgTW9sZCBkYXRhIGZyYW1lcwoKYGBge3J9CmRlbW9fYW5hIDwtIGRlbW9fYWxsICU+JSAKICBmaWx0ZXIocmFjZSA9PSAnYWxsJywgYWdlX2dyb3VwID09ICdhbGwnLCBzZXggPT0gJ2FsbCcpICU+JSAKICAjIGxlZnRfam9pbihzaXRlX3RvX2NvdW50cnksIGJ5ID0gJ3NpdGVpZCcpICU+JSAKICBzZWxlY3QoLSBjKHNleCwgYWdlX2dyb3VwLCByYWNlKSkgJT4lIAogIGJpbmRfcm93cygjIENvbXB1dGUgcGF0aWVudHNfYWxsIGZvciBTSVRFNzM0IG1hbnVhbGx5CiAgICBkZW1vX2FsbCAlPiUgCiAgICAgIGZpbHRlcihzaXRlaWQgPT0gJ1NJVEU3MzQnLCByYWNlID09ICdhbGwnLCBhZ2VfZ3JvdXAgPT0gJ2FsbCcpICU+JSAKICAgICAgZ3JvdXBfYnkoc2l0ZWlkKSAlPiUgCiAgICAgIHN1bW1hcmlzZShhY3Jvc3MoYyhudW1fcGF0aWVudHNfYWxsLCBudW1fcGF0aWVudHNfZXZlcl9zZXZlcmUpLCAuZm5zID0gc3VtKSwKICAgICAgICAgICAgICAgIC5ncm91cHMgPSAnZHJvcCcpCiAgKSAlPiUgCiAgbXV0YXRlKG51bV9wYXRpZW50c19uZXZlcl9zZXZlcmUgPSBudW1fcGF0aWVudHNfYWxsIC0gbnVtX3BhdGllbnRzX2V2ZXJfc2V2ZXJlKQoKCnNwbGl0X3BhdGllbnRfdHlwZSA8LSBmdW5jdGlvbih4KSB7CiAgdGVtcCA8LSBzdHJzcGxpdChzdWIoJyheW15fXStfW15fXSspXyguKikkJywgJ1xcMSBcXDInLCBzdHJpX3JldmVyc2UoeCkpLCAnICcpCiAgbWFwKHRlbXAsIHN0cmlfcmV2ZXJzZSkKfQoKZGlhZ19hbmEgPC0gZGlhZ19hbGwgJT4lIAogIG11dGF0ZSgKICAgIG51bV9wYXRpZW50c19uZXZlcl9zZXZlcmVfYmVmb3JlX2FkbWlzc2lvbiA9IG51bV9wYXRpZW50c19hbGxfYmVmb3JlX2FkbWlzc2lvbiAtIG51bV9wYXRpZW50c19ldmVyX3NldmVyZV9iZWZvcmVfYWRtaXNzaW9uLAogICAgbnVtX3BhdGllbnRzX25ldmVyX3NldmVyZV9zaW5jZV9hZG1pc3Npb24gPSBudW1fcGF0aWVudHNfYWxsX3NpbmNlX2FkbWlzc2lvbiAtIG51bV9wYXRpZW50c19ldmVyX3NldmVyZV9zaW5jZV9hZG1pc3Npb24sCiAgKSAlPiUgCiAgcGl2b3RfbG9uZ2VyKGNvbHMgPSBzdGFydHNfd2l0aCgnbnVtJyksIG5hbWVzX3RvID0gJ3BhdGllbnRfdHlwZScsIHZhbHVlc190byA9ICdjb3VudCcpICU+JSAKICBiaW5kX2NvbHMoCiAgICBzcGxpdF9wYXRpZW50X3R5cGUoLltbJ3BhdGllbnRfdHlwZSddXSkgJT4lIAogICAgICBkby5jYWxsKHJiaW5kLCAuKSAlPiUgCiAgICAgIGFzLmRhdGEuZnJhbWUoKSAlPiUgCiAgICAgIGBjb2xuYW1lczwtYChjKCd0aW1lJywgJ3NldmVyZScpKQogICkgJT4lIAogIG11dGF0ZShzZXZlcmUgPSByZWNvZGUoc2V2ZXJlLCAKICAgICAgICAgICAgICAgICAgICAgICAgIG51bV9wYXRpZW50c19hbGwgPSAnbnVtX3BhdGllbnRzX2ljZCcsCiAgICAgICAgICAgICAgICAgICAgICAgICBudW1fcGF0aWVudHNfZXZlcl9zZXZlcmU9ICdudW1fcGF0aWVudHNfZXZlcl9zZXZlcmVfaWNkMScsCiAgICAgICAgICAgICAgICAgICAgICAgICBudW1fcGF0aWVudHNfbmV2ZXJfc2V2ZXJlPSAnbnVtX3BhdGllbnRzX25ldmVyX3NldmVyZV9pY2QxJyksCiAgICAgICAgIHRpbWUgPSByZWNvZGUodGltZSwKICAgICAgICAgICAgICAgICAgICAgICBiZWZvcmVfYWRtaXNzaW9uID0gJ0JlZm9yZSBhZG1pc3Npb24nLAogICAgICAgICAgICAgICAgICAgICAgIHNpbmNlX2FkbWlzc2lvbiA9ICdBZnRlciBhZG1pc3Npb24nKSkgJT4lIAogIHJlbmFtZSgnaWNkJyA9IGljZF9jb2RlXzNjaGFycykgJT4lIAogIHNlbGVjdCgtIHBhdGllbnRfdHlwZSkgJT4lIAogIGRyb3BfbmEoKSAlPiUgCiAgey59CgpkaWFnX2ljZF8xMCA8LSBkaWFnX2FuYSAlPiUgCiAgZmlsdGVyKGljZF92ZXJzaW9uID09IDEwKSAlPiUKICBzZWxlY3QoLSBpY2RfdmVyc2lvbikgJT4lIAogIHBpdm90X3dpZGVyKG5hbWVzX2Zyb20gPSBzZXZlcmUsIHZhbHVlc19mcm9tID0gY291bnQpICU+JQogIHJpZ2h0X2pvaW4obmV1cm9faWNkc18xMCwgYnkgPSAnaWNkJykgJT4lIAogIGRpc3RpbmN0KCkgJT4lIAogIGxlZnRfam9pbihkZW1vX2FuYSwgYnkgPSAnc2l0ZWlkJykgJT4lIAogIG11dGF0ZShmdWxsX2ljZCA9IHBhc3RlMChgSUNELTEwIERlc2NyaXB0aW9uYCwgJyAoJywgaWNkLCAnKScpLAogICAgICAgICBudW1fcGF0aWVudHNfbmV2ZXJfc2V2ZXJlX2ljZDAgPSBudW1fcGF0aWVudHNfbmV2ZXJfc2V2ZXJlIC0gbnVtX3BhdGllbnRzX25ldmVyX3NldmVyZV9pY2QxLAogICAgICAgICBudW1fcGF0aWVudHNfZXZlcl9zZXZlcmVfaWNkMCA9IG51bV9wYXRpZW50c19ldmVyX3NldmVyZSAtIG51bV9wYXRpZW50c19ldmVyX3NldmVyZV9pY2QxLAogICkgJT4lCiAgZHJvcF9uYShudW1fcGF0aWVudHNfaWNkKSAlPiUgCiAgey59CgoKZGlhZ19pY2RfOSA8LSBkaWFnX2FuYSAlPiUgCiAgZmlsdGVyKGljZF92ZXJzaW9uID09IDkpICU+JQogIHNlbGVjdCgtIGljZF92ZXJzaW9uKSAlPiUgCiAgcGl2b3Rfd2lkZXIobmFtZXNfZnJvbSA9IHNldmVyZSwgdmFsdWVzX2Zyb20gPSBjb3VudCkgJT4lCiAgcmlnaHRfam9pbihuZXVyb19pY2RzXzkgJT4lIHNlbGVjdCgtIGMoSUNEMTBfQ09ERSwgSUNEOV9DT0RFLCBJQ0Q5X0RFU0NSSVBUSU9OKSksIGJ5ID0gJ2ljZCcpICU+JSAKICBkaXN0aW5jdCgpICU+JSAKICBsZWZ0X2pvaW4oZGVtb19hbmEsIGJ5ID0gJ3NpdGVpZCcpICU+JSAKICBtdXRhdGUoZnVsbF9pY2QgPSBwYXN0ZTAoSUNEMTBfREVTQ1JJUFRJT04sICcgKCcsIGljZCwgJyknKSwKICAgICAgICAgbnVtX3BhdGllbnRzX25ldmVyX3NldmVyZV9pY2QwID0gbnVtX3BhdGllbnRzX25ldmVyX3NldmVyZSAtIG51bV9wYXRpZW50c19uZXZlcl9zZXZlcmVfaWNkMSwKICAgICAgICAgbnVtX3BhdGllbnRzX2V2ZXJfc2V2ZXJlX2ljZDAgPSBudW1fcGF0aWVudHNfZXZlcl9zZXZlcmUgLSBudW1fcGF0aWVudHNfZXZlcl9zZXZlcmVfaWNkMSwKICApICU+JQogIGRyb3BfbmEobnVtX3BhdGllbnRzX2ljZCkgJT4lIAogIHsufQpgYGAKCmByIGxlbmd0aCh1bmlxdWUoZGlhZ19pY2RfMTAkc2l0ZWlkKSlgIHNpdGVzIHdpdGggaWNkLTEwIGNvZGUuIApgciBsZW5ndGgodW5pcXVlKGRpYWdfaWNkXzkkc2l0ZWlkKSlgIHNpdGVzIGhhdmUgaWNkLTkuCgojIFdyaXRlIGRhdGEgb3V0IHRvIC5SZGF0YQoKYGBge3J9CnNhdmUoZGVtb19hbmEsIGRpYWdfaWNkXzEwLCBkaWFnX2ljZF85LCBmaWxlID0gJ2RhdGEvcHJvY2Vzc2VkLWRhdGEuUmRhdGEnKQpgYGAKCiMjIEdlbmVyYXRlIGNoYXJhY3RlcmlzdGljcyB0YWJsZQoKYGBge3J9CnN1bV9zdW0gPC0gc3ltKHBhc3RlKCdOID0nLCBzdW0oZGVtb19hbmEkbnVtX3BhdGllbnRzX2FsbCkpKQphZ2VfZ3JvdXBfZGVzYyA8LSBkZW1vX2FsbCAlPiUgCiAgZmlsdGVyKHNleCA9PSAnYWxsJywgcmFjZSA9PSAnYWxsJywgYWdlX2dyb3VwICE9ICdhbGwnKSAlPiUgCiAgZ3JvdXBfYnkoYWdlX2dyb3VwKSAlPiUgCiAgc3VtbWFyaXNlKCEhc3VtX3N1bSA6PSBzdW0obnVtX3BhdGllbnRzX2FsbCksIC5ncm91cHMgPSAnZHJvcCcpICU+JSAKICBtdXRhdGUoY2F0ZWdvcnkgPSAnQWdlIGdyb3VwJykgJT4lIAogIHJlbmFtZSgnQ2hhcmFjdGVyaXN0aWNzJyA9IGFnZV9ncm91cCkKCnNleF9kZXNjIDwtIGRlbW9fYWxsICU+JSAKICBmaWx0ZXIoc2V4ICE9ICdhbGwnLCByYWNlID09ICdhbGwnLCBhZ2VfZ3JvdXAgPT0gJ2FsbCcpICU+JSAKICBncm91cF9ieShzZXgpICU+JSAKICBzdW1tYXJpc2UoISFzdW1fc3VtIDo9IHN1bShudW1fcGF0aWVudHNfYWxsKSwgLmdyb3VwcyA9ICdkcm9wJykgJT4lIAogIG11dGF0ZShjYXRlZ29yeSA9ICdTZXgnKSAlPiUgCiAgcmVuYW1lKCdDaGFyYWN0ZXJpc3RpY3MnID0gc2V4KQoKcmFjZV9kZXNjIDwtIGRlbW9fYWxsICU+JSAKICBmaWx0ZXIoc2V4ID09ICdhbGwnLCByYWNlICE9ICdhbGwnLCBhZ2VfZ3JvdXAgPT0gJ2FsbCcpICU+JSAKICBncm91cF9ieShyYWNlKSAlPiUgCiAgc3VtbWFyaXNlKCEhc3VtX3N1bSA6PSBzdW0obnVtX3BhdGllbnRzX2FsbCksIC5ncm91cHMgPSAnZHJvcCcpICU+JSAKICBtdXRhdGUoY2F0ZWdvcnkgPSAnUmFjZS9FdGhuaWNpdHknKSAlPiUgCiAgcmVuYW1lKCdDaGFyYWN0ZXJpc3RpY3MnID0gcmFjZSkKCmJpbmRfcm93cyhhZ2VfZ3JvdXBfZGVzYywgc2V4X2Rlc2MsIHJhY2VfZGVzYykgJT4lIAogIGdyb3VwX2J5KGNhdGVnb3J5KSAlPiUgCiAgZ3QoKSAlPiUgCiAgdGFiX2Zvb3Rub3RlKAogICAgZm9vdG5vdGUgPSAiT2JmdXNjYXRpb24gYXQgZWFjaCBzaXRlIG1heSBhZmZlY3QgdGhlIHRvdGFsIGNvdW50cy4iLAogICAgbG9jYXRpb25zID0gY2VsbHNfY29sdW1uX2xhYmVscygKICAgICAgY29sdW1ucyA9IDIpCiAgKSAlPiUgCiAgey59CmBgYAoKIyBRdWFsaXR5IGNoZWNrcwoKIyMgQ2hlY2sgaWYgJ2FsbCcgZXF1YWxzIHRvIHN1bSBvZiB0aGUgcmVzdApgYGB7cn0KYWdlX2dyb3VwX2NoZWNrIDwtIGRlbW9fYWxsICU+JSAKICBmaWx0ZXIoc2V4ID09ICdhbGwnLCByYWNlID09ICdhbGwnLCBhZ2VfZ3JvdXAgIT0gJ2FsbCcpICU+JSAKICBncm91cF9ieShzaXRlaWQpICU+JSAKICBzdW1tYXJpc2UoYWdlX2dyb3VwX3N1bSA9IHN1bShudW1fcGF0aWVudHNfYWxsKSwgLmdyb3VwcyA9ICdkcm9wJykgJT4lIAogIGxlZnRfam9pbihkZW1vX2FuYSkgJT4lIAogIG11dGF0ZShtaXNtYXRjaGVzID0gbnVtX3BhdGllbnRzX2FsbCAtIGFnZV9ncm91cF9zdW0pICU+JSAKICBmaWx0ZXIoYWJzKG1pc21hdGNoZXMpICE9IDApICU+JSAKICBzZWxlY3QoLWNvbnRhaW5zKCdzZXZlcmUnKSkgJT4lIAogIGFycmFuZ2UoZGVzYyhhYnMobWlzbWF0Y2hlcykpKSAlPiUgCiAgey59CgpyYWNlX2NoZWNrIDwtIGRlbW9fYWxsICU+JSAKICBmaWx0ZXIoc2V4ID09ICdhbGwnLCByYWNlICE9ICdhbGwnLCBhZ2VfZ3JvdXAgPT0gJ2FsbCcpICU+JSAKICBncm91cF9ieShzaXRlaWQpICU+JSAKICBzdW1tYXJpc2UocmFjZV9zdW0gPSBzdW0obnVtX3BhdGllbnRzX2FsbCksIC5ncm91cHMgPSAnZHJvcCcpICU+JSAKICBsZWZ0X2pvaW4oZGVtb19hbmEpICU+JSAKICBtdXRhdGUobWlzbWF0Y2hlcyA9IG51bV9wYXRpZW50c19hbGwgLSByYWNlX3N1bSkgJT4lIAogIGZpbHRlcihhYnMobWlzbWF0Y2hlcykgIT0gMCkgJT4lIAogIHNlbGVjdCgtY29udGFpbnMoJ3NldmVyZScpKSAlPiUgCiAgYXJyYW5nZShkZXNjKGFicyhtaXNtYXRjaGVzKSkpICU+JSAKICB7Ln0KCnNleF9jaGVjayA8LSBkZW1vX2FsbCAlPiUgCiAgZmlsdGVyKHJhY2UgPT0gJ2FsbCcsIHNleCAhPSAnYWxsJywgYWdlX2dyb3VwID09ICdhbGwnKSAlPiUgCiAgZ3JvdXBfYnkoc2l0ZWlkKSAlPiUgCiAgc3VtbWFyaXNlKHNleF9zdW0gPSBzdW0obnVtX3BhdGllbnRzX2FsbCksIC5ncm91cHMgPSAnZHJvcCcpICU+JSAKICBsZWZ0X2pvaW4oZGVtb19hbmEpICU+JSAKICBtdXRhdGUobWlzbWF0Y2hlcyA9IG51bV9wYXRpZW50c19hbGwgLSBzZXhfc3VtKSAlPiUgCiAgZmlsdGVyKG1pc21hdGNoZXMgIT0gMCkgJT4lIAogIHNlbGVjdCgtY29udGFpbnMoJ3NldmVyZScpKSAlPiUgCiAgYXJyYW5nZShkZXNjKGFicyhtaXNtYXRjaGVzKSkpICU+JSAKICB7Ln0KCmRlbW9fY2hlY2sgPC0gZGVtb19hbmEgJT4lIAogIG11dGF0ZShwZXJjX3NldmVyZSA9IG51bV9wYXRpZW50c19ldmVyX3NldmVyZS9udW1fcGF0aWVudHNfYWxsKQoKd3JpdGVfY3N2KHJhY2VfY2hlY2ssICdkYXRhL3JhY2VfY2hlY2suY3N2JykKd3JpdGVfY3N2KHNleF9jaGVjaywgJ2RhdGEvc2V4X2NoZWNrLmNzdicpCndyaXRlX2NzdihhZ2VfZ3JvdXBfY2hlY2ssICdkYXRhL2FnZV9ncm91cF9jaGVjay5jc3YnKQpgYGAKCgpDaGVjayBOQXM6CmBgYHtyfQpuYV9kaWFnIDwtIGRpYWdfYW5hICU+JSAKICBzZWxlY3Qoc2l0ZWlkLCBpY2QsIGNvbnRhaW5zKCdudW0nKSkgJT4lIAogIGZpbHRlcihyb3dTdW1zKGlzLm5hKC4pKSA+IDApCmBgYAoKPCEtLSAjIE1vcmUgcXVhbGl0eSBjaGVjazogLS0+CgpgYGB7ciBpbmNsdWRlPUZBTFNFLCBldmFsPUZBTFNFfQojIGNoZWNrX2FsbCA8LSBkZW1vX2FsbCAlPiUgCiMgICBmaWx0ZXIocmFjZSA9PSAnYWxsJykgCgojIGNoZWNrIHdoZXRoZXIgdGhlIHJvd3Mgd2l0aCByYWNlID0gYWxsIGFyZSBhY3R1YWwgc3VtIG9mIHRoZSByZXN0CiMgY2hlY2tfcmFjZSA8LSBkZW1vX2FsbCAlPiUKIyAgIGZpbHRlcihyYWNlICE9ICdhbGwnKSAlPiUKIyAgIGdyb3VwX2J5KHNpdGVpZCwgc2V4LCBhZ2VfZ3JvdXApICU+JQojICAgc3VtbWFyaXNlKG51bV9wYXRpZW50c19zdW0gPSBzdW0obnVtX3BhdGllbnRzX2FsbCkpICU+JQojICAgbGVmdF9qb2luKGNoZWNrX2FsbCkKCgojIGNoZWNrX25hIDwtIGNoZWNrX3JhY2UgJT4lIAojICAgZmlsdGVyKGlzLm5hKG51bV9wYXRpZW50c19hbGwpKSAlPiUgCiMgICBwdWxsKHNpdGVpZCkgJT4lIAojICAgdW5pcXVlKCkKCiMgbGVuZ3RoKHVuaXF1ZShkaWFnX2FsbCRzaXRlaWQpKQpjaGVja19kaWFnIDwtIGRpYWdfYWxsICU+JSAKICBmaWx0ZXIoIWlzLm5hKG51bV9wYXRpZW50c19ldmVyX3NldmVyZV9pY2QxKSkgJT4lIAogIG11dGF0ZShudW1fcGF0aWVudHNfaWNkID0gbnVtX3BhdGllbnRzX2V2ZXJfc2V2ZXJlX2ljZDEgKyBudW1fcGF0aWVudHNfbmV2ZXJfc2V2ZXJlX2ljZDEsCiAgICAgICAgIGljZCA9IGdzdWIoJ2ljZDonLCAnJywgaWNkKSkgJT4lIAogIGdyb3VwX2J5KHNpdGVpZCkgJT4lCiAgc3VtbWFyaXNlKG1heF9pY2RfcGF0c19hbGwgPSBtYXgobnVtX3BhdGllbnRzX2ljZCwgbmEucm0gPSBUKSwgLmdyb3VwcyA9ICdkcm9wJykgJT4lCiAgbGVmdF9qb2luKGRlbW9fYW5hKQoKY2hlY2tfZGlhZyAlPiUgCiAgZmlsdGVyKG1heF9pY2RfcGF0c19hbGwgPiBudW1fcGF0aWVudHNfYWxsKQpgYGAKCgpgYGB7ciBpbmNsdWRlPUZBTFNFLCBldmFsPUZBTFNFfQojIGNvdW50cnlfcGF0cyA8LSBkZW1vX2FuYSAlPiUKIyAgIGdyb3VwX2J5KENvdW50cnkpICU+JQojICAgc3VtbWFyaXNlKHRvdGFsX3BhdGllbnRzX3Blcl9jb3VudHJ5ID0gc3VtKG51bV9wYXRpZW50c19hbGwpLCAuZ3JvdXBzID0gJ2Ryb3AnKQoKIyBkb3RfZGF0IDwtIGRpYWdfYW5hICU+JQojICAgZ3JvdXBfYnkoc2l0ZWlkLCB0aW1lLCBpY2QpICU+JQojICAgc3VtbWFyaXNlKHBhdHNfdGltZV9pY2RfY3RyeSA9IHN1bShudW1fcGF0aWVudHNfaWNkKSwgLmdyb3VwcyA9ICdkcm9wJykgJT4lCiMgICBsZWZ0X2pvaW4oc2l0ZV9wYXRzLCBieSA9ICdzaXRlaWQnKSAlPiUKIyAgIG11dGF0ZShwZXJjZW50X3BhdHMgPSBwYXRzX3RpbWVfaWNkX2N0cnkvbnVtX3BhdGllbnRzX2FsbCkKIyAKIyBkb3RfZGF0ICU+JQojICAgZ2dwbG90KGFlcyh5ID0gZm9yY2F0czo6ZmN0X3Jlb3JkZXIoaWNkLCBwZXJjZW50X3BhdHMpLCB4ID0gcGVyY2VudF9wYXRzLCBncm91cCA9IGljZCkpICsKIyAgICAgZ2VvbV9wb2ludChhZXMoY29sb3IgPSB0aW1lKSkgKwojICAgICBnZW9tX2xpbmUoKSArCiMgICAgIGZhY2V0X2dyaWQocm93cyA9IHZhcnMoc2l0ZWlkKSkgKwojICAgIyBzY2FsZV95X2NvbnRpbnVvdXMoYnJlYWtzID0gc2VxKDAsIDEsIDAuMSksIGxhYmVscyA9IHNjYWxlczo6cGVyY2VudF9mb3JtYXQoYWNjdXJhY3kgPSAxKSkgKwojICAgc2NhbGVfY29sb3JfY2FydG9fZChwYWxldHRlID0gNCkgKwojICAgbGFicyh4ID0gTlVMTCwgeSA9ICdQZXJjZW50IHBhdGllbnRzJykKICAgIApgYGAK</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUmVhZCBpbiBhbmQgcHJvY2VzcyBkYXRhIgpvdXRwdXQ6CiAgaHRtbF9kb2N1bWVudDoKICAgIHRoZW1lOiBsdW1lbgogICAgdG9jOiB0cnVlCiAgICB0b2NfZmxvYXQ6IGZhbHNlCiAgICBjb2RlX2Rvd25sb2FkOiB0cnVlCiAgICBoaWdobGlnaHQ6IHRhbmdvCmtuaXQ6IChmdW5jdGlvbihpbnB1dEZpbGUsIGVuY29kaW5nKSB7CiAgcm1hcmtkb3duOjpyZW5kZXIoaW5wdXRGaWxlLCBlbmNvZGluZyA9IGVuY29kaW5nLCBvdXRwdXRfZGlyID0gImRvY3MiKSB9KQotLS0KCmBgYHtyfQpsaWJyYXJ5KGRwbHlyKQpsaWJyYXJ5KHRpZHlyKQpsaWJyYXJ5KHJlYWRyKQpsaWJyYXJ5KHJlYWR4bCkKbGlicmFyeShodHRyKQpsaWJyYXJ5KHB1cnJyKQpsaWJyYXJ5KHN0cmluZ2kpCmxpYnJhcnkoZ3QpCmxpYnJhcnkoZ3RzdW1tYXJ5KQpgYGAKCiMjIERvd25sb2FkIGRhdGEKCmBgYHtyIG1lc3NhZ2U9RkFMU0V9CmdpdGh1Yl9saW5rIDwtICdodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vY292aWRjbGluaWNhbC9QaGFzZTEuMUFnZ3JlZ2F0ZURhdGFQZXJTaXRlL21hc3Rlci8nCmRlbW9fbGluayA8LSBwYXN0ZTAoZ2l0aHViX2xpbmssICdEZW1vZ3JhcGhpY3NfcGVyc2l0ZV9mYWtlSUQuY3N2JykKZGlhZ19saW5rIDwtIHBhc3RlMChnaXRodWJfbGluaywgJ0RpYWdub3Nlc19wZXJzaXRlX2Zha2VJRC5jc3YnKQoKdGVtcF9maWxlXzEgPC0gdGVtcF9maWxlXzIgPC0gdGVtcGZpbGUoZmlsZWV4dCA9ICIuY3N2IikKcmVxIDwtIEdFVChkZW1vX2xpbmssIAogICAgICAgICAgIyBhdXRoZW50aWNhdGUgdXNpbmcgR0lUSFVCX1BBVAogICAgICAgICAgIGF1dGhlbnRpY2F0ZShTeXMuZ2V0ZW52KCJHSVRIVUJfUEFUIiksICIiKSwKICAgICAgICAgICMgd3JpdGUgcmVzdWx0IHRvIGRpc2sKICAgICAgICAgICB3cml0ZV9kaXNrKHBhdGggPSB0ZW1wX2ZpbGVfMSkpCmRlbW9fYWxsIDwtIHJlYWRfY3N2KHRlbXBfZmlsZV8xKQp1bmxpbmsodGVtcF9maWxlXzEpCgpyZXEgPC0gR0VUKGRpYWdfbGluaywgCiAgICAgICAgICAgYXV0aGVudGljYXRlKFN5cy5nZXRlbnYoIkdJVEhVQl9QQVQiKSwgIiIpLAogICAgICAgICAgIHdyaXRlX2Rpc2socGF0aCA9IHRlbXBfZmlsZV8yKSkKZGlhZ19hbGwgPC0gcmVhZF9jc3YodGVtcF9maWxlXzIpCnVubGluayh0ZW1wX2ZpbGVfMikKYGBgCgpOb3RlczoKLSBgbnVtX3BhdGllbnRzX2V2ZXJfc2V2ZXJlX2ljZDFgOiBudW1iZXIgb2YgcGF0aWVudHMgaGF2aW5nIHRoZSBpY2QgY29kZSBhbmQgZXZlciBiZWluZyBzZXZlcmUKLSBgbnVtX3BhdGllbnRzX25ldmVyX3NldmVyZV9pY2QxYDogbnVtYmVyIG9mIHBhdGllbnRzIGhhdmluZyB0aGUgaWNkIGNvZGUgYW5kIG5ldmVyIGJlaW5nIHNldmVyZQotIGBudW1fcGF0aWVudHNfZXZlcl9zZXZlcmVfaWNkMGA6IG51bWJlciBvZiBwYXRpZW50cyBub3QgaGF2aW5nIHRoZSBpY2QgY29kZSBhbmQgZXZlciBiZWluZyBzZXZlcmUKLSBgbnVtX3BhdGllbnRzX25ldmVyX3NldmVyZV9pY2QwYDogbnVtYmVyIG9mIHBhdGllbnRzIG5vdCBoYXZpbmcgdGhlIGljZCBjb2RlIGFuZCBuZXZlciBiZWluZyBzZXZlcmUKCiMjIFJlYWQgaW4gbG9jYWwgZmlsZXMKCmBgYHtyfQpzaXRlX2NvdW50cnkgPC0gcmVhZF9jc3YoJ2RhdGEvU2l0ZUlEX01hcF9Ob25fUGVkaWF0cmljXzNkaWdpdF90b3NoYXJlLmNzdicpICU+JSAKICBzZWxlY3QoLSBQZWRzLm9ubHkpICU+JSAKICBtdXRhdGUoQ291bnRyeSA9IGNhc2Vfd2hlbigKICAgIENvdW50cnkgPT0gJ1VTQScgfiBDb3VudHJ5LAogICAgVFJVRSB+IHN0cmluZ3I6OnN0cl90b190aXRsZShDb3VudHJ5KSkpCmBgYAoKPCEtLSBUd28gcm93cyBoYXZlIGNvdW50cnkgU0lOR0FQT1JFX1NQQUlOIGJlY2F1c2UgdGhlcmUgaXMgb25seSBvbmUgc2l0ZSBpbiBlYWNoIG9uZSBvZiB0aGUgY291bnRyaWVzLiAtLT4KPCEtLSBJZiB0aGlzIHdlcmUgbm90IGNvbWJpbmVkOiBkYXRhIGNvdWxkIGJlIGtub3duIHRoZSBzcGVjaWZpYyBzaXRlLiAtLT4KCjwhLS0gU0lURTY2MCB3YXMgbWFwcGVkIHRvIGJvdGggVVMgYW5kIEZyYW5jZT8gLS0+CjwhLS0gU0lURTMwOSB3YXMgbWFwcGVkIHRvIGJvdGggVVMgYW5kIEl0YWx5PyAtLT4KYGBge3J9Cm5ldXJvX2ljZHNfMTAgPC0gcmVhZF9leGNlbCgnZGF0YS8yMDIwLTA5LTEwX25ldXJvLWljZDEwLnhsc3gnKSAlPiUgCiAgcmVuYW1lKCdpY2QnID0gYElDRC0xMGApCgpuZXVyb19pY2RzXzkgPC0gcmVhZHhsOjpyZWFkX2V4Y2VsKCdkYXRhL25ldXJvaWNkMTB0bzl3aXRoZGVzY3JpcHQueGxzeCcpICU+JSAKICBsZWZ0X2pvaW4obmV1cm9faWNkc18xMCAlPiUgc2VsZWN0KGBOZXVyb2xvZ2ljYWwgRGlzZWFzZSBDYXRlZ29yeWAsIGljZCksIAogICAgICAgICAgICBieSA9IGMoJ0lDRDEwX0NPREUnID0gJ2ljZCcpKSAlPiUgCiAgIyBzZWxlY3QoLSBjKElDRDlfQ09ERSwgSUNEOV9ERVNDUklQVElPTiwgSUNEMTBfQ09ERSkpICU+JSAKICByZW5hbWUoJ2ljZCcgPSBJQ0Q5X1RIUkVFX0RJR0lUKSAlPiUgCiAgZmlsdGVyKCFpcy5uYShpY2QpKSAlPiUgIyBpZ25vcmUgSUNEMTAgY29kZSBHNDYgYW5kIEc2NSBub3QgbWFwcGVkIHRvIGFueSBJQ0RfOSBjb2RlCiAgey59CgpuZXVyb19pY2RzXzkgJT4lIAogIGRpc3RpbmN0KGljZCwgSUNEMTBfQ09ERSkgJT4lIAogIGNvdW50KGljZCkgJT4lCiAgZmlsdGVyKG4gPiAxKQpgYGAKYAoKCiMjIE1hbnVhbCBncm91cGluZyBvZiBmb3VyIElDRC05IGNvZGVzCgpGb3IgdGhlIHR3byBjb2RlcyB3aXRoIG5vbi1zcGVjaWZpYyBkZXNjcmlwdGlvbiAoNzgwIGFuZCA3ODEpLCB3ZSBjYW4gaW5jbHVkZSAoaW4gdGhlIE1ldGhvZHMsIEZpZ3VyZSBsZWdlbmQgb3Igc3VwcGxlbWVudGFyeSBtYXRlcmlhbCkgdGhlIGRlc2NyaXB0aW9ucyBvZiBhbGwgc3ViY29kZXMgZm9yIGVhY2guClNlZSBsaW5rIGhlcmUgPGh0dHA6Ly9kYm1pLW5jYXRzLXRlc3QwMS5kYm1pLnBpdHQuZWR1L3dlYmNsaWVudC8+OiBubyBsb2dpbiByZXF1aXJlZCwgYW5kIGFsc28gdGhlIGxpbmsgYmVsb3cgZWFjaCBjb2RlLgpJIGFkZGVkIHRoZSBkaXNlYXNlIGdyb3VwcyBpbiBwYXJlbnRoZXNlcyBmb3IgdGhlc2UgZm91ciBjb2Rlcy4KVGhlIG9ubHkgZ3JvdXAgdGhhdCBpcyBub3QgY29uc2lzdGVudCB3aXRoIHRoZSBncm91cGluZyBiYXNlZCBvbiBJQ0QxMCBjb2RlcyBpcyB2aXNpb24vc21lbGwvdGFzdGUuCihGb3IgSUNEMTAgY29kZXMsIHdlIHNlcGFyYXRlIHZpc2lvbiBhbmQgbmV1cm9wYXRoeSwgdGhlIGxhdHRlciBvZiB3aGljaCBpbmNsdWRlcyBzbWVsbCBhbmQgdGFzdGUpLgpWNDEgUHJvYmxlbXMgd2l0aCBzcGVjaWFsIHNlbnNlcyBhbmQgb3RoZXIgc3BlY2lhbCBmdW5jdGlvbnMgKHZpc2lvbi9zbWVsbC90YXN0ZSkKNDM3IE90aGVyIGFuZCBpbGwtZGVmaW5lZCBjZXJlYnJvdmFzY3VsYXIgZGlzZWFzZSAodmFzY3VsYXIpCjc4MCBHZW5lcmFsIHN5bXB0b21zIChPdGhlcikKaHR0cHM6Ly9pY2QuY29kZXMvaWNkOWNtLzc4MAo3ODEgU3ltcHRvbXMgaW52b2x2aW5nIG5lcnZvdXMgYW5kIG11c2N1bG9za2VsZXRhbCBzeXN0ZW1zIChPdGhlcikKaHR0cHM6Ly9pY2QuY29kZXMvaWNkOWNtLzc4MQoKCmBgYHtyfQpwaGVjb2RlX2ljZDkgPC0gcmVhZF9jc3YoJ2RhdGEvcGhlY29kZV9pY2Q5X3JvbGxlZC5jc3YnKSAlPiUgCiAgc2VsZWN0KGljZCA9IElDRDksIGljZDlfZGVzYyA9IGBJQ0Q5IFN0cmluZ2ApCgpuZXVyb19pY2RzXzkgPC0gbmV1cm9faWNkc185ICU+JSAKICBsZWZ0X2pvaW4ocGhlY29kZV9pY2Q5LCBieSA9ICdpY2QnKQoKbmV1cm9faWNkc185ICU+JSBmaWx0ZXIoaWNkICVpbiUgYygnVjQxJywgJzc4MCcsICc3ODEnLCAnNDM3JykpCgpuZXVyb19pY2RzXzkgPC0gbmV1cm9faWNkc185ICU+JSAKICB3aXRoaW4oLiwgaWNkOV9kZXNjW2ljZCA9PSAnVjQxJ10gPC0gJ1Byb2JsZW1zIHdpdGggc3BlY2lhbCBzZW5zZXMgYW5kIG90aGVyIHNwZWNpYWwgZnVuY3Rpb25zJykgJT4lIAogIHdpdGhpbiguLCBgTmV1cm9sb2dpY2FsIERpc2Vhc2UgQ2F0ZWdvcnlgW2ljZCA9PSAnVjQxJ10gPC0gJ1Zpc2lvbi9zbWVsbC90YXN0ZScpICU+JQogIHdpdGhpbiguLCBpY2Q5X2Rlc2NbaWNkID09ICc3ODEnXSA8LSAnU3ltcHRvbXMgaW52b2x2aW5nIG5lcnZvdXMgYW5kIG11c2N1bG9za2VsZXRhbCBzeXN0ZW1zJykgJT4lIAogIHdpdGhpbiguLCBgTmV1cm9sb2dpY2FsIERpc2Vhc2UgQ2F0ZWdvcnlgW2ljZCA9PSAnNzgxJ10gPC0gJ05ldXJvcGF0aHknKSAlPiUgIyBhbmQgQ29uc2Npb3VzbmVzcwogIHdpdGhpbiguLCBpY2Q5X2Rlc2NbaWNkID09ICc0MzcnXSA8LSAnT3RoZXIgYW5kIGlsbC1kZWZpbmVkIGNlcmVicm92YXNjdWxhciBkaXNlYXNlJykgJT4lCiAgd2l0aGluKC4sIGljZDlfZGVzY1tpY2QgPT0gJzc4MCddIDwtICdHZW5lcmFsIHN5bXB0b21zJykgJT4lCiAgd2l0aGluKC4sIGBOZXVyb2xvZ2ljYWwgRGlzZWFzZSBDYXRlZ29yeWBbaWNkID09ICc3ODAnXSA8LSAnT3RoZXInKSAlPiUKICBkaXN0aW5jdCgpICU+JSAKICBzZWxlY3QoYE5ldXJvbG9naWNhbCBEaXNlYXNlIENhdGVnb3J5YCwgaWNkLCBpY2Q5X2Rlc2MpICU+JSAKICBkaXN0aW5jdCgpICU+JSAKICBhcnJhbmdlKGljZCkKCm5ldXJvX2ljZHNfOSAlPiUgCiAgd3JpdGVfY3N2KCdyZXN1bHRzL2ljZDlfdGFiLmNzdicpCmBgYAoKYGBge3J9CmNoZWNrIDwtIGRlbW9fYWxsICU+JSAKICBmaWx0ZXIoIXJhY2UgJWluJSBjKCdvdGhlcicsICdhbGwnKSkKYGBgCgpOb3RlczogCgrigJwtOTnigJ0gaW5kaWNhdGUgbWFza2VkIHNtYWxsIG51bWJlcnMgKGZvciBvYmZ1c2NhdGlvbikgYW5kIOKAnC05OTkiIGluZGljYXRlIG1pc3NpbmcsIG1pc21hdGNoZXMsIG5vdCBhcHBsaWNhYmxlLCBldGMuCgojIERlc2NyaXB0aXZlIHN0YXRpc3RpY3MKCmBEaWFnbm9zZXNfcGVyc2l0ZV9mYWtlSUQuY3N2YCBoYXMgYHIgbGVuZ3RoKHVuaXF1ZShkaWFnX2FsbCRzaXRlaWQpKWAgdW5pcXVlIHNpdGVpZCdzLgpgRGVtb2dyYXBoaWNzX3BlcnNpdGVfZmFrZUlELmNzdmAgaGFzIGByIGxlbmd0aCh1bmlxdWUoZGVtb19hbGwkc2l0ZWlkKSlgIHVuaXF1ZSBzaXRlaWQncy4KCgojIE1vbGQgZGF0YSBmcmFtZXMKCmBgYHtyfQpkZW1vX2FuYSA8LSBkZW1vX2FsbCAlPiUgCiAgZmlsdGVyKHJhY2UgPT0gJ2FsbCcsIGFnZV9ncm91cCA9PSAnYWxsJywgc2V4ID09ICdhbGwnKSAlPiUgCiAgIyBsZWZ0X2pvaW4oc2l0ZV90b19jb3VudHJ5LCBieSA9ICdzaXRlaWQnKSAlPiUgCiAgc2VsZWN0KC0gYyhzZXgsIGFnZV9ncm91cCwgcmFjZSkpICU+JSAKICBiaW5kX3Jvd3MoIyBDb21wdXRlIHBhdGllbnRzX2FsbCBmb3IgU0lURTczNCBtYW51YWxseQogICAgZGVtb19hbGwgJT4lIAogICAgICBmaWx0ZXIoc2l0ZWlkID09ICdTSVRFNzM0JywgcmFjZSA9PSAnYWxsJywgYWdlX2dyb3VwID09ICdhbGwnKSAlPiUgCiAgICAgIGdyb3VwX2J5KHNpdGVpZCkgJT4lIAogICAgICBzdW1tYXJpc2UoYWNyb3NzKGMobnVtX3BhdGllbnRzX2FsbCwgbnVtX3BhdGllbnRzX2V2ZXJfc2V2ZXJlKSwgLmZucyA9IHN1bSksCiAgICAgICAgICAgICAgICAuZ3JvdXBzID0gJ2Ryb3AnKQogICkgJT4lIAogIG11dGF0ZShudW1fcGF0aWVudHNfbmV2ZXJfc2V2ZXJlID0gbnVtX3BhdGllbnRzX2FsbCAtIG51bV9wYXRpZW50c19ldmVyX3NldmVyZSkKCgpzcGxpdF9wYXRpZW50X3R5cGUgPC0gZnVuY3Rpb24oeCkgewogIHRlbXAgPC0gc3Ryc3BsaXQoc3ViKCcoXlteX10rX1teX10rKV8oLiopJCcsICdcXDEgXFwyJywgc3RyaV9yZXZlcnNlKHgpKSwgJyAnKQogIG1hcCh0ZW1wLCBzdHJpX3JldmVyc2UpCn0KCmRpYWdfYW5hIDwtIGRpYWdfYWxsICU+JSAKICBtdXRhdGUoCiAgICBudW1fcGF0aWVudHNfbmV2ZXJfc2V2ZXJlX2JlZm9yZV9hZG1pc3Npb24gPSBudW1fcGF0aWVudHNfYWxsX2JlZm9yZV9hZG1pc3Npb24gLSBudW1fcGF0aWVudHNfZXZlcl9zZXZlcmVfYmVmb3JlX2FkbWlzc2lvbiwKICAgIG51bV9wYXRpZW50c19uZXZlcl9zZXZlcmVfc2luY2VfYWRtaXNzaW9uID0gbnVtX3BhdGllbnRzX2FsbF9zaW5jZV9hZG1pc3Npb24gLSBudW1fcGF0aWVudHNfZXZlcl9zZXZlcmVfc2luY2VfYWRtaXNzaW9uLAogICkgJT4lIAogIHBpdm90X2xvbmdlcihjb2xzID0gc3RhcnRzX3dpdGgoJ251bScpLCBuYW1lc190byA9ICdwYXRpZW50X3R5cGUnLCB2YWx1ZXNfdG8gPSAnY291bnQnKSAlPiUgCiAgYmluZF9jb2xzKAogICAgc3BsaXRfcGF0aWVudF90eXBlKC5bWydwYXRpZW50X3R5cGUnXV0pICU+JSAKICAgICAgZG8uY2FsbChyYmluZCwgLikgJT4lIAogICAgICBhcy5kYXRhLmZyYW1lKCkgJT4lIAogICAgICBgY29sbmFtZXM8LWAoYygndGltZScsICdzZXZlcmUnKSkKICApICU+JSAKICBtdXRhdGUoc2V2ZXJlID0gcmVjb2RlKHNldmVyZSwgCiAgICAgICAgICAgICAgICAgICAgICAgICBudW1fcGF0aWVudHNfYWxsID0gJ251bV9wYXRpZW50c19pY2QnLAogICAgICAgICAgICAgICAgICAgICAgICAgbnVtX3BhdGllbnRzX2V2ZXJfc2V2ZXJlPSAnbnVtX3BhdGllbnRzX2V2ZXJfc2V2ZXJlX2ljZDEnLAogICAgICAgICAgICAgICAgICAgICAgICAgbnVtX3BhdGllbnRzX25ldmVyX3NldmVyZT0gJ251bV9wYXRpZW50c19uZXZlcl9zZXZlcmVfaWNkMScpLAogICAgICAgICB0aW1lID0gcmVjb2RlKHRpbWUsCiAgICAgICAgICAgICAgICAgICAgICAgYmVmb3JlX2FkbWlzc2lvbiA9ICdCZWZvcmUgYWRtaXNzaW9uJywKICAgICAgICAgICAgICAgICAgICAgICBzaW5jZV9hZG1pc3Npb24gPSAnQWZ0ZXIgYWRtaXNzaW9uJykpICU+JSAKICByZW5hbWUoJ2ljZCcgPSBpY2RfY29kZV8zY2hhcnMpICU+JSAKICBzZWxlY3QoLSBwYXRpZW50X3R5cGUpICU+JSAKICBkcm9wX25hKCkgJT4lIAogIGxlZnRfam9pbihzaXRlX2NvdW50cnksIGJ5ID0gYygnc2l0ZWlkJyA9ICdTaXRlSUQubmV3JykpICU+JSAKICB7Ln0KCmRpYWdfaWNkXzEwIDwtIGRpYWdfYW5hICU+JSAKICBmaWx0ZXIoaWNkX3ZlcnNpb24gPT0gMTApICU+JQogIHNlbGVjdCgtIGljZF92ZXJzaW9uKSAlPiUgCiAgcGl2b3Rfd2lkZXIobmFtZXNfZnJvbSA9IHNldmVyZSwgdmFsdWVzX2Zyb20gPSBjb3VudCkgJT4lCiAgcmlnaHRfam9pbihuZXVyb19pY2RzXzEwLCBieSA9ICdpY2QnKSAlPiUgCiAgZGlzdGluY3QoKSAlPiUgCiAgbGVmdF9qb2luKGRlbW9fYW5hLCBieSA9ICdzaXRlaWQnKSAlPiUgCiAgbXV0YXRlKGZ1bGxfaWNkID0gcGFzdGUwKGBJQ0QtMTAgRGVzY3JpcHRpb25gLCAnICgnLCBpY2QsICcpJyksCiAgICAgICAgIG51bV9wYXRpZW50c19uZXZlcl9zZXZlcmVfaWNkMCA9IG51bV9wYXRpZW50c19uZXZlcl9zZXZlcmUgLSBudW1fcGF0aWVudHNfbmV2ZXJfc2V2ZXJlX2ljZDEsCiAgICAgICAgIG51bV9wYXRpZW50c19ldmVyX3NldmVyZV9pY2QwID0gbnVtX3BhdGllbnRzX2V2ZXJfc2V2ZXJlIC0gbnVtX3BhdGllbnRzX2V2ZXJfc2V2ZXJlX2ljZDEsCiAgKSAlPiUKICBkcm9wX25hKG51bV9wYXRpZW50c19pY2QpICU+JSAKICB7Ln0KCgpkaWFnX2ljZF85IDwtIGRpYWdfYW5hICU+JSAKICBmaWx0ZXIoaWNkX3ZlcnNpb24gPT0gOSkgJT4lCiAgc2VsZWN0KC0gaWNkX3ZlcnNpb24pICU+JSAKICBwaXZvdF93aWRlcihuYW1lc19mcm9tID0gc2V2ZXJlLCB2YWx1ZXNfZnJvbSA9IGNvdW50KSAlPiUKICByaWdodF9qb2luKG5ldXJvX2ljZHNfOSwgYnkgPSAnaWNkJykgJT4lIAogIGRpc3RpbmN0KCkgJT4lIAogIGxlZnRfam9pbihkZW1vX2FuYSwgYnkgPSAnc2l0ZWlkJykgJT4lIAogIG11dGF0ZShmdWxsX2ljZCA9IHBhc3RlMChpY2Q5X2Rlc2MsICcgKCcsIGljZCwgJyknKSwKICAgICAgICAgbnVtX3BhdGllbnRzX25ldmVyX3NldmVyZV9pY2QwID0gbnVtX3BhdGllbnRzX25ldmVyX3NldmVyZSAtIG51bV9wYXRpZW50c19uZXZlcl9zZXZlcmVfaWNkMSwKICAgICAgICAgbnVtX3BhdGllbnRzX2V2ZXJfc2V2ZXJlX2ljZDAgPSBudW1fcGF0aWVudHNfZXZlcl9zZXZlcmUgLSBudW1fcGF0aWVudHNfZXZlcl9zZXZlcmVfaWNkMSwKICApICU+JQogIGRyb3BfbmEobnVtX3BhdGllbnRzX2ljZCkgJT4lIAogIHsufQpgYGAKCmByIGxlbmd0aCh1bmlxdWUoZGlhZ19pY2RfMTAkc2l0ZWlkKSlgIHNpdGVzIHdpdGggaWNkLTEwIGNvZGUuIApgciBsZW5ndGgodW5pcXVlKGRpYWdfaWNkXzkkc2l0ZWlkKSlgIHNpdGVzIGhhdmUgaWNkLTkuCgpgYGB7cn0KY291bnRyeV9zdW1faWNkMTAgPC0gZGlhZ19pY2RfMTAgJT4lIAogIHNlbGVjdChzaXRlaWQsIENvdW50cnksIG51bV9wYXRpZW50c19hbGwpICU+JSAKICBkaXN0aW5jdCgpICU+JSAKICBncm91cF9ieShDb3VudHJ5KSAlPiUgCiAgc3VtbWFyaXNlKGFsbF9wYXRzX2NvdW50cnkgPSBzdW0obnVtX3BhdGllbnRzX2FsbCksIC5ncm91cHMgPSAnZHJvcCcpCgpjb3VudHJ5X3N1bV9pY2Q5IDwtIGRpYWdfaWNkXzkgJT4lIAogIHNlbGVjdChzaXRlaWQsIENvdW50cnksIG51bV9wYXRpZW50c19hbGwpICU+JSAKICBkaXN0aW5jdCgpICU+JSAKICBncm91cF9ieShDb3VudHJ5KSAlPiUgCiAgc3VtbWFyaXNlKGFsbF9wYXRzX2NvdW50cnkgPSBzdW0obnVtX3BhdGllbnRzX2FsbCksIC5ncm91cHMgPSAnZHJvcCcpCgpkaWFnX2ljZF8xMCA8LSBkaWFnX2ljZF8xMCAlPiUgCiAgbWVyZ2UoY291bnRyeV9zdW1faWNkMTAsIGJ5ID0gJ0NvdW50cnknKQoKZGlhZ19pY2RfOSA8LSBkaWFnX2ljZF85ICU+JSAKICBtZXJnZShjb3VudHJ5X3N1bV9pY2Q5LCBieSA9ICdDb3VudHJ5JykKYGBgCgoKIyBXcml0ZSBkYXRhIG91dCB0byAuUmRhdGEKCmBgYHtyfQpzYXZlKGRlbW9fYW5hLCBkaWFnX2ljZF8xMCwgZGlhZ19pY2RfOSwgZmlsZSA9ICdkYXRhL3Byb2Nlc3NlZC1kYXRhLlJkYXRhJykKYGBgCgoKCiMgUXVhbGl0eSBjaGVja3MKCiMjIENoZWNrIGlmICdhbGwnIGVxdWFscyB0byBzdW0gb2YgdGhlIHJlc3QKYGBge3J9CmFnZV9ncm91cF9jaGVjayA8LSBkZW1vX2FsbCAlPiUgCiAgZmlsdGVyKHNleCA9PSAnYWxsJywgcmFjZSA9PSAnYWxsJywgYWdlX2dyb3VwICE9ICdhbGwnKSAlPiUgCiAgZ3JvdXBfYnkoc2l0ZWlkKSAlPiUgCiAgc3VtbWFyaXNlKGFnZV9ncm91cF9zdW0gPSBzdW0obnVtX3BhdGllbnRzX2FsbCksIC5ncm91cHMgPSAnZHJvcCcpICU+JSAKICByaWdodF9qb2luKGRlbW9fYW5hKSAlPiUgCiAgbXV0YXRlKG1pc21hdGNoZXMgPSBudW1fcGF0aWVudHNfYWxsIC0gYWdlX2dyb3VwX3N1bSkgJT4lIAogICMgZmlsdGVyKGFicyhtaXNtYXRjaGVzKSAhPSAwKSAlPiUgCiAgc2VsZWN0KC1jb250YWlucygnc2V2ZXJlJykpICU+JSAKICBhcnJhbmdlKGRlc2MoYWJzKG1pc21hdGNoZXMpKSkgJT4lIAogIHsufQoKcmFjZV9jaGVjayA8LSBkZW1vX2FsbCAlPiUgCiAgZmlsdGVyKHNleCA9PSAnYWxsJywgcmFjZSAhPSAnYWxsJywgYWdlX2dyb3VwID09ICdhbGwnKSAlPiUgCiAgZ3JvdXBfYnkoc2l0ZWlkKSAlPiUgCiAgc3VtbWFyaXNlKHJhY2Vfc3VtID0gc3VtKG51bV9wYXRpZW50c19hbGwpLCAuZ3JvdXBzID0gJ2Ryb3AnKSAlPiUgCiAgcmlnaHRfam9pbihkZW1vX2FuYSkgJT4lIAogIG11dGF0ZShtaXNtYXRjaGVzID0gbnVtX3BhdGllbnRzX2FsbCAtIHJhY2Vfc3VtKSAlPiUgCiAgIyBmaWx0ZXIoYWJzKG1pc21hdGNoZXMpICE9IDApICU+JSAKICBzZWxlY3QoLWNvbnRhaW5zKCdzZXZlcmUnKSkgJT4lIAogIGFycmFuZ2UoZGVzYyhhYnMobWlzbWF0Y2hlcykpKSAlPiUgCiAgey59CgpzZXhfY2hlY2sgPC0gZGVtb19hbGwgJT4lIAogIGZpbHRlcihyYWNlID09ICdhbGwnLCBzZXggIT0gJ2FsbCcsIGFnZV9ncm91cCA9PSAnYWxsJykgJT4lIAogIGdyb3VwX2J5KHNpdGVpZCkgJT4lIAogIHN1bW1hcmlzZShzZXhfc3VtID0gc3VtKG51bV9wYXRpZW50c19hbGwpLCAuZ3JvdXBzID0gJ2Ryb3AnKSAlPiUgCiAgcmlnaHRfam9pbihkZW1vX2FuYSkgJT4lIAogIG11dGF0ZShtaXNtYXRjaGVzID0gbnVtX3BhdGllbnRzX2FsbCAtIHNleF9zdW0pICU+JSAKICAjIGZpbHRlcihtaXNtYXRjaGVzICE9IDApICU+JSAKICBzZWxlY3QoLWNvbnRhaW5zKCdzZXZlcmUnKSkgJT4lIAogIGFycmFuZ2UoZGVzYyhhYnMobWlzbWF0Y2hlcykpKSAlPiUgCiAgey59CgpkZW1vX2NoZWNrIDwtIGRlbW9fYW5hICU+JSAKICBtdXRhdGUocGVyY19zZXZlcmUgPSBudW1fcGF0aWVudHNfZXZlcl9zZXZlcmUvbnVtX3BhdGllbnRzX2FsbCkKCndyaXRlX2NzdihyYWNlX2NoZWNrLCAnZGF0YS9yYWNlX2NoZWNrLmNzdicpCndyaXRlX2NzdihzZXhfY2hlY2ssICdkYXRhL3NleF9jaGVjay5jc3YnKQp3cml0ZV9jc3YoYWdlX2dyb3VwX2NoZWNrLCAnZGF0YS9hZ2VfZ3JvdXBfY2hlY2suY3N2JykKYGBgCgojIyBHZW5lcmF0ZSBjaGFyYWN0ZXJpc3RpY3MgdGFibGUKCmBgYHtyfQpzdW1fc3VtIDwtIHN5bShwYXN0ZSgnTiA9Jywgc3VtKGRlbW9fYW5hJG51bV9wYXRpZW50c19hbGwpKSkKYGBgCgoKYGBge3J9CmFnZV9ncm91cF9kZXNjIDwtIGRlbW9fYWxsICU+JSAKICBmaWx0ZXIoc2V4ID09ICdhbGwnLCByYWNlID09ICdhbGwnLCBhZ2VfZ3JvdXAgIT0gJ2FsbCcpICU+JSAKICBncm91cF9ieShhZ2VfZ3JvdXAsIHNpdGVpZCkgJT4lIAogIHN1bW1hcmlzZShzaXplID0gc3VtKG51bV9wYXRpZW50c19hbGwsIG5hLnJtID0gVCksIC5ncm91cHMgPSAnZHJvcCcpICU+JSAKICBwaXZvdF93aWRlcihuYW1lc19mcm9tID0gYWdlX2dyb3VwLCB2YWx1ZXNfZnJvbSA9IHNpemUsIHZhbHVlc19maWxsID0gMCkgJT4lIAogIG11dGF0ZShzdW1fYWdlX2NvbHMgPSByb3dTdW1zKC5bLCAtMV0pKSAlPiUgCiAgcmlnaHRfam9pbihhZ2VfZ3JvdXBfY2hlY2spICU+JSAKICByZXBsYWNlKGlzLm5hKC4pLCAwKSAlPiUgCiAgbXV0YXRlKHVua25vd25fb3RoZXIgPSBvdGhlciArIG51bV9wYXRpZW50c19hbGwgLSBhZ2VfZ3JvdXBfc3VtKSAlPiUgCiAgey59CgpzZXhfZGVzYyA8LSBkZW1vX2FsbCAlPiUgCiAgZmlsdGVyKHNleCAhPSAnYWxsJywgcmFjZSA9PSAnYWxsJywgYWdlX2dyb3VwID09ICdhbGwnKSAlPiUgCiAgZ3JvdXBfYnkoc2V4LCBzaXRlaWQpICU+JSAKICBzdW1tYXJpc2Uoc2l6ZSA9IHN1bShudW1fcGF0aWVudHNfYWxsLCBuYS5ybSA9IFQpLCAuZ3JvdXBzID0gJ2Ryb3AnKSAlPiUgCiAgcGl2b3Rfd2lkZXIobmFtZXNfZnJvbSA9IHNleCwgdmFsdWVzX2Zyb20gPSBzaXplLCB2YWx1ZXNfZmlsbCA9IDApICU+JSAKICBtdXRhdGUoc3VtX3NleF9jb2xzID0gcm93U3VtcyguWywgLTFdKSkgJT4lIAogIHJpZ2h0X2pvaW4oc2V4X2NoZWNrKSAlPiUgCiAgcmVwbGFjZShpcy5uYSguKSwgMCkgJT4lIAogIG11dGF0ZSh1bmtub3duX290aGVyID0gb3RoZXIgKyBudW1fcGF0aWVudHNfYWxsIC0gc2V4X3N1bSkgJT4lIAogIHsufQoKcmFjZV9kZXNjIDwtIGRlbW9fYWxsICU+JQogIGZpbHRlcihzZXggPT0gJ2FsbCcsIHJhY2UgIT0gJ2FsbCcsIGFnZV9ncm91cCA9PSAnYWxsJykgJT4lIAogIGdyb3VwX2J5KHJhY2UsIHNpdGVpZCkgJT4lIAogIHN1bW1hcmlzZShzaXplID0gc3VtKG51bV9wYXRpZW50c19hbGwsIG5hLnJtID0gVCksIC5ncm91cHMgPSAnZHJvcCcpICU+JSAKICBwaXZvdF93aWRlcihuYW1lc19mcm9tID0gcmFjZSwgdmFsdWVzX2Zyb20gPSBzaXplLCB2YWx1ZXNfZmlsbCA9IDApICU+JSAKICBtdXRhdGUoc3VtX3JhY2VfY29scyA9IHJvd1N1bXMoLlssIC0xXSkpICU+JSAKICByaWdodF9qb2luKHJhY2VfY2hlY2spICU+JSAKICByZXBsYWNlKGlzLm5hKC4pLCAwKSAlPiUgCiAgbXV0YXRlKHVua25vd25fb3RoZXJfcmFjZSA9IG90aGVyICsgbnVtX3BhdGllbnRzX2FsbCAtIHJhY2Vfc3VtKSAlPiUgCiAgey59CgpkZW1vX2Rlc2MgPC0gbGVmdF9qb2luKHNleF9kZXNjLCBhZ2VfZ3JvdXBfZGVzYywgYnkgPSAnc2l0ZWlkJywgc3VmZml4ID0gYygiX3NleCIsICJfYWdlX2dyb3VwIikpICU+JSAKICBsZWZ0X2pvaW4ocmFjZV9kZXNjLCBieSA9ICdzaXRlaWQnKSAlPiUgCiAgIyBSZWR1Y2UoZnVuY3Rpb24oLi4uKSBsZWZ0X2pvaW4oLi4uLCBieSA9ICdzaXRlaWQnLCAsICdfcmFjZScpKSwgCiAgIyAgICAgICAgICAgICAgICAgICBsaXN0KCwgcmFjZV9kZXNjKSwgKSAlPiUgCiAgc2VsZWN0KC0gYyhjb250YWlucygndW0nKSwgY29udGFpbnMoJ21pc21hdGNoZXMnKSkpCgpkZW1vX2Rlc2MgJT4lIHdyaXRlX2NzdigncmVzdWx0cy9kZW1vX3ByZWxpbS5jc3YnKQojIHNvbWUgTkFzIGFyZSBiZWNhdXNlIHRoZXJlIGFyZSBqdXN0IG5vdCBhIHJvdyBmb3Igd2l0aCB0aGF0IHZhbHVlCmBgYAoKYGBge3J9CiMgc2V4X2Rlc2MgPC0gZGVtb19hbGwgJT4lIAojICAgZmlsdGVyKHNleCAhPSAnYWxsJywgcmFjZSA9PSAnYWxsJywgYWdlX2dyb3VwID09ICdhbGwnKSAlPiUgCiMgICBncm91cF9ieShzZXgpICU+JSAKIyAgIHN1bW1hcmlzZSghIXN1bV9zdW0gOj0gc3VtKG51bV9wYXRpZW50c19hbGwpLCAuZ3JvdXBzID0gJ2Ryb3AnKSAlPiUgCiMgICBtdXRhdGUoY2F0ZWdvcnkgPSAnU2V4JykgJT4lIAojICAgcmVuYW1lKCdDaGFyYWN0ZXJpc3RpY3MnID0gc2V4KQojIAojIHJhY2VfZGVzYyA8LSBkZW1vX2FsbCAlPiUgCiMgICBmaWx0ZXIoc2V4ID09ICdhbGwnLCByYWNlICE9ICdhbGwnLCBhZ2VfZ3JvdXAgPT0gJ2FsbCcpICU+JSAKIyAgIGdyb3VwX2J5KHJhY2UpICU+JSAKIyAgIHN1bW1hcmlzZSghIXN1bV9zdW0gOj0gc3VtKG51bV9wYXRpZW50c19hbGwpLCAuZ3JvdXBzID0gJ2Ryb3AnKSAlPiUgCiMgICBtdXRhdGUoY2F0ZWdvcnkgPSAnUmFjZS9FdGhuaWNpdHknKSAlPiUgCiMgICByZW5hbWUoJ0NoYXJhY3RlcmlzdGljcycgPSByYWNlKQojIAojIGJpbmRfcm93cyhhZ2VfZ3JvdXBfZGVzYywgc2V4X2Rlc2MsIHJhY2VfZGVzYykgJT4lIAojICAgZ3JvdXBfYnkoY2F0ZWdvcnkpICU+JSAKIyAgIGd0KCkgJT4lIAojICAgdGFiX2Zvb3Rub3RlKAojICAgICBmb290bm90ZSA9ICJPYmZ1c2NhdGlvbiBhdCBlYWNoIHNpdGUgbWF5IGFmZmVjdCB0aGUgdG90YWwgY291bnRzLiIsCiMgICAgIGxvY2F0aW9ucyA9IGNlbGxzX2NvbHVtbl9sYWJlbHMoCiMgICAgICAgY29sdW1ucyA9IDIpCiMgICApICU+JSAKIyAgIHsufQpgYGAKCgpDaGVjayBOQXM6CmBgYHtyfQpuYV9kaWFnIDwtIGRpYWdfYW5hICU+JSAKICBzZWxlY3Qoc2l0ZWlkLCBpY2QsIGNvbnRhaW5zKCdudW0nKSkgJT4lIAogIGZpbHRlcihyb3dTdW1zKGlzLm5hKC4pKSA+IDApCmBgYAoKPCEtLSAjIE1vcmUgcXVhbGl0eSBjaGVjazogLS0+CgpgYGB7ciBpbmNsdWRlPUZBTFNFLCBldmFsPUZBTFNFfQojIGNoZWNrX2FsbCA8LSBkZW1vX2FsbCAlPiUgCiMgICBmaWx0ZXIocmFjZSA9PSAnYWxsJykgCgojIGNoZWNrIHdoZXRoZXIgdGhlIHJvd3Mgd2l0aCByYWNlID0gYWxsIGFyZSBhY3R1YWwgc3VtIG9mIHRoZSByZXN0CiMgY2hlY2tfcmFjZSA8LSBkZW1vX2FsbCAlPiUKIyAgIGZpbHRlcihyYWNlICE9ICdhbGwnKSAlPiUKIyAgIGdyb3VwX2J5KHNpdGVpZCwgc2V4LCBhZ2VfZ3JvdXApICU+JQojICAgc3VtbWFyaXNlKG51bV9wYXRpZW50c19zdW0gPSBzdW0obnVtX3BhdGllbnRzX2FsbCkpICU+JQojICAgbGVmdF9qb2luKGNoZWNrX2FsbCkKCgojIGNoZWNrX25hIDwtIGNoZWNrX3JhY2UgJT4lIAojICAgZmlsdGVyKGlzLm5hKG51bV9wYXRpZW50c19hbGwpKSAlPiUgCiMgICBwdWxsKHNpdGVpZCkgJT4lIAojICAgdW5pcXVlKCkKCiMgbGVuZ3RoKHVuaXF1ZShkaWFnX2FsbCRzaXRlaWQpKQpjaGVja19kaWFnIDwtIGRpYWdfYWxsICU+JSAKICBmaWx0ZXIoIWlzLm5hKG51bV9wYXRpZW50c19ldmVyX3NldmVyZV9pY2QxKSkgJT4lIAogIG11dGF0ZShudW1fcGF0aWVudHNfaWNkID0gbnVtX3BhdGllbnRzX2V2ZXJfc2V2ZXJlX2ljZDEgKyBudW1fcGF0aWVudHNfbmV2ZXJfc2V2ZXJlX2ljZDEsCiAgICAgICAgIGljZCA9IGdzdWIoJ2ljZDonLCAnJywgaWNkKSkgJT4lIAogIGdyb3VwX2J5KHNpdGVpZCkgJT4lCiAgc3VtbWFyaXNlKG1heF9pY2RfcGF0c19hbGwgPSBtYXgobnVtX3BhdGllbnRzX2ljZCwgbmEucm0gPSBUKSwgLmdyb3VwcyA9ICdkcm9wJykgJT4lCiAgbGVmdF9qb2luKGRlbW9fYW5hKQoKY2hlY2tfZGlhZyAlPiUgCiAgZmlsdGVyKG1heF9pY2RfcGF0c19hbGwgPiBudW1fcGF0aWVudHNfYWxsKQpgYGAKCgpgYGB7ciBpbmNsdWRlPUZBTFNFLCBldmFsPUZBTFNFfQojIGNvdW50cnlfcGF0cyA8LSBkZW1vX2FuYSAlPiUKIyAgIGdyb3VwX2J5KENvdW50cnkpICU+JQojICAgc3VtbWFyaXNlKHRvdGFsX3BhdGllbnRzX3Blcl9jb3VudHJ5ID0gc3VtKG51bV9wYXRpZW50c19hbGwpLCAuZ3JvdXBzID0gJ2Ryb3AnKQoKIyBkb3RfZGF0IDwtIGRpYWdfYW5hICU+JQojICAgZ3JvdXBfYnkoc2l0ZWlkLCB0aW1lLCBpY2QpICU+JQojICAgc3VtbWFyaXNlKHBhdHNfdGltZV9pY2RfY3RyeSA9IHN1bShudW1fcGF0aWVudHNfaWNkKSwgLmdyb3VwcyA9ICdkcm9wJykgJT4lCiMgICBsZWZ0X2pvaW4oc2l0ZV9wYXRzLCBieSA9ICdzaXRlaWQnKSAlPiUKIyAgIG11dGF0ZShwZXJjZW50X3BhdHMgPSBwYXRzX3RpbWVfaWNkX2N0cnkvbnVtX3BhdGllbnRzX2FsbCkKIyAKIyBkb3RfZGF0ICU+JQojICAgZ2dwbG90KGFlcyh5ID0gZm9yY2F0czo6ZmN0X3Jlb3JkZXIoaWNkLCBwZXJjZW50X3BhdHMpLCB4ID0gcGVyY2VudF9wYXRzLCBncm91cCA9IGljZCkpICsKIyAgICAgZ2VvbV9wb2ludChhZXMoY29sb3IgPSB0aW1lKSkgKwojICAgICBnZW9tX2xpbmUoKSArCiMgICAgIGZhY2V0X2dyaWQocm93cyA9IHZhcnMoc2l0ZWlkKSkgKwojICAgIyBzY2FsZV95X2NvbnRpbnVvdXMoYnJlYWtzID0gc2VxKDAsIDEsIDAuMSksIGxhYmVscyA9IHNjYWxlczo6cGVyY2VudF9mb3JtYXQoYWNjdXJhY3kgPSAxKSkgKwojICAgc2NhbGVfY29sb3JfY2FydG9fZChwYWxldHRlID0gNCkgKwojICAgbGFicyh4ID0gTlVMTCwgeSA9ICdQZXJjZW50IHBhdGllbnRzJykKICAgIApgYGAK</div>
 
 
 
