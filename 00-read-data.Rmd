@@ -54,6 +54,14 @@ Notes:
 
 ## Read in local files
 
+```{r}
+site_country <- read_csv('data/SiteID_Map_Non_Pediatric_3digit_toshare.csv') %>% 
+  select(- Peds.only) %>% 
+  mutate(Country = case_when(
+    Country == 'USA' ~ Country,
+    TRUE ~ stringr::str_to_title(Country)))
+```
+
 <!-- Two rows have country SINGAPORE_SPAIN because there is only one site in each one of the countries. -->
 <!-- If this were not combined: data could be known the specific site. -->
 
@@ -93,10 +101,6 @@ https://icd.codes/icd9cm/780
 781 Symptoms involving nervous and musculoskeletal systems (Other)
 https://icd.codes/icd9cm/781
 
-```{r}
-
-```
-
 
 ```{r}
 phecode_icd9 <- read_csv('data/phecode_icd9_rolled.csv') %>% 
@@ -131,7 +135,7 @@ check <- demo_all %>%
 
 Notes: 
 
-“-99” indicate masked small numbers (for obfuscation) and “-999" indicate missing, unknown, not applicable, etc.
+“-99” indicate masked small numbers (for obfuscation) and “-999" indicate missing, mismatches, not applicable, etc.
 
 # Descriptive statistics
 
@@ -183,6 +187,7 @@ diag_ana <- diag_all %>%
   rename('icd' = icd_code_3chars) %>% 
   select(- patient_type) %>% 
   drop_na() %>% 
+  left_join(site_country, by = c('siteid' = 'SiteID.new')) %>% 
   {.}
 
 diag_icd_10 <- diag_ana %>% 
@@ -224,41 +229,7 @@ diag_icd_9 <- diag_ana %>%
 save(demo_ana, diag_icd_10, diag_icd_9, file = 'data/processed-data.Rdata')
 ```
 
-## Generate characteristics table
 
-```{r}
-sum_sum <- sym(paste('N =', sum(demo_ana$num_patients_all)))
-age_group_desc <- demo_all %>% 
-  filter(sex == 'all', race == 'all', age_group != 'all') %>% 
-  group_by(age_group) %>% 
-  summarise(!!sum_sum := sum(num_patients_all), .groups = 'drop') %>% 
-  mutate(category = 'Age group') %>% 
-  rename('Characteristics' = age_group)
-
-sex_desc <- demo_all %>% 
-  filter(sex != 'all', race == 'all', age_group == 'all') %>% 
-  group_by(sex) %>% 
-  summarise(!!sum_sum := sum(num_patients_all), .groups = 'drop') %>% 
-  mutate(category = 'Sex') %>% 
-  rename('Characteristics' = sex)
-
-race_desc <- demo_all %>% 
-  filter(sex == 'all', race != 'all', age_group == 'all') %>% 
-  group_by(race) %>% 
-  summarise(!!sum_sum := sum(num_patients_all), .groups = 'drop') %>% 
-  mutate(category = 'Race/Ethnicity') %>% 
-  rename('Characteristics' = race)
-
-bind_rows(age_group_desc, sex_desc, race_desc) %>% 
-  group_by(category) %>% 
-  gt() %>% 
-  tab_footnote(
-    footnote = "Obfuscation at each site may affect the total counts.",
-    locations = cells_column_labels(
-      columns = 2)
-  ) %>% 
-  {.}
-```
 
 # Quality checks
 
@@ -268,9 +239,9 @@ age_group_check <- demo_all %>%
   filter(sex == 'all', race == 'all', age_group != 'all') %>% 
   group_by(siteid) %>% 
   summarise(age_group_sum = sum(num_patients_all), .groups = 'drop') %>% 
-  left_join(demo_ana) %>% 
+  right_join(demo_ana) %>% 
   mutate(mismatches = num_patients_all - age_group_sum) %>% 
-  filter(abs(mismatches) != 0) %>% 
+  # filter(abs(mismatches) != 0) %>% 
   select(-contains('severe')) %>% 
   arrange(desc(abs(mismatches))) %>% 
   {.}
@@ -279,9 +250,9 @@ race_check <- demo_all %>%
   filter(sex == 'all', race != 'all', age_group == 'all') %>% 
   group_by(siteid) %>% 
   summarise(race_sum = sum(num_patients_all), .groups = 'drop') %>% 
-  left_join(demo_ana) %>% 
+  right_join(demo_ana) %>% 
   mutate(mismatches = num_patients_all - race_sum) %>% 
-  filter(abs(mismatches) != 0) %>% 
+  # filter(abs(mismatches) != 0) %>% 
   select(-contains('severe')) %>% 
   arrange(desc(abs(mismatches))) %>% 
   {.}
@@ -290,9 +261,9 @@ sex_check <- demo_all %>%
   filter(race == 'all', sex != 'all', age_group == 'all') %>% 
   group_by(siteid) %>% 
   summarise(sex_sum = sum(num_patients_all), .groups = 'drop') %>% 
-  left_join(demo_ana) %>% 
+  right_join(demo_ana) %>% 
   mutate(mismatches = num_patients_all - sex_sum) %>% 
-  filter(mismatches != 0) %>% 
+  # filter(mismatches != 0) %>% 
   select(-contains('severe')) %>% 
   arrange(desc(abs(mismatches))) %>% 
   {.}
@@ -303,6 +274,83 @@ demo_check <- demo_ana %>%
 write_csv(race_check, 'data/race_check.csv')
 write_csv(sex_check, 'data/sex_check.csv')
 write_csv(age_group_check, 'data/age_group_check.csv')
+```
+
+## Generate characteristics table
+
+```{r}
+sum_sum <- sym(paste('N =', sum(demo_ana$num_patients_all)))
+```
+
+
+```{r}
+age_group_desc <- demo_all %>% 
+  filter(sex == 'all', race == 'all', age_group != 'all') %>% 
+  group_by(age_group, siteid) %>% 
+  summarise(size = sum(num_patients_all, na.rm = T), .groups = 'drop') %>% 
+  pivot_wider(names_from = age_group, values_from = size, values_fill = 0) %>% 
+  mutate(sum_age_cols = rowSums(.[, -1])) %>% 
+  right_join(age_group_check) %>% 
+  replace(is.na(.), 0) %>% 
+  mutate(unknown_other = other + num_patients_all - age_group_sum) %>% 
+  {.}
+
+sex_desc <- demo_all %>% 
+  filter(sex != 'all', race == 'all', age_group == 'all') %>% 
+  group_by(sex, siteid) %>% 
+  summarise(size = sum(num_patients_all, na.rm = T), .groups = 'drop') %>% 
+  pivot_wider(names_from = sex, values_from = size, values_fill = 0) %>% 
+  mutate(sum_sex_cols = rowSums(.[, -1])) %>% 
+  right_join(sex_check) %>% 
+  replace(is.na(.), 0) %>% 
+  mutate(unknown_other = other + num_patients_all - sex_sum) %>% 
+  {.}
+
+race_desc <- demo_all %>% C
+  filter(sex == 'all', race != 'all', age_group == 'all') %>% 
+  group_by(race, siteid) %>% 
+  summarise(size = sum(num_patients_all, na.rm = T), .groups = 'drop') %>% 
+  pivot_wider(names_from = race, values_from = size, values_fill = 0) %>% 
+  mutate(sum_race_cols = rowSums(.[, -1])) %>% 
+  right_join(race_check) %>% 
+  replace(is.na(.), 0) %>% 
+  mutate(unknown_other_race = other + num_patients_all - race_sum) %>% 
+  {.}
+
+demo_desc <- left_join(sex_desc, age_group_desc, by = 'siteid', suffix = c("_sex", "_age_group")) %>% 
+  left_join(race_desc, by = 'siteid') %>% 
+  # Reduce(function(...) left_join(..., by = 'siteid', , '_race')), 
+  #                   list(, race_desc), ) %>% 
+  select(- c(contains('um'), contains('mismatches')))
+
+demo_desc %>% write_csv('results/demo_prelim.csv')
+# some NAs are because there are just not a row for with that value
+```
+
+```{r}
+# sex_desc <- demo_all %>% 
+#   filter(sex != 'all', race == 'all', age_group == 'all') %>% 
+#   group_by(sex) %>% 
+#   summarise(!!sum_sum := sum(num_patients_all), .groups = 'drop') %>% 
+#   mutate(category = 'Sex') %>% 
+#   rename('Characteristics' = sex)
+# 
+# race_desc <- demo_all %>% 
+#   filter(sex == 'all', race != 'all', age_group == 'all') %>% 
+#   group_by(race) %>% 
+#   summarise(!!sum_sum := sum(num_patients_all), .groups = 'drop') %>% 
+#   mutate(category = 'Race/Ethnicity') %>% 
+#   rename('Characteristics' = race)
+# 
+# bind_rows(age_group_desc, sex_desc, race_desc) %>% 
+#   group_by(category) %>% 
+#   gt() %>% 
+#   tab_footnote(
+#     footnote = "Obfuscation at each site may affect the total counts.",
+#     locations = cells_column_labels(
+#       columns = 2)
+#   ) %>% 
+#   {.}
 ```
 
 

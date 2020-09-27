@@ -19,6 +19,7 @@ library(ggplot2)
 library(rcartocolor)
 library(forcats)
 library(purrr)
+library(stringr)
 library(DT)
 library(cowplot)
 
@@ -33,11 +34,15 @@ Calculate percentages:
 
 ```{r fig.height=9}
 code_prevalence <- diag_icd_10 %>% 
-  group_by(siteid, time, icd, `Neurological Disease Category`, full_icd) %>% 
+  group_by(siteid, Country, time, icd, `Neurological Disease Category`, full_icd) %>% 
   # summarise(pats_time_icd_site = sum(num_patients_icd), .groups = 'drop') %>% 
   # left_join(demo_ana, by = 'siteid') %>% 
   mutate(percent_pats_site = num_patients_icd/num_patients_all,
-         siteid = as.factor(siteid))
+         siteid = as.factor(siteid)) %>% 
+  ungroup() %>% 
+  group_by(Country, time, icd, `Neurological Disease Category`, full_icd) %>% 
+  mutate(percent_pats_country = sum(num_patients_icd)/sum(num_patients_all)) %>% 
+  ungroup()
 
 before_code_prev <- code_prevalence %>% 
   filter(time == 'Before admission') %>%
@@ -79,32 +84,48 @@ ggsave('figs/icd_heatmap.png', heats, height = 10, width = 7)
 ```
 
 ```{r fig.height=4, fig.width=8}
-diff_code <- code_prevalence %>% 
-  # filter(siteid != 'SITE309') %>%
-  pivot_wider(names_from = time, values_from = percent_pats_site, 
-              id_cols = c(siteid, icd, `Neurological Disease Category`), 
+diff_code_country <- code_prevalence %>% 
+  select(location = Country, icd, `Neurological Disease Category`, time, percent_pats_country) %>% 
+  distinct() %>% 
+  pivot_wider(names_from = time, values_from = percent_pats_country, 
+              id_cols = c(location, icd, `Neurological Disease Category`), 
               values_fill = 0) %>% 
-  mutate(percent_diff = `After admission` - `Before admission`)
+  mutate(percent_diff = `After admission` - `Before admission`,
+         loc_type = 'Country', .keep = 'unused')
+
+diff_code <- code_prevalence %>% 
+  select(location = siteid, icd, `Neurological Disease Category`, time, percent_pats_site) %>% 
+  pivot_wider(names_from = time, values_from = percent_pats_site, 
+              id_cols = c(location, icd, `Neurological Disease Category`), 
+              values_fill = 0) %>% 
+  mutate(percent_diff = `After admission` - `Before admission`,
+         loc_type = 'Site', location = tolower(location), .keep = 'unused') %>% 
+  bind_rows(diff_code_country)
 
 diff_heat <- diff_code %>% 
-  mutate(siteid = tolower(siteid)) %>%
-  ggplot(aes(y = icd, x = siteid, fill = percent_diff)) +
+  mutate() %>%
+  ggplot(aes(y = icd, x = location, fill = percent_diff)) +
   geom_tile() +
   labs(y = NULL, x = NULL, fill = 'After - Before') +
   scale_x_discrete(drop = F) + 
-  #009392,#39b185,#9ccb86,#e9e29c,#eeb479,#e88471,#cf597e
-  scale_fill_gradient2(
+  scale_fill_gradient2(#009392,#39b185,#9ccb86,#e9e29c,#eeb479,#e88471,#cf597e
     low = '#798234',
     high = '#cf597e',
     labels = scales::percent_format(accuracy = 1)) +
-  facet_grid(rows = vars(`Neurological Disease Category`), space = 'free', scale = 'free') +
+  facet_grid(rows = vars(`Neurological Disease Category`), 
+             cols = vars(fct_rev(loc_type)), space = 'free', scale = 'free') +
   heat_theme_bottom() +
-  theme(plot.margin = unit(c(1,0.2,0.5,5), "lines")) +
+  theme(panel.spacing.x = unit(10, "points"),
+        plot.margin = unit(c(1,0.2,0.2,3), "lines"),
+        axis.text.x = element_text(hjust = 1)) +
+  # theme() +
   NULL
 diff_heat
 
-# ggsave('figs/icd_diff_heatmap.png', diff_heat, height = 4, width = 8)
+
+# ggsave('figs/icd_diff_heat_sitemap.png', diff_heat_site, height = 4, width = 8)
 ```
+
 
 ### Hypothesis testing
 
@@ -232,8 +253,11 @@ icd_prevalence_plots
 ```{r}
 plot_grid(diff_heat, icd_prevalence_plots, rel_heights = c(1, 0.9),
           ncol = 1, labels = 'AUTO') %>%
-  ggsave('figs/icd_prevalence_AB.png', ., height = 7, width = 9.7)
+  ggsave('figs/icd_prevalence_AB.png', ., height = 7.5, width = 9.7)
 ```
+
+
+
 
 ```{r}
 diff_code %>% 
