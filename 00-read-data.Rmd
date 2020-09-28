@@ -343,13 +343,14 @@ demo_desc <- left_join(sex_desc, age_group_desc, by = 'siteid', suffix = c("_sex
   # Reduce(function(...) left_join(..., by = 'siteid', , '_race')), 
   #                   list(, race_desc), ) %>% 
   select(- c(contains('um'), contains('mismatches'))) %>% 
-  right_join(demo_ana, ., by = 'siteid')
-
+  right_join(demo_ana, ., by = 'siteid') %>% 
+  left_join(site_country, by = c('siteid' = 'SiteID.new')) %>% 
+  select(siteid, Country, everything())
 
 
 demo_perc <- demo_desc %>% 
   # mutate(across(- contains('num'), ~ .x/.data$num_patients_all))
-  mutate_at(vars(!starts_with("num"), - siteid),
+  mutate_at(vars(- num_patients_all, - siteid, - Country),
             list(~ round(. / .data$num_patients_all * 100, 1)))
 
 demo_desc %>% write_csv('results/demo_prelim.csv')

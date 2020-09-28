@@ -1,0 +1,270 @@
+---
+title: "Analysis of demographics"
+output: html_document
+---
+
+```{r}
+library(readr)
+library(dplyr)
+library(scales)
+library(tidyr)
+library(ggplot2)
+library(cowplot)
+library(stringr)
+library(forcats)
+```
+
+## Read in data
+```{r}
+demo_desc <- read_csv('results/demo_prelim.csv')
+colorBlindGrey6 <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#CC79A7")
+demo_perc <- demo_desc %>% 
+  mutate_at(vars(- num_patients_all, - siteid, - Country),
+            list(~ . / .data$num_patients_all)) %>% 
+  mutate(Country = as.factor(Country))
+```
+
+```{r}
+unknowns <- demo_perc %>%
+  select(siteid, Country, contains('unknown')) %>% 
+  pivot_longer(- c(siteid, Country))
+unknowns %>% filter(value < 0)
+
+unknowns %>% 
+  ggplot(aes(y = value, x = name)) +
+  # geom_point(position = position_dodge(width = 0.2)) =
+  # geom_boxplot() +
+  ggbeeswarm::geom_beeswarm() +
+  facet_wrap(~ name, scales = 'free')
+```
+
+
+## Severity vs. sex?
+```{r}
+demo_sex <- demo_perc %>% filter(unknown_other_sex < 1)
+lm(num_patients_ever_severe ~ female, demo_sex) %>% 
+  summary()
+
+age_perc <- demo_perc %>% 
+  filter(unknown_other_age_group < 1) %>% 
+  select(Country, num_patients_all, num_patients_ever_severe, contains('to'), ends_with('plus'))
+
+lm(num_patients_ever_severe ~ . - Country - num_patients_all, age_perc) %>% 
+  summary()
+
+age_radar <- age_perc %>% 
+  select(-contains('num')) %>% 
+  group_by(Country) %>% 
+  summarise(across(.fns = mean_se), .groups = 'drop') %>% 
+  pivot_longer(- Country)
+
+races <- c("black",
+           "hispanic_latino",
+           "white",
+           "asian",
+           "hawaiian_pacific_islander",
+           "american_indian")  
+race_perc <- demo_perc %>% 
+  filter(abs(unknown_other_race) < 1) %>% 
+  select(Country, num_patients_all, num_patients_ever_severe, all_of(races))
+
+race_radar <- race_perc %>% 
+  select(-contains('num')) %>% 
+  group_by(Country) %>% 
+  summarise(across(.fns = mean_se), .groups = 'drop') %>% 
+  pivot_longer(- Country) %>% 
+  mutate(name = gsub('_', ' ', name) %>% 
+           str_to_title(.) %>% 
+           gsub('Hispanic ', 'Hispanic/', .) %>% 
+           gsub('Hawaiian ', 'Hawaiian/', .),
+         name = fct_reorder(name, value$y))
+
+lm(num_patients_ever_severe ~ black + white + asian + hispanic_latino + american_indian +
+     hawaiian_pacific_islander, race_perc) %>% 
+  summary()
+```
+
+## Gender plot
+
+```{r}
+sex_plot <- demo_sex %>% 
+  ggplot(aes(female, num_patients_ever_severe, 
+             color = Country)) +
+  geom_point(aes(size = num_patients_all), alpha = 0.8) +
+  scale_x_continuous(labels = scales::percent_format(), 
+                     limits = c(0, 0.65),
+                     expand = expansion(add = c(0.18, 0))) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  # scale_y_log10() +
+  # scale_size_continuous(guide = FALSE) +
+  geom_vline(xintercept = 0.5, linetype = 'dashed') +
+  # coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
+  labs(x = 'Proportion of female patients', y = 'Proportion of severe cases', color = NULL, size = 'Total number of patients
+at each site') +
+  scale_size(trans = "log10") +
+  scale_color_manual(values = colorBlindGrey6) +
+  theme_bw() +
+  theme(legend.position = c(0.22, 0.4),
+        plot.margin = margin(10.5, 5.5, 15.5, 5.5, 'pt'),
+        legend.background = element_blank(),
+        legend.key.height = unit(1, 'line'),
+        legend.title = element_text(hjust = 0, size = 9)) +
+  # scale_color_viridis_d(option = 'E', direction = -1) + 
+  NULL
+# sex_plot
+
+
+```
+
+## Age plot
+
+```{r}
+age_plot <- age_radar %>% 
+  mutate(name = gsub('to', '-', name) %>% gsub('plus', '+', .)) %>% 
+  ggplot(aes(name, value$y, fill = Country, group = Country)) +
+  geom_col(position = 'dodge2') + 
+  coord_flip() +
+  facet_grid(rows = vars(Country)) +
+  geom_linerange(aes(ymin = value$ymin, ymax = value$ymax), 
+                position = position_dodge(width = 0.9),
+                color = 'grey50') +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     expand = expansion(add = c(0,0.02))) +
+  scale_size_continuous(guide = FALSE) +
+  labs(x = NULL, y = 'Proportion of patients in each age group') +
+  scale_color_manual(values = colorBlindGrey6, drop = FALSE) +
+  scale_fill_manual(values = colorBlindGrey6, drop = FALSE) +
+  theme_bw() +
+  theme(legend.position = 'None',
+        panel.grid.major.y = element_blank(),
+        plot.margin = margin(10.5, 5.5, 6.5, 5.5, 'pt')) +
+  NULL
+```
+
+## Race plot
+
+```{r}
+race_plot <- race_radar %>% 
+  ggplot(aes(name, value$y, fill = Country, group = Country)) +
+  geom_col(position = 'dodge2') + 
+  coord_flip() +
+  facet_grid(rows = vars(Country)) +
+  geom_linerange(aes(ymin = value$ymin, ymax = value$ymax), 
+                position = position_dodge(width = 0.9),
+                color = 'grey50') +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     expand = expansion(add = c(0,0.02))) +
+  scale_size_continuous(guide = FALSE) +
+  labs(x = NULL, y = 'Patient proportion in each race/ethnicity group') +
+  scale_color_manual(values = colorBlindGrey6, drop = FALSE) +
+  scale_fill_manual(values = colorBlindGrey6, drop = FALSE) +
+  theme_bw() +
+  theme(legend.position = 'None',
+        panel.grid.major.y = element_blank(),
+        ) +
+  NULL
+```
+
+## Composite plot
+
+```{r}
+sex_race <- plot_grid(sex_plot, race_plot, ncol = 1,
+          rel_heights = c(2.9, 1), labels = 'AUTO')
+comp_plots <- plot_grid(sex_race, age_plot, ncol = 2, rel_widths = c(1.3, 1),
+          labels = c('', 'C'))
+
+ggsave('figs/composite_plot.png', comp_plots, height = 6, width = 8)
+```
+
+
+
+
+```{r}
+# age_radar <- age_perc %>% 
+#   select(-contains('num')) %>% 
+#   group_by(Country) %>% 
+#   summarise(across(.fns = mean_se), .groups = 'drop') %>% 
+#   mutate(Country = as.character(Country)) %>% 
+#   rename(group = Country)
+# 
+# mtcars %>%
+#      add_rownames( var = "group" ) %>%
+#      mutate_each(funs(rescale), -group) %>%
+#      tail(4) %>% select(1:10) -> mtcars_radar
+# 
+# ggradar(age_radar, 
+#         values.radar = c(NA, paste0(c(25, 50), '%')),
+#         group.colours = colorBlindGrey6[-4],
+#         grid.mid = 0.25,
+#         grid.max = 0.5,
+#         base.size = 1)
+```
+
+
+
+```{r}
+
+age_perc %>% 
+  pivot_longer(- c(Country, num_patients_all, num_patients_ever_severe)) %>% 
+  ggplot(aes(value, num_patients_ever_severe, 
+             color = Country)) +
+  facet_wrap(~ name) +
+  geom_point(aes(size = log2(num_patients_all)), alpha = 0.8) +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_size_continuous(guide = FALSE) +
+  labs(x = '% patients in each age group', y = '% severe cases') +
+  scale_color_manual(values = colorBlindGrey6, drop = FALSE) +
+  NULL
+```
+
+```{r}
+age_perc %>% 
+  pivot_longer(- c(Country, num_patients_all, num_patients_ever_severe)) %>% 
+  ggplot(aes(name, value, color = Country)) +
+  # facet_grid(cols = vars(name), scales = 'free_x') +
+  geom_boxplot(alpha = 0.8) +
+  # geom_violin(aes(color = Country)) +
+  # geom_jitter() +
+  # geom_point(aes(size = log2(num_patients_all)), alpha = 0.8) +
+  # scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
+  # scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_size_continuous(guide = FALSE) +
+  labs(x = '% patients in each age group', y = '% patient') +
+  scale_color_manual(values = colorBlindGrey6, drop = FALSE) +
+  scale_fill_manual(values = colorBlindGrey6, drop = FALSE) +
+  theme_bw() +
+  coord_polar() +
+  NULL
+```
+
+
+```{r}
+race_perc %>% 
+  pivot_longer(- c(Country, num_patients_all, num_patients_ever_severe)) %>% 
+  ggplot(aes(value, num_patients_ever_severe, 
+             color = Country)) +
+  facet_wrap(~ name) +
+  geom_point(aes(size = log2(num_patients_all)), alpha = 0.8) +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 0.1)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 0.1)) +
+  scale_size_continuous(guide = FALSE) +
+  labs(x = '% patients in each race/ethnicity group', y = '% severe cases') +
+  scale_color_manual(values = colorBlindGrey6, drop = FALSE, guide = FALSE) +
+  NULL
+```
+
+```{r}
+race_perc %>% 
+  pivot_longer(- c(Country, num_patients_all, num_patients_ever_severe)) %>% 
+  ggplot(aes(name, value, color = Country)) +
+  # facet_wrap(~ name) +
+  # geom_point(aes(size = log2(num_patients_all)), alpha = 0.8) +
+  geom_boxplot() +
+  # scale_x_continuous(labels = scales::percent_format(accuracy = 0.1)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 0.1)) +
+  scale_size_continuous(guide = FALSE) +
+  labs(x = '% patients in each race/ethnicity group', y = '% severe cases') +
+  scale_color_manual(values = colorBlindGrey6, drop = FALSE, guide = FALSE) +
+  NULL
+```
