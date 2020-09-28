@@ -43,44 +43,6 @@ code_prevalence <- diag_icd_10 %>%
   group_by(Country, time, icd, `Neurological Disease Category`, full_icd) %>% 
   mutate(percent_pats_country = sum(num_patients_icd)/all_pats_country) %>% 
   ungroup()
-
-before_code_prev <- code_prevalence %>% 
-  filter(time == 'Before admission') %>%
-  ggplot(aes(y = icd, x = siteid, fill = percent_pats_site)) +
-  geom_tile() +
-  labs(y = NULL, x = NULL) +
-  #f6d2a9,#f5b78e,#f19c7c,#ea8171,#dd686c,#ca5268,#b13f64
-  scale_fill_gradient(
-    # low = '#f6d2a9', high = '#b13f64',
-    low = '#d1eeea', high = '#2a5674',
-    labels = scales::percent_format(accuracy = 1),
-    limits = c(0, 0.3),
-    guide = guide_legend(override.aes = list(fill = "white"))) +
-  scale_x_discrete(drop = F) + 
-  facet_grid(rows = vars(`Neurological Disease Category`), space = 'free', scale = 'free') +
-  heat_theme_top() +
-  NULL
-
-after_code_prev <- code_prevalence %>% 
-  filter(time == 'After admission') %>%
-  ggplot(aes(y = icd, x = siteid, fill = percent_pats_site)) +
-  geom_tile() +
-  labs(y = NULL, x = NULL) +
-  scale_x_discrete(drop = F) + 
-  #d1eeea,#a8dbd9,#85c4c9,#68abb8,#4f90a6,#3b738f,#2a5674
-  scale_fill_gradient(low = '#d1eeea', high = '#2a5674',
-                      labels = scales::percent_format(accuracy = 1),
-                      limits = c(0, 0.3)) +
-  facet_grid(rows = vars(`Neurological Disease Category`), space = 'free', scale = 'free') +
-  heat_theme_bottom() +
-  NULL
-
-heats <- cowplot::plot_grid(before_code_prev, after_code_prev, ncol = 1,
-                            rel_heights = c(1, 1.15),
-                   labels = c('A. Before admission', 'B. After admission'))
-heats
-ggsave('figs/icd_heatmap.png', heats, height = 10, width = 7)
-
 ```
 
 ```{r fig.height=4, fig.width=8}
@@ -90,7 +52,7 @@ diff_code <- code_prevalence %>%
               id_cols = c(location, icd, `Neurological Disease Category`), 
               values_fill = 0) %>% 
   mutate(percent_diff = `After admission` - `Before admission`,
-         loc_type = 'Site', location = tolower(location), .keep = 'unused')
+         loc_type = 'Site', location = tolower(location))
 
 diff_code_country <- code_prevalence %>% 
   select(location = Country, icd, `Neurological Disease Category`, time, percent_pats_country) %>% 
@@ -99,7 +61,7 @@ diff_code_country <- code_prevalence %>%
               id_cols = c(location, icd, `Neurological Disease Category`), 
               values_fill = 0) %>% 
   mutate(percent_diff = `After admission` - `Before admission`,
-         loc_type = 'Country', .keep = 'unused')
+         loc_type = 'Country')
 
 diff_code_loc <- diff_code %>% 
   bind_rows(diff_code_country)
@@ -116,15 +78,52 @@ diff_heat <- diff_code_loc %>%
   facet_grid(rows = vars(`Neurological Disease Category`), 
              cols = vars(fct_rev(loc_type)), space = 'free', scale = 'free') +
   heat_theme_bottom() +
-  theme(panel.spacing.x = unit(10, "points"),
-        plot.margin = unit(c(1,0.2,0.2,3), "lines"),
-        axis.text.x = element_text(hjust = 1)) +
-  # theme() +
+  theme(plot.margin = unit(c(1,0.2,0.2,3), "lines")) +
   NULL
 diff_heat
 
 
 # ggsave('figs/icd_diff_heat_sitemap.png', diff_heat_site, height = 4, width = 8)
+```
+
+```{r}
+before_code_prev <- diff_code_loc %>% 
+  ggplot(aes(y = icd, x = location, fill = `Before admission`)) +
+  geom_tile() +
+  labs(y = NULL, x = NULL) +
+  #f6d2a9,#f5b78e,#f19c7c,#ea8171,#dd686c,#ca5268,#b13f64
+  scale_fill_gradient(
+    low = '#d1eeea', high = '#2a5674',
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0, max(diff_code_loc$`After admission`)),
+    guide = guide_legend(override.aes = list(fill = "white"))) +
+  scale_x_discrete(drop = F) + 
+  facet_grid(rows = vars(`Neurological Disease Category`), 
+             cols = vars(fct_rev(loc_type)), space = 'free', scale = 'free') +
+  heat_theme_top() +
+  NULL
+
+after_code_prev <- diff_code_loc %>% 
+  ggplot(aes(y = icd, x = location, fill = `After admission`)) +
+  geom_tile() +
+  labs(y = NULL, x = NULL, fill = 'Patient % per
+site/country') +
+  scale_x_discrete(drop = F) + 
+  scale_fill_gradient(low = '#d1eeea', high = '#2a5674',
+                      labels = scales::percent_format(accuracy = 1),
+                      limits = c(0, max(diff_code_loc$`After admission`))) +
+  facet_grid(rows = vars(`Neurological Disease Category`), 
+             cols = vars(fct_rev(loc_type)), space = 'free', scale = 'free') +
+  heat_theme_bottom() +
+  theme(legend.title = element_text(hjust = 0)) +
+  NULL
+
+heats <- cowplot::plot_grid(before_code_prev, after_code_prev, ncol = 1,
+                            rel_heights = c(1, 1.15),
+                   labels = c('A. Before admission', 'B. After admission'))
+heats
+ggsave('figs/icd_heatmap.png', heats, height = 10, width = 9)
+
 ```
 
 

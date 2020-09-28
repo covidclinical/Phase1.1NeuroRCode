@@ -342,9 +342,18 @@ demo_desc <- left_join(sex_desc, age_group_desc, by = 'siteid', suffix = c("_sex
   left_join(race_desc, by = 'siteid') %>% 
   # Reduce(function(...) left_join(..., by = 'siteid', , '_race')), 
   #                   list(, race_desc), ) %>% 
-  select(- c(contains('um'), contains('mismatches')))
+  select(- c(contains('um'), contains('mismatches'))) %>% 
+  right_join(demo_ana, ., by = 'siteid')
+
+
+
+demo_perc <- demo_desc %>% 
+  # mutate(across(- contains('num'), ~ .x/.data$num_patients_all))
+  mutate_at(vars(!starts_with("num"), - siteid),
+            list(~ round(. / .data$num_patients_all * 100, 1)))
 
 demo_desc %>% write_csv('results/demo_prelim.csv')
+demo_perc %>% write_csv('results/demo_perc_prelim.csv')
 # some NAs are because there are just not a row for with that value
 ```
 

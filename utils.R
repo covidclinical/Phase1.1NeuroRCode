@@ -82,7 +82,8 @@ heat_theme_top <- function(){
         legend.text = element_text(color = "white"),
         legend.title = element_text(color = 'white'),
         plot.margin = unit(c(1.5,0.2,1,0.5), "lines"),
-        panel.spacing = unit(0, "points"))
+        panel.spacing.x = unit(10, "points"),
+        panel.spacing.y = unit(0, "points"))
 }
 
 
@@ -90,9 +91,10 @@ heat_theme_bottom <- function(){
   theme(panel.grid = element_blank(),
         legend.title = element_text(),
         strip.text.y = element_text(angle = 0),
-        axis.text.x = element_text(angle = 90, vjust = 0.5),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
         plot.margin = unit(c(1.5,0.2,0.5,0.5), "lines"),
-        panel.spacing = unit(0, "points"))
+        panel.spacing.x = unit(10, "points"),
+        panel.spacing.y = unit(0, "points"))
 }
 
 plot_enrich <- function(
