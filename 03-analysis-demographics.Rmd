@@ -34,6 +34,8 @@ demo_perc <- demo_desc %>%
             list(~ . / .data$num_patients_all)) %>% 
   mutate(Country = as.factor(Country)) %>% 
   filter(siteid != 'SITE157', siteid != 'SITE712')
+
+write_csv(demo_perc, 'results/demographics.csv')
 ```
 
 ```{r}
@@ -43,10 +45,10 @@ unknowns <- demo_perc %>%
 unknowns %>% filter(value < 0)
 unknowns %>% filter(value < 1, value > 0.1)
 
-unknowns %>% 
-  ggplot(aes(y = value, x = name)) +
-  ggbeeswarm::geom_beeswarm() +
-  facet_wrap(~ name, scales = 'free')
+# unknowns %>% 
+#   ggplot(aes(y = value, x = name)) +
+#   ggbeeswarm::geom_beeswarm() +
+#   facet_wrap(~ name, scales = 'free_x')
 ```
 
 
