@@ -32,7 +32,8 @@ colorBlindGrey6 <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#CC
 demo_perc <- demo_desc %>% 
   mutate_at(vars(- num_patients_all, - siteid, - Country),
             list(~ . / .data$num_patients_all)) %>% 
-  mutate(Country = as.factor(Country))
+  mutate(Country = as.factor(Country)) %>% 
+  filter(siteid != 'SITE157', siteid != 'SITE712')
 ```
 
 ```{r}
@@ -40,6 +41,7 @@ unknowns <- demo_perc %>%
   select(siteid, Country, contains('unknown')) %>% 
   pivot_longer(- c(siteid, Country))
 unknowns %>% filter(value < 0)
+unknowns %>% filter(value < 1, value > 0.1)
 
 unknowns %>% 
   ggplot(aes(y = value, x = name)) +
