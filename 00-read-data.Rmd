@@ -303,19 +303,28 @@ write_csv(age_group_check, 'data/age_group_check.csv')
 sum_sum <- sym(paste('N =', sum(demo_ana$num_patients_all)))
 ```
 
-
 ```{r}
+sites_no_age <- demo_all %>% 
+  filter(siteid %in% (age_group_check %>% filter(is.na(age_group_sum)) %>% pull(siteid)), 
+  age_group != 'all', sex != 'all', race != 'all') %>% 
+  group_by(siteid, age_group) %>% 
+  summarise(size = sum(num_patients_all), .groups = 'drop') 
+
 age_group_desc <- demo_all %>% 
   filter(sex == 'all', race == 'all', age_group != 'all') %>% 
   group_by(age_group, siteid) %>% 
   summarise(size = sum(num_patients_all, na.rm = T), .groups = 'drop') %>% 
+  bind_rows(sites_no_age) %>% 
   pivot_wider(names_from = age_group, values_from = size, values_fill = 0) %>% 
   mutate(sum_age_cols = rowSums(.[, -1])) %>% 
   right_join(age_group_check) %>% 
   replace(is.na(.), 0) %>% 
-  mutate(unknown_other = other + num_patients_all - age_group_sum) %>% 
+  mutate(unknown_other = other + num_patients_all - sum_age_cols) %>% 
   {.}
+```
 
+
+```{r}
 sex_desc <- demo_all %>% 
   filter(sex != 'all', race == 'all', age_group == 'all') %>% 
   group_by(sex, siteid) %>% 
@@ -446,3 +455,35 @@ check_diag %>%
 #   labs(x = NULL, y = 'Percent patients')
     
 ```
+
+
+```{r}
+# va_vec <- c("VA1", "VA10", "VA12", "VA15", "VA16", "VA17", "VA19", "VA2", "VA20", "VA21", "VA22", "VA23", "VA4", "VA5", "VA6", "VA7", "VA8", "VA9")
+# sites <- c("APHP", "ASSTPAVIA", "BIDMC", "C2WF", "FRBDX", "H12O", "HPG23", "ICSM1", "KUMC", "MCWCTSI", "MGB", "MUSC", "NUH", "NWU", "POLIMI", "RIVHS", "SLHN", "UCLA", "UKER", "UKFR", "UKY", "UMICH", "UMM", "UNICZ", "UPenn", "UPITT", "UTSW", "VA")
+# 
+# obfuscation_df <- googlesheets4::read_sheet(
+#   # 'https://docs.google.com/spreadsheets/d/1VhtKIbzEOeGFG1Iw27D_gq_l3eJpKn0LiJr_f_hFdwc/edit?ts=5ec17a70#gid=0',
+#   'https://docs.google.com/spreadsheets/d/1Xl9juDBXt86P3xQtsoTaBl2zPl1BIiAG9DI3Rotyqp8/edit#gid=212461777',
+#   skip = 1,
+#   col_names = c('SLHN', 'site_name', 'contact_name', 'contact_email', 'city', 'country',
+#                 'low_count_threshold', 'small_count_rows_deleted', 'blur_range', 'notes',
+#                 'irb_statement')) %>%
+#   filter(SLHN != 'FICHOS') %>%
+#   mutate(low_count_threshold = low_count_threshold %>%
+#            replace(low_count_threshold == '<=10', '<11') %>%
+#            replace(low_count_threshold == '<=5', '<6'))
+# 
+# library(ggplot2)
+
+# obfuscation_df %>%
+#   ggplot(aes(x = low_count_threshold)) +
+#   geom_bar()
+```
+
+```{r}
+# obfus_1 <- obfuscation_df %>%
+#   filter(SLHN %in% sites)
+# table(obfus_1$low_count_threshold)
+# sum(table(obfus_1$low_count_threshold))
+```
+
