@@ -43,7 +43,7 @@ code_prevalence <- diag_icd_9 %>%
   ungroup()
 ```
 
-```{r}
+```{r include=FALSE}
 # diag_icd_9 %>% 
 #   count(siteid, icd, `Neurological Disease Category`) %>% 
 #   pull(icd) %>% 
@@ -52,7 +52,31 @@ code_prevalence <- diag_icd_9 %>%
 # 
 # check = diag_icd_9 %>%
 #   count(icd, `Neurological Disease Category`)
+diag_icd_9 %>% 
+  count(siteid, Country, num_patients_all)
 
+diag_icd_9 %>% 
+  count(siteid, Country, num_patients_all) %>% 
+  filter(Country == 'Italy')
+
+diag_icd_9 %>% filter(
+  siteid %in% intersect(unique(diag_icd_9$siteid), unique(diag_icd_10$siteid))
+) %>% 
+  select(Country, siteid) %>% 
+  distinct()
+
+diag_icd_9 %>% 
+  filter(Country == 'USA') %>% 
+  group_by(siteid) %>% 
+  summarise(site_pats_9 = sum(num_patients_icd), .groups = 'drop') %>% 
+  left_join(diag_icd_10 %>% 
+  filter(siteid %in% diag_icd_9$siteid) %>% 
+  group_by(siteid) %>% 
+  summarise(site_pats_10 = sum(num_patients_icd), .groups = 'drop'),
+  by = 'siteid') %>% 
+  pivot_longer(- siteid) %>% 
+  ggplot(aes(x = siteid, y = value, fill = name)) +
+  geom_col(position = 'dodge')
 ```
 
 
@@ -226,7 +250,7 @@ plot_grid(diff_heat, icd9_prevalence_plots, rel_heights = c(1, 0.85),
   ggsave('figs/icd9_prevalence_AB.png', ., height = 8, width = 9.7)
 ```
 
-```{r}
+```{r fig.height=9}
 before_code_prev <- diff_code_loc %>% 
   ggplot(aes(y = icd, x = location, fill = `Before admission`)) +
   geom_tile() +

@@ -86,11 +86,12 @@ diff_heat
 # ggsave('figs/icd_diff_heat_sitemap.png', diff_heat_site, height = 4, width = 8)
 ```
 
-```{r}
+```{r fig.height=9}
 before_code_prev <- diff_code_loc %>% 
   ggplot(aes(y = icd, x = location, fill = `Before admission`)) +
   geom_tile() +
-  labs(y = NULL, x = NULL) +
+  labs(y = NULL, x = NULL, fill = 'Patient % per
+site/country') +
   #f6d2a9,#f5b78e,#f19c7c,#ea8171,#dd686c,#ca5268,#b13f64
   scale_fill_gradient(
     low = '#d1eeea', high = '#2a5674',
@@ -375,9 +376,15 @@ fish_obs_exp <- nested_obs_exp %>%
   mutate(fish = map(data, my_fish)) %>% 
   dplyr::select(-data) %>% 
   unnest(cols = c(fish)) %>% 
-  mutate(upper = ifelse(is.na(upper), Inf, upper))
+  mutate(upper = ifelse(is.na(upper), Inf, upper)) %>% 
+  mutate(ci = paste0('(', round(log2(lower), 1), ', ', 
+                     round(log2(upper), 1), ')'),
+         lestimate = log2(estimate))
 fish_obs_exp$`P value (Holm)` <-  p.adjust(fish_obs_exp$p_value, 'holm')
 fish_obs_exp$`P value (FDR)` <- p.adjust(fish_obs_exp$p_value, 'BH')
+fish_obs_exp %>% 
+  filter(`P value (FDR)` < 0.05,
+         time == 'After admission')
 ```
 
 While the Warning messages mentioned Chi-squared, the p-values were actually calculated using Fisher's Exact test (see more in `epitools::tab2by2.test()`).
@@ -396,10 +403,7 @@ contingency_df %>%
 The full table with all ICD codes and their corresponding enrichment can be browsed interactively below:
 ```{r}
 library(DT)
-fish_tab <- fish_obs_exp %>% 
-  mutate(ci = paste0('(', round(log2(lower), 1), ', ', 
-                     round(log2(upper), 1), ')'),
-         lestimate = log2(estimate)) %>% 
+fish_tab <- fish_obs_exp  %>% 
   left_join(contingency_df, by = c('full_icd', 'time')) %>% 
   select(full_icd, time, Observed, Expected, over_sev,
          estimate, lestimate, ci, p_value,
