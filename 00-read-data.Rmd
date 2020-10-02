@@ -323,6 +323,26 @@ age_group_desc <- demo_all %>%
   {.}
 ```
 
+```{r}
+sites_no_race <- demo_all %>% 
+  filter(siteid %in% (race_check %>% filter(is.na(race_sum)) %>% pull(siteid)), 
+  age_group != 'all', sex != 'all', race != 'all') %>% 
+  group_by(siteid, race) %>% 
+  summarise(size = sum(num_patients_all), .groups = 'drop') 
+
+race_desc <- demo_all %>% 
+  filter(sex == 'all', race != 'all', age_group == 'all') %>% 
+  group_by(race, siteid) %>% 
+  summarise(size = sum(num_patients_all, na.rm = T), .groups = 'drop') %>% 
+  bind_rows(sites_no_race) %>% 
+  pivot_wider(names_from = race, values_from = size, values_fill = 0) %>% 
+  mutate(sum_race_cols = rowSums(.[, -1])) %>% 
+  right_join(race_check) %>% 
+  replace(is.na(.), 0) %>% 
+  mutate(unknown_other_race = other + num_patients_all - sum_race_cols) %>% 
+  {.}
+```
+
 
 ```{r}
 sex_desc <- demo_all %>% 
@@ -336,16 +356,16 @@ sex_desc <- demo_all %>%
   mutate(unknown_other = other + num_patients_all - sex_sum) %>% 
   {.}
 
-race_desc <- demo_all %>%
-  filter(sex == 'all', race != 'all', age_group == 'all') %>% 
-  group_by(race, siteid) %>% 
-  summarise(size = sum(num_patients_all, na.rm = T), .groups = 'drop') %>% 
-  pivot_wider(names_from = race, values_from = size, values_fill = 0) %>% 
-  mutate(sum_race_cols = rowSums(.[, -1])) %>% 
-  right_join(race_check) %>% 
-  replace(is.na(.), 0) %>% 
-  mutate(unknown_other_race = other + num_patients_all - race_sum) %>% 
-  {.}
+# race_desc <- demo_all %>%
+#   filter(sex == 'all', race != 'all', age_group == 'all') %>% 
+#   group_by(race, siteid) %>% 
+#   summarise(size = sum(num_patients_all, na.rm = T), .groups = 'drop') %>% 
+#   pivot_wider(names_from = race, values_from = size, values_fill = 0) %>% 
+#   mutate(sum_race_cols = rowSums(.[, -1])) %>% 
+#   right_join(race_check) %>% 
+#   replace(is.na(.), 0) %>% 
+#   mutate(unknown_other_race = other + num_patients_all - race_sum) %>% 
+#   {.}
 
 demo_desc <- left_join(sex_desc, age_group_desc, by = 'siteid', suffix = c("_sex", "_age_group")) %>% 
   left_join(race_desc, by = 'siteid') %>% 

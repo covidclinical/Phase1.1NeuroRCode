@@ -47,6 +47,8 @@ demo_perc %>%
   rename('perc_patients_ever_severe' = num_patients_ever_severe,
          'perc_patients_never_severe' = num_patients_never_severe) %>% 
   write_csv('results/demographics.csv')
+
+countries <- c("France", "Germany", "Spain", "Italy", "Singapore", "USA" )
 ```
 
 
@@ -60,7 +62,6 @@ demo_desc %>%
   summarise(across(c(num_patients_all, races, unknown_other_race), sum)) %>% 
   print()
 ```
-
 
 
 ```{r}
@@ -107,7 +108,7 @@ age_radar <- age_perc %>%
   mutate(name = gsub('to', '–', name) %>% gsub('plus', '+', .))
 age_radar$name <- factor(age_radar$name, levels = unique(age_radar$name))
   
-
+Races <- rev(c('White', 'Black', 'Hispanic/Latino', 'Asian', 'American Indian', 'Hawaiian/Pacific Islander', 'Other/Unknown'))
 race_perc <- demo_perc %>% 
   filter(abs(unknown_other_race) < 1) %>% 
   select(Country, num_patients_all, num_patients_ever_severe, all_of(races), unknown_other_race)
@@ -125,7 +126,7 @@ race_radar <- race_perc %>%
            gsub('Hispanic ', 'Hispanic/', .) %>% 
            gsub('Hawaiian ', 'Hawaiian/', .) %>% 
            gsub('Unknown Other Race', 'Other/Unknown',. ),
-         name = fct_reorder(name, value$y))
+         name = fct_relevel(name, Races))
 
 lm(num_patients_ever_severe ~ black + white + asian + hispanic_latino + american_indian +
      hawaiian_pacific_islander, race_perc) %>% 
@@ -151,10 +152,10 @@ gender_plot <- demo_gender %>%
     color = NULL, 
     size = 'Total number of patients
 at each site') +
-  scale_size(trans = "log10") +
+  scale_size(trans = "log10", guide = FALSE) +
   scale_color_manual(values = colorBlindGrey6) +
-  theme(legend.position = c(0.22, 0.4),
-        plot.margin = margin(10.5, 5.5, 25.5, 5.5, 'pt'),
+  theme(legend.position = c(0.15, 0.28),
+        plot.margin = margin(10.5, 5.5, 5.5, 45.5, 'pt'),
         legend.background = element_blank(),
         legend.key.height = unit(1, 'line'),
         legend.title = element_text(hjust = 0, size = 9)) +
@@ -170,7 +171,7 @@ age_plot <- age_radar  %>%
   ggplot(aes(name, value$y, fill = Country, group = Country)) +
   geom_col(position = 'dodge2') + 
   coord_flip() +
-  facet_grid(rows = vars(Country)) +
+  facet_grid(rows = vars(fct_relevel(Country, countries))) +
   geom_linerange(aes(ymin = cimin, ymax = cimax), 
                 position = position_dodge(width = 0.9),
                 color = 'grey50') +
@@ -182,11 +183,9 @@ age_plot <- age_radar  %>%
   scale_fill_manual(values = colorBlindGrey6, drop = FALSE) +
   theme(legend.position = 'None',
         panel.grid.major.y = element_blank(),
-        plot.margin = margin(10.5, 5.5, 6.5, 5.5, 'pt')) +
+        plot.margin = margin(10.5, 5.5, 5.5, 5.5, 'pt')) +
   NULL
 ```
-
-
 
 ## Race plot
 
@@ -216,13 +215,12 @@ race_plot <- race_radar %>%
 
 ```{r fig.width=10, fig.height=8, warning=FALSE}
 gender_race <- plot_grid(gender_plot, race_plot, ncol = 1,
-          rel_heights = c(3.54, 1), labels = 'AUTO')
+          rel_heights = c(0.897, 1), labels = 'AUTO')
 comp_plots <- plot_grid(gender_race, age_plot, ncol = 2, rel_widths = c(1.2, 1),
           labels = c('', 'C'))
 comp_plots
 ggsave('figs/composite_plot.png', comp_plots, height = 6.7, width = 8)
 ```
-
 
 
 ```{r eval=FALSE, include=FALSE}
