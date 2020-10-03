@@ -19,8 +19,10 @@ library(readxl)
 library(httr)
 library(purrr)
 library(stringi)
-library(gt)
-library(gtsummary)
+library(tibble)
+# library(gt)
+# library(gtsummary)
+source('utils.R')
 ```
 
 ## Download data
@@ -306,7 +308,7 @@ sum_sum <- sym(paste('N =', sum(demo_ana$num_patients_all)))
 ```{r}
 sites_no_age <- demo_all %>% 
   filter(siteid %in% (age_group_check %>% filter(is.na(age_group_sum)) %>% pull(siteid)), 
-  age_group != 'all', sex != 'all', race != 'all') %>% 
+         age_group != 'all', sex != 'all', race != 'all') %>% 
   group_by(siteid, age_group) %>% 
   summarise(size = sum(num_patients_all), .groups = 'drop') 
 
@@ -321,6 +323,18 @@ age_group_desc <- demo_all %>%
   replace(is.na(.), 0) %>% 
   mutate(unknown_other = other + num_patients_all - sum_age_cols) %>% 
   {.}
+
+age_comp <- age_group_desc  %>% 
+  column_to_rownames('siteid') %>% 
+  select(contains('to'), ends_with('plus')) %>% 
+  apply(., 1, cumsum) %>% 
+  t()
+
+age_med_df <- data.frame(median_age = apply(age_comp, 1, median_age)) %>% 
+  rownames_to_column('siteid')
+
+age_group_desc <- age_group_desc %>% 
+  left_join(age_med_df)
 ```
 
 ```{r}
@@ -329,6 +343,9 @@ sites_no_race <- demo_all %>%
   age_group != 'all', sex != 'all', race != 'all') %>% 
   group_by(siteid, race) %>% 
   summarise(size = sum(num_patients_all), .groups = 'drop') 
+
+sites_no_race %>% 
+  left_join(site_country, by = c('siteid' = 'SiteID.new'))
 
 race_desc <- demo_all %>% 
   filter(sex == 'all', race != 'all', age_group == 'all') %>% 
@@ -379,13 +396,32 @@ demo_desc <- left_join(sex_desc, age_group_desc, by = 'siteid', suffix = c("_sex
 
 demo_perc <- demo_desc %>% 
   # mutate(across(- contains('num'), ~ .x/.data$num_patients_all))
-  mutate_at(vars(- num_patients_all, - siteid, - Country),
+  mutate_at(vars(- num_patients_all, - siteid, - Country, - median_age),
             list(~ round(. / .data$num_patients_all * 100, 1)))
 
 demo_desc %>% write_csv('results/demo_prelim.csv')
 demo_perc %>% write_csv('results/demo_perc_prelim.csv')
 # some NAs are because there are just not a row for with that value
 ```
+
+
+```{r}
+sex_age <- demo_all %>% 
+  filter(age_group != 'all', sex != 'all', race != 'all') %>% 
+  group_by(siteid, age_group, sex) %>% 
+  summarise(size = sum(num_patients_all), .groups = 'drop') %>% 
+  pivot_wider(names_from = c(sex, age_group), values_from = size, values_fill = 0) %>% 
+  mutate(sum_age_cols = rowSums(.[, -1])) %>% 
+  right_join(age_group_check) %>% 
+  replace(is.na(.), 0) %>% 
+  mutate(unknown_other = female_other + male_other + other_other + num_patients_all - sum_age_cols) %>% 
+  select(- c(contains('um'), contains('mismatches'))) %>% 
+  right_join(demo_ana, ., by = 'siteid') %>% 
+  left_join(site_country, by = c('siteid' = 'SiteID.new')) %>% 
+  select(siteid, Country, everything()) %>% 
+  {.}
+```
+
 
 ```{r}
 # sex_desc <- demo_all %>% 
