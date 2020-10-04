@@ -22,6 +22,7 @@ library(purrr)
 library(stringr)
 library(DT)
 library(cowplot)
+library(meta)
 
 load('data/processed-data.Rdata')
 theme_set(theme_bw() + theme(legend.title = element_blank()))
@@ -349,7 +350,63 @@ We performed an enrichment analysis to examine the difference of *severe patient
 We calculated each ICD code's enrichment by dividing the observed proportion of honorees by the expected proportion of honorees and reported a value of log2 enrichment (LOE) and its 95% confidence intervals.
 The 95% confidence interval of the LOE was estimated using the Poisson model method [@isbn:9780849394447].
 
-## Before admission
+## Metaanalysis
+```{r warning=FALSE, message=FALSE}
+ind_fish <- diag_icd_10 %>% 
+  group_by(full_icd, time, siteid) %>% 
+  summarise(across(contains('severe'), .fns = sum, na.rm = T), .groups = 'drop') %>% 
+  mutate(Observed = num_patients_ever_severe_icd1, 
+         num_non_severe = num_patients_never_severe_icd1 + num_patients_never_severe_icd0,
+         num_severe = num_patients_ever_severe_icd1 + num_patients_ever_severe_icd0,
+         Expected = num_patients_never_severe_icd1/num_non_severe*num_severe,
+         over_sev = Observed - Expected) %>%
+  filter(!is.na(Expected), num_patients_never_severe_icd0 >= 0) %>% 
+  select(full_icd, time, siteid,
+         num_patients_never_severe_icd0, 
+         num_patients_never_severe_icd1,
+         num_patients_ever_severe_icd0, 
+         num_patients_ever_severe_icd1) %>% 
+  group_by(full_icd, time, siteid) %>% 
+  nest() %>% 
+  mutate(fish = map(data, my_fish)) %>% 
+  dplyr::select(-data) %>% 
+  unnest(cols = c(fish)) 
+
+madata <- ind_fish %>% 
+  mutate(upper = ifelse(is.na(upper), Inf, upper),
+         lestimate = log(estimate),
+         llower = log(lower),
+         lupper = log(upper),
+         mase = (lupper - llower)/(2*alpha_threshold))
+
+```
+
+```{r}
+meta_res <- data.frame()
+for (timei in c('Before admission', 'After admission')){
+  for (icdi in unique(madata$full_icd)){
+    m <- madata %>% 
+      filter(full_icd == icdi, time == timei, !is.na(estimate)) %>% 
+      metagen(lestimate,
+              mase,
+              data = .,
+              method.tau = "SJ",
+              sm = 'RR',
+              studlab=siteid)
+    
+    meta_res <- meta_res %>% 
+      rbind(data.frame(n_sites = nrow(m$data), full_icd = icdi, time = timei,
+                       estimate = m$TE.fixed, pval = m$pval.fixed,
+                       i2 = m$I2, li2 = m$lower.I2, ui2 = m$upper.I2, 
+                       Q = m$Q, pQ = m$pval.Q))
+  }
+}
+
+meta_res$pval_fdr <-  p.adjust(meta_res$pval, 'BH')
+write.csv(meta_res, 'results/metaanalysis_results.csv')
+```
+
+## Before and after admission
 
 ```{r}
 contingency_df <- diag_icd_10 %>% 
