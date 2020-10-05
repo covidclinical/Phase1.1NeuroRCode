@@ -403,7 +403,7 @@ for (timei in c('Before admission', 'After admission')){
 }
 
 meta_res$pval_fdr <-  p.adjust(meta_res$pval, 'BH')
-write.csv(meta_res, 'results/metaanalysis_results.csv')
+write_csv(meta_res, 'results/metaanalysis_results.csv')
 ```
 
 ## Before and after admission

@@ -130,11 +130,6 @@ neuro_icds_9 %>%
   write_csv('results/icd9_tab.csv')
 ```
 
-```{r}
-check <- demo_all %>% 
-  filter(!race %in% c('other', 'all'))
-```
-
 Notes: 
 
 “-99” indicate masked small numbers (for obfuscation) and “-999" indicate missing, mismatches, not applicable, etc.
@@ -206,7 +201,6 @@ diag_icd_10 <- diag_ana %>%
   drop_na(num_patients_icd) %>% 
   {.}
 
-
 diag_icd_9 <- diag_ana %>% 
   filter(icd_version == 9) %>%
   select(- icd_version) %>% 
@@ -245,14 +239,11 @@ diag_icd_9 <- diag_icd_9 %>%
   merge(country_sum_icd9, by = 'Country')
 ```
 
-
 # Write data out to .Rdata
 
 ```{r}
 save(demo_ana, diag_icd_10, diag_icd_9, file = 'data/processed-data.Rdata')
 ```
-
-
 
 # Quality checks
 

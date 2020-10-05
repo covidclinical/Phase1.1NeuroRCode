@@ -71,7 +71,6 @@ unknowns %>% filter(value < 1, value > 0.1)
 #   facet_wrap(~ name, scales = 'free_x')
 ```
 
-
 ## Severity vs. gender/age/race?
 ```{r}
 demo_gender <- demo_perc %>% filter(unknown_other_sex < 1)
@@ -95,7 +94,7 @@ lm(num_patients_ever_severe ~ black + white + asian + hispanic_latino +
 
 ```{r}
 gender_count <- demo_desc %>% 
-  filter(unknown_other_sex/num_patients_all < 1) %>% 
+  # filter(unknown_other_sex/num_patients_all < 1) %>% 
   mutate(siteid = as.factor(siteid)) %>% 
   mutate(num_patients_all_gender = female + male) %>% 
   {.}
@@ -192,7 +191,6 @@ country_codes <- read_csv('https://raw.githubusercontent.com/lukes/ISO-3166-Coun
   mutate(coun_code = as.factor(coun_code) %>% fct_relevel(countries_code))
 
 age_severity <- demo_perc %>% 
-  filter(unknown_other_sex < 1) %>% 
   left_join(country_codes, by = 'Country') %>%
   ggplot(aes(median_age, num_patients_ever_severe, 
              color = coun_code)) +
@@ -206,7 +204,7 @@ age_severity <- demo_perc %>%
   scale_color_manual(values = colorBlindGrey6) +
   coord_cartesian(ylim = c(0, 1)) +
   theme(
-    legend.position = c(0.85, 0.5),
+    legend.position = c(0.85, 0.7),
     legend.background = element_blank(),
     plot.margin = margin(15, 5.5, 20, 25.5),
     legend.key.height = unit(0.7, 'line'),
