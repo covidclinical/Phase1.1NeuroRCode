@@ -113,6 +113,7 @@ plot_enrich <- function(
                        guide = FALSE) +
     labs(x = NULL, y = bquote(Log[2] ~ 'enrichment, 95% CI')) +
     theme(axis.title = element_text(size = 9),
+          panel.grid.minor = element_blank(),
           plot.margin = margin(20, 2, 5.5, 5.5, unit = 'pt')) +
     scale_x_discrete(position = 'top', labels = NULL) +
     scale_y_reverse()
@@ -132,6 +133,7 @@ plot_enrich <- function(
     coord_flip() +
     theme(
       axis.title = element_text(size = 9),
+      panel.grid.minor = element_blank(),
       legend.position = c(0.78 , 0.1),
       axis.text.y = element_text(
         color = as.character(plot_obs_exp_right$presentation),
