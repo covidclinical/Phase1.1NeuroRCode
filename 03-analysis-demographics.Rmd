@@ -111,15 +111,16 @@ overall_plot <- gender_count %>%
              x = num_patients_all_gender, 
              fill = Country)) +
   geom_col() +
-  scale_x_continuous(breaks = seq(0, 10000, 2000)) +
-  geom_errorbar(aes(x = male, xmin = male, xmax = male),
-                col = "white", size = 0.2) +
-  geom_text(data = filter(gender_count, Country == 'France', num_patients_all > 9000),
-            aes(y = 2, x = male + 350), fontface = 2, 
-            label = female, size = 4, color = 'white') +
-  geom_text(data = filter(gender_count, Country == 'France', num_patients_all > 9000),
-            aes(y = 2, x = male - 350), fontface = 2,
-            label = male, size = 4, color = 'white') +
+  # scale_x_continuous(breaks = seq(0, 10000, 2000)) +
+  scale_x_sqrt(breaks = c(2000, 6000, 10000)) +
+  # geom_errorbar(aes(x = male, xmin = male, xmax = male),
+  #               col = "white", size = 0.2) +
+  # geom_text(data = filter(gender_count, Country == 'France', num_patients_all > 9000),
+  #           aes(y = 2, x = male + 350), fontface = 2, 
+  #           label = female, size = 4, color = 'white') +
+  # geom_text(data = filter(gender_count, Country == 'France', num_patients_all > 9000),
+  #           aes(y = 2, x = male - 350), fontface = 2,
+  #           label = male, size = 4, color = 'white') +
   # ggforce::facet_col(vars(fct_relevel(coun_code, countries_code)), 
   #                    scales = "free_x", space = "free", strip.position = 'bottom') +
   ggforce::facet_col(vars(Country), 
@@ -130,7 +131,7 @@ overall_plot <- gender_count %>%
     fill = NULL) +
   scale_fill_manual(values = colorBlindGrey6) +
   theme(legend.position = 'None',
-        plot.margin = margin(15, 5.5, 5.5, 5.5),
+        plot.margin = margin(15, 7.5, 5.5, 5.5),
         axis.ticks.y = element_blank(),
         axis.text.y = element_blank(),
         panel.grid.major.y = element_blank(),
