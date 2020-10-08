@@ -159,14 +159,15 @@ plot_enrich <- function(
   
 }
 
+age_vec <- age_comp['SITE974',]
 median_age <- function(age_vec){
   # calculate median age for each site, assuming uniform age distribution within 
   # bin containing the median. Given this is a fairly smooth distribution,
   # the assumption is quite reasonable.
-  median_idx <- unname((age_vec['80plus']+ 1)/2)
-  idx_bef <- tail(which(age_vec < median_idx, arr.ind = TRUE), 1)
+  median_idx <- unname((age_vec['80to100']+ 1)/2)
+  idx_bef <- head(which(age_vec > median_idx, arr.ind = TRUE), 1)
   range_bef <- names(idx_bef) %>% stringr::str_split('to') %>% unlist() %>% as.numeric()
-  cumu_age <- unname(c(age_vec[idx_bef], age_vec[idx_bef + 1]))
+  cumu_age <- unname(c(age_vec[idx_bef - 1], age_vec[idx_bef]))
   median_age <- range_bef[1] + (median_idx - cumu_age[1])/diff(cumu_age)*(diff(range_bef) + 1)
   median_age
 }

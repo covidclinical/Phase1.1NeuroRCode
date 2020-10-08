@@ -20,6 +20,7 @@ library(ggplot2)
 library(cowplot)
 library(stringr)
 library(forcats)
+library(ggallin)
 
 theme_set(theme_bw())
 ```
@@ -98,8 +99,13 @@ lm(num_patients_ever_severe ~ median_age, demo_perc) %>%
 ```{r}
 gender_count <- demo_desc %>% 
   # filter(unknown_other_sex/num_patients_all < 1) %>% 
-  mutate(siteid = as.factor(siteid)) %>% 
-  mutate(num_patients_all_gender = female + male) %>% 
+  # mutate(siteid = as.factor(siteid)) %>% 
+  # mutate(num_patients_all_gender = female + male) %>% 
+  group_by(Country) %>% 
+  summarise(num_patients_country = sum(num_patients_all),
+            male_count = sum(male),
+            female_count = sum(female),
+            .groups = 'drop') %>% 
   {.}
 
 showtext::showtext_auto()
@@ -107,44 +113,42 @@ female <- intToUtf8(9792)
 male <- intToUtf8(9794)
 
 overall_plot <- gender_count %>% 
-  ggplot(aes(y = fct_reorder(siteid, num_patients_all_gender), 
-             x = num_patients_all_gender, 
+  mutate(male_count = -male_count) %>% 
+  pivot_longer(- c(Country, num_patients_country)) %>% 
+  ggplot(aes(y = fct_relevel(Country, rev(countries)), 
+             x = value, color = name, 
              fill = Country)) +
-  geom_col() +
-  # scale_x_continuous(breaks = seq(0, 10000, 2000)) +
-  scale_x_sqrt(breaks = c(2000, 6000, 10000)) +
-  # geom_errorbar(aes(x = male, xmin = male, xmax = male),
-  #               col = "white", size = 0.2) +
-  # geom_text(data = filter(gender_count, Country == 'France', num_patients_all > 9000),
-  #           aes(y = 2, x = male + 350), fontface = 2, 
-  #           label = female, size = 4, color = 'white') +
-  # geom_text(data = filter(gender_count, Country == 'France', num_patients_all > 9000),
-  #           aes(y = 2, x = male - 350), fontface = 2,
-  #           label = male, size = 4, color = 'white') +
-  # ggforce::facet_col(vars(fct_relevel(coun_code, countries_code)), 
-  #                    scales = "free_x", space = "free", strip.position = 'bottom') +
-  ggforce::facet_col(vars(Country), 
-             scales = "free_y", space = "free",  strip.position = 'left') +
-  labs(
-    y = NULL, 
-    x = 'Total number of patients per site', 
-    fill = NULL) +
+  geom_col(position = 'identity') +
+  scale_color_manual(values = c('white', 'white')) +
+  scale_x_continuous(breaks = c(-10000, -5000, -2000, 0, 2000, 5000),
+                     trans = ssqrt_trans) +
+  geom_vline(xintercept = 0, color = 'white') +
+  geom_text(data = filter(gender_count, Country == 'France'),
+            aes(y = 6, x = female_count - 600), fontface = 2,
+            label = female, size = 3, color = 'white') +
+  geom_text(data = filter(gender_count, Country == 'France'),
+            aes(y = 6, x = - male_count + 600), fontface = 2,
+            label = male, size = 3, color = 'white') +
+  labs(y = NULL, 
+       x = 'Number of male/female patients per country', 
+       fill = NULL) +
   scale_fill_manual(values = colorBlindGrey6) +
   theme(legend.position = 'None',
-        plot.margin = margin(15, 7.5, 5.5, 5.5),
+        plot.margin = margin(15, 5.5, 15.5, 55.5),
         axis.ticks.y = element_blank(),
-        axis.text.y = element_blank(),
         panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
         panel.border = element_blank(),
         panel.spacing.y = unit(0, 'pt'),
         strip.background = element_blank(),
         strip.placement = 'inside',
-        strip.text.y.left = element_text(angle = 0, hjust = 1, margin = margin(0,0,0,0)),
         legend.background = element_blank(),
         legend.key.height = unit(1, 'line'),
         legend.title = element_text(hjust = 0, size = 9)) +
   NULL
 ```
+
+
 
 ## Age plot (B)
 
@@ -203,15 +207,17 @@ age_severity <- demo_perc %>%
   scale_y_continuous(labels = scales::percent_format(),
                      breaks = seq(0, 1, 0.2)) +
   labs(x = 'Median age estimate', 
-       y = 'Proportion of severe cases', 
+       y = 'Severe case proportion', 
        color = NULL) +
   scale_size(trans = "log10", guide = FALSE) +
   scale_color_manual(values = colorBlindGrey6) +
   coord_cartesian(ylim = c(0, 1)) +
   theme(
-    legend.position = c(0.9, 0.7),
+    # legend.position = c(0.9, 0.7),
+    legend.position = 'left',
     legend.background = element_blank(),
-    plot.margin = margin(15, 5.5, 20, 25.5),
+    plot.margin = margin(5.5, 5.5, 10.5, 15.5),
+    panel.grid.minor = element_blank(),
     legend.key.height = unit(0.7, 'line'),
     legend.key.width = unit(0.4, 'line'),
     legend.title = element_text(hjust = 0, size = 9)) +
@@ -261,14 +267,17 @@ race_plot <- race_count %>%
 ## Composite plot
 
 ```{r fig.width=10, fig.height=8, warning=FALSE}
-gender_race <- plot_grid(age_severity, race_plot, ncol = 1,
-          rel_heights = c(1.7, 1), labels = c('C', 'D'), axis = 'r')
-abcd <- plot_grid(overall_plot, age_plot, gender_race, ncol = 3,
-                  rel_widths = c(1, 1, 1.25), labels = c('A', 'B', ''),
+gender_race <- plot_grid(overall_plot, age_severity, race_plot, ncol = 1,
+          rel_heights = c(0.7, 1, 1), 
+          labels = c('A', 'B', 'C'), axis = 'r')
+abcd <- plot_grid(gender_race, age_plot, ncol = 2,
+                  rel_widths = c(1.25, 1 ), labels = c('', 'D'),
                   axis = 'b')
-abcd
-ggsave('figs/composite_plot.png', abcd, height = 6, width = 10)
+# abcd
+ggsave('figs/composite_plot.png', abcd, height = 6.5, width = 9)
 ```
+
+
 
 
 ```{r eval=FALSE, include=FALSE}

@@ -317,10 +317,11 @@ age_group_desc <- demo_all %>%
 
 age_comp <- age_group_desc  %>% 
   column_to_rownames('siteid') %>% 
-  select(contains('to'), ends_with('plus')) %>% 
+  rename('80to100' = `80plus`) %>% 
+  select(contains('to')) %>% 
   apply(., 1, cumsum) %>% 
   t()
-
+median_age(age_comp[2,])
 age_med_df <- data.frame(median_age = apply(age_comp, 1, median_age)) %>% 
   rownames_to_column('siteid')
 
