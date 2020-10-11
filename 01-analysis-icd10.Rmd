@@ -435,7 +435,7 @@ fish_obs_exp <- nested_obs_exp %>%
   dplyr::select(-data) %>% 
   unnest(cols = c(fish)) %>% 
   mutate(upper = ifelse(is.na(upper), Inf, upper)) %>% 
-  mutate(ci = paste0('(', round(log2(lower), 1), ', ', 
+  mutate(lci = paste0('(', round(log2(lower), 1), ', ', 
                      round(log2(upper), 1), ')'),
          lestimate = log2(estimate))
 fish_obs_exp$`P value (Holm)` <-  p.adjust(fish_obs_exp$p_value, 'holm')
@@ -464,7 +464,7 @@ library(DT)
 fish_tab <- fish_obs_exp  %>% 
   left_join(contingency_df, by = c('full_icd', 'time')) %>% 
   select(full_icd, time, Observed, Expected, over_sev,
-         estimate, lestimate, ci, p_value,
+         estimate, lestimate, lci, p_value,
          `P value (Holm)`, `P value (FDR)`) %>% 
   arrange(desc(over_sev)) %>% 
   rename('ICD' = 'full_icd',
@@ -484,6 +484,18 @@ fish_tab %>%
 fish_tab %>% 
   write_csv('results/icd10_fish_tab.csv')
 
+fish_obs_exp %>% 
+  filter(`P value (FDR)` < 0.05) %>% 
+  arrange(desc(time)) %>% 
+  mutate(lestimate = round(lestimate, 2),
+         drr = round((estimate - 1)*100, 1),
+         lower_drr = (lower - 1)*100,
+         upper_drr = (upper - 1)*100,
+         ci_drr = paste0('(', round(lower_drr, 1), ', ', 
+                     round(upper_drr, 1), ')'),
+         p_fdr = format(`P value (FDR)`, digits = 2)) %>% 
+  select(time, full_icd, lestimate, drr, ci_drr, p_fdr) %>% 
+  write_csv('results/icd10_signi.csv')
 ```
 
 A positive value of LOE indicates a higher proportion of *severe patients* with that ICD code compared to *non-severe patients*.

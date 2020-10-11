@@ -121,6 +121,7 @@ overall_plot <- gender_count %>%
   geom_col(position = 'identity') +
   scale_color_manual(values = c('white', 'white')) +
   scale_x_continuous(breaks = c(-10000, -5000, -2000, 0, 2000, 5000),
+                     labels = c(10000, 5000, 2000, 0, 2000, 5000),
                      trans = ssqrt_trans) +
   geom_vline(xintercept = 0, color = 'white') +
   geom_text(data = filter(gender_count, Country == 'France'),
