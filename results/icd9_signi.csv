@@ -1,0 +1,9 @@
+time,full_icd,lestimate,drr,ci_drr,p_fdr
+Before admission,Epilepsy and recurrent seizures (345),0.58,50,"(18, 89)",0.032
+Before admission,General symptoms (780),0.37,29,"(18, 42)",1.4e-06
+Before admission,Inflammatory and toxic neuropathy (357),0.45,36,"(12, 65)",0.032
+Before admission,Other ill-defined and unknown causes of morbidity and mortality (799),0.45,37,"(18, 58)",0.002
+After admission,General symptoms (780),0.41,33,"(24, 42)",6.4e-14
+After admission,Other and ill-defined cerebrovascular disease (437),-0.76,-41,"(-60, -14)",0.022
+After admission,Other conditions of brain (348),0.63,55,"(37, 74)",1.7e-08
+After admission,Other ill-defined and unknown causes of morbidity and mortality (799),0.5,42,"(32, 53)",2.7e-15

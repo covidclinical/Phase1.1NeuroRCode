@@ -51,7 +51,7 @@ diff_code <- code_prevalence %>%
   select(location = siteid, icd, `Neurological Disease Category`, time, percent_pats_site) %>% 
   pivot_wider(names_from = time, values_from = percent_pats_site, 
               id_cols = c(location, icd, `Neurological Disease Category`), 
-              values_fill = 0) %>% 
+              values_fill = list(percent_pats_site = 0)) %>% 
   mutate(percent_diff = `After admission` - `Before admission`,
          loc_type = 'Site', location = as.factor(tolower(location)))
 
@@ -60,7 +60,7 @@ diff_code_country <- code_prevalence %>%
   distinct() %>% 
   pivot_wider(names_from = time, values_from = percent_pats_country, 
               id_cols = c(location, icd, `Neurological Disease Category`), 
-              values_fill = 0) %>% 
+              values_fill = list(percent_pats_country = 0)) %>% 
   mutate(percent_diff = `After admission` - `Before admission`,
          location = fct_relevel(location, countries),
          loc_type = 'Country')
@@ -210,7 +210,8 @@ icd_time <- diag_icd_10 %>%
 sorted_icds <- code_prevalence %>% 
   ungroup() %>% 
   select(time, percent_pats_site, full_icd, siteid) %>% 
-  pivot_wider(names_from = time, values_from = percent_pats_site, values_fill = 0) %>% 
+  pivot_wider(names_from = time, values_from = percent_pats_site, 
+              values_fill = list(percent_pats_site = 0)) %>% 
   group_by(full_icd) %>% 
   summarise(after = mean(`After admission`, na.rm = T),
          before = mean(`Before admission`, na.rm = T),
@@ -356,55 +357,55 @@ The 95% confidence interval of the LOE was estimated using the Poisson model met
 # Metaanalysis
 # library(meta)
 
-ind_fish <- diag_icd_10 %>% 
-  group_by(full_icd, time, siteid) %>% 
-  summarise(across(contains('severe'), .fns = sum, na.rm = T), .groups = 'drop') %>% 
-  mutate(Observed = num_patients_ever_severe_icd1, 
-         num_non_severe = num_patients_never_severe_icd1 + num_patients_never_severe_icd0,
-         num_severe = num_patients_ever_severe_icd1 + num_patients_ever_severe_icd0,
-         Expected = num_patients_never_severe_icd1/num_non_severe*num_severe,
-         over_sev = Observed - Expected) %>%
-  filter(!is.na(Expected), num_patients_never_severe_icd0 >= 0) %>% 
-  select(full_icd, time, siteid,
-         num_patients_never_severe_icd0, 
-         num_patients_never_severe_icd1,
-         num_patients_ever_severe_icd0, 
-         num_patients_ever_severe_icd1) %>% 
-  group_by(full_icd, time, siteid) %>% 
-  nest() %>% 
-  mutate(fish = map(data, my_fish)) %>% 
-  dplyr::select(-data) %>% 
-  unnest(cols = c(fish)) 
+# ind_fish <- diag_icd_10 %>% 
+#   group_by(full_icd, time, siteid) %>% 
+#   summarise(across(contains('severe'), .fns = sum, na.rm = T), .groups = 'drop') %>% 
+#   mutate(Observed = num_patients_ever_severe_icd1, 
+#          num_non_severe = num_patients_never_severe_icd1 + num_patients_never_severe_icd0,
+#          num_severe = num_patients_ever_severe_icd1 + num_patients_ever_severe_icd0,
+#          Expected = num_patients_never_severe_icd1/num_non_severe*num_severe,
+#          over_sev = Observed - Expected) %>%
+#   filter(!is.na(Expected), num_patients_never_severe_icd0 >= 0) %>% 
+#   select(full_icd, time, siteid,
+#          num_patients_never_severe_icd0, 
+#          num_patients_never_severe_icd1,
+#          num_patients_ever_severe_icd0, 
+#          num_patients_ever_severe_icd1) %>% 
+#   group_by(full_icd, time, siteid) %>% 
+#   nest() %>% 
+#   mutate(fish = map(data, my_fish)) %>% 
+#   dplyr::select(-data) %>% 
+#   unnest(cols = c(fish)) 
+# 
+# madata <- ind_fish %>% 
+#   mutate(upper = ifelse(is.na(upper), Inf, upper),
+#          lestimate = log(estimate),
+#          llower = log(lower),
+#          lupper = log(upper),
+#          mase = (lupper - llower)/(2*alpha_threshold))
 
-madata <- ind_fish %>% 
-  mutate(upper = ifelse(is.na(upper), Inf, upper),
-         lestimate = log(estimate),
-         llower = log(lower),
-         lupper = log(upper),
-         mase = (lupper - llower)/(2*alpha_threshold))
-
-meta_res <- data.frame()
-for (timei in c('Before admission', 'After admission')){
-  for (icdi in unique(madata$full_icd)){
-    m <- madata %>% 
-      filter(full_icd == icdi, time == timei, !is.na(estimate)) %>% 
-      metagen(lestimate,
-              mase,
-              data = .,
-              method.tau = "SJ",
-              sm = 'RR',
-              studlab=siteid)
-    
-    meta_res <- meta_res %>% 
-      rbind(data.frame(n_sites = nrow(m$data), full_icd = icdi, time = timei,
-                       estimate = m$TE.fixed, pval = m$pval.fixed,
-                       i2 = m$I2, li2 = m$lower.I2, ui2 = m$upper.I2, 
-                       Q = m$Q, pQ = m$pval.Q))
-  }
-}
-
-meta_res$pval_fdr <-  p.adjust(meta_res$pval, 'BH')
-write_csv(meta_res, 'results/metaanalysis_results.csv')
+# meta_res <- data.frame()
+# for (timei in c('Before admission', 'After admission')){
+#   for (icdi in unique(madata$full_icd)){
+#     m <- madata %>% 
+#       filter(full_icd == icdi, time == timei, !is.na(estimate)) %>% 
+#       metagen(lestimate,
+#               mase,
+#               data = .,
+#               method.tau = "SJ",
+#               sm = 'RR',
+#               studlab=siteid)
+#     
+#     meta_res <- meta_res %>% 
+#       rbind(data.frame(n_sites = nrow(m$data), full_icd = icdi, time = timei,
+#                        estimate = m$TE.fixed, pval = m$pval.fixed,
+#                        i2 = m$I2, li2 = m$lower.I2, ui2 = m$upper.I2, 
+#                        Q = m$Q, pQ = m$pval.Q))
+#   }
+# }
+# 
+# meta_res$pval_fdr <-  p.adjust(meta_res$pval, 'BH')
+# write_csv(meta_res, 'results/metaanalysis_results.csv')
 ```
 
 ## Before and after admission
@@ -471,7 +472,7 @@ fish_tab <- fish_obs_exp  %>%
          'Observed - Expected' = 'over_sev',
          'Enrichment' = 'estimate',
          'Log2(enrichment)' = 'lestimate',
-         '95% Confidence interval' = 'ci', 
+         '95% Confidence interval' = 'lci', 
          'P value (raw)' = 'p_value')
 
 fish_tab %>% 
@@ -486,13 +487,13 @@ fish_tab %>%
 
 fish_obs_exp %>% 
   filter(`P value (FDR)` < 0.05) %>% 
-  arrange(desc(time)) %>% 
+  arrange(time) %>% 
   mutate(lestimate = round(lestimate, 2),
-         drr = round((estimate - 1)*100, 1),
+         drr = round((estimate - 1)*100, 0),
          lower_drr = (lower - 1)*100,
          upper_drr = (upper - 1)*100,
-         ci_drr = paste0('(', round(lower_drr, 1), ', ', 
-                     round(upper_drr, 1), ')'),
+         ci_drr = paste0('(', round(lower_drr, 0), ', ', 
+                     round(upper_drr, 0), ')'),
          p_fdr = format(`P value (FDR)`, digits = 2)) %>% 
   select(time, full_icd, lestimate, drr, ci_drr, p_fdr) %>% 
   write_csv('results/icd10_signi.csv')
