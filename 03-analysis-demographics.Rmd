@@ -274,8 +274,9 @@ gender_race <- plot_grid(overall_plot, age_severity, race_plot, ncol = 1,
 abcd <- plot_grid(gender_race, age_plot, ncol = 2,
                   rel_widths = c(1.25, 1 ), labels = c('', 'D'),
                   axis = 'b')
-# abcd
+abcd
 ggsave('figs/composite_plot.png', abcd, height = 6.5, width = 9)
+ggsave('figs/tiffs/composite_plot.tiff', abcd, height = 6.5, width = 9, dpi = 300)
 ```
 
 

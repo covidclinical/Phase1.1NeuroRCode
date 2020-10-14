@@ -126,7 +126,7 @@ heats <- cowplot::plot_grid(before_code_prev, after_code_prev, ncol = 1,
                    labels = c('A. Before admission', 'B. After admission'))
 heats
 ggsave('figs/icd_heatmap.png', heats, height = 10, width = 9)
-
+ggsave('figs/tiffs/icd_heatmap.tiff', heats, height = 10, width = 9, dpi = 300)
 ```
 
 
@@ -201,6 +201,7 @@ ci_prevalence <- code_prevalence %>%
 
 ```{r fig.width=10, fig.height=5}
 icd_time <- diag_icd_10 %>% 
+  mutate(time = fct_relevel(time, c('After admission', 'Before admission'))) %>% 
   group_by(full_icd, time) %>% 
   summarise(pats_icd_time = sum(num_patients_icd, na.rm = T), .groups = 'drop') 
 # sorted_icds <- icd_time %>% 
@@ -267,6 +268,11 @@ icd_prevalence_plots
 plot_grid(diff_heat, icd_prevalence_plots, rel_heights = c(1, 0.85),
           ncol = 1, labels = 'AUTO') %>%
   ggsave('figs/icd_prevalence_AB.png', ., height = 8, width = 9.7)
+
+plot_grid(diff_heat, icd_prevalence_plots, rel_heights = c(1, 0.85),
+          ncol = 1, labels = 'AUTO') %>%
+ggsave('figs/tiffs/icd_prevalence_AB.tiff', ., height = 8, width = 9.7, dpi = 300)
+
 ```
 
 
@@ -336,6 +342,7 @@ severe_heats <- cowplot::plot_grid(severe_bef_heat, severe_aft_heat, ncol = 1,
                    labels = c('A. Before admission', 'B. After admission'))
 severe_heats
 ggsave('figs/icd_severe_heatmap.png', severe_heats, height = 10, width = 7)
+ggsave('figs/tiffs/icd_severe_heatmap.tiff', severe_heats, height = 10, width = 7, dpi = 300)
 
 ```
 
@@ -579,6 +586,7 @@ enrichment_plot <- cowplot::plot_grid(
 )
 enrichment_plot
 ggsave('figs/icd_severe_before_after.png', enrichment_plot, width = 9.5, height = 7)
+ggsave('figs/tiffs/icd_severe_before_after.tiff', enrichment_plot, width = 9.5, height = 7, dpi = 300)
 ```
 
 
@@ -602,15 +610,16 @@ plot_enrich_both <- plot_obs_exp %>%
   ) +
   labs(y = NULL, x = bquote(Log[2] ~ 'enrichment, 95% CI')) +
   theme(
-    legend.position = c(0.83, 0.1),
+    legend.position = 'bottom',
     legend.background = element_blank(),
     axis.title = element_text(size = 9),
     plot.margin = margin(5.5, 2, 5.5, 5.5, unit = 'pt')
   ) +
-  scale_color_carto_d(palette = 4, guide = guide_legend(reverse = TRUE)) +
+  scale_color_carto_d(palette = 4, direction = -1) +
   NULL
 plot_enrich_both
 ggsave('figs/icd_severe.png', plot_enrich_both, width = 9, height = 5)
+ggsave('figs/tiffs/icd_severe.tiff', plot_enrich_both, width = 9, height = 5, dpi = 300)
 ```
 
 
