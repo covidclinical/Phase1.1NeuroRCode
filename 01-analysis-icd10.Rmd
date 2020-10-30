@@ -584,8 +584,8 @@ enrichment_plot <- cowplot::plot_grid(
   labels = c('A. Before admission', 'B. After admission')
 )
 enrichment_plot
-ggsave('figs/icd_severe_before_after.png', enrichment_plot, width = 9.5, height = 7)
-ggsave('figs/tiffs/fig_4.tiff', enrichment_plot, width = 9.5, height = 7, dpi = 300)
+ggsave('figs/icd_severe_before_after.png', enrichment_plot_after, width = 9.5, height = 3.5)
+ggsave('figs/tiffs/fig_4.tiff', enrichment_plot_after, width = 9.5, height = 3.5, dpi = 300)
 ```
 
 

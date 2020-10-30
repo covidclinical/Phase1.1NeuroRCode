@@ -536,14 +536,14 @@ enrichment_plot_before <- plot_enrich(
   plot_obs_exp_right %>% filter(time == 'Before admission') %>% 
     slice(match(sorted_icds, full_icd)) %>% 
     mutate(presentation = droplevels(presentation)),
-  nudge = 2.5)
+  nudge = 1.5)
 
 enrichment_plot_after <- plot_enrich(
   plot_obs_exp_left %>% filter(time == 'After admission') %>% 
     mutate(presentation = droplevels(presentation)),
   plot_obs_exp_right %>% filter(time == 'After admission') %>% slice(match(sorted_icds, full_icd)) %>% 
     mutate(presentation = droplevels(presentation)),
-  nudge = 4)
+  nudge = 1.5)
 
 enrichment_plot <- cowplot::plot_grid(
   enrichment_plot_before,
@@ -552,8 +552,8 @@ enrichment_plot <- cowplot::plot_grid(
   labels = c('A. Before admission', 'B. After admission')
 )
 enrichment_plot
-ggsave('figs/icd9_severe_before_after.png', enrichment_plot, width = 9.5, height = 7)
-ggsave('figs/tiffs/efig_4.tiff', enrichment_plot, width = 9.5, height = 7, dpi = 300)
+ggsave('figs/icd9_severe_before_after.png', enrichment_plot_after, width = 9.5, height = 3.5)
+ggsave('figs/tiffs/efig_4.tiff', enrichment_plot_after, width = 9.5, height = 3.5, dpi = 300)
 ```
 
 Figure caption: 
