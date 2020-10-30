@@ -253,7 +253,7 @@ plot_grid(diff_heat, icd9_prevalence_plots, rel_heights = c(1, 0.85),
 
 plot_grid(diff_heat, icd9_prevalence_plots, rel_heights = c(1, 0.85),
           ncol = 1, labels = 'AUTO') %>%
-  ggsave('figs/tiffs/icd9_prevalence_AB.tiff', ., height = 8, width = 9.7, dpi = 300)
+  ggsave('figs/tiffs/efig_3.tiff', ., height = 8, width = 9.7, dpi = 300)
 ```
 
 ```{r fig.height=9}
@@ -293,7 +293,7 @@ heats <- cowplot::plot_grid(before_code_prev, after_code_prev, ncol = 1,
                    labels = c('A. Before admission', 'B. After admission'))
 heats
 ggsave('figs/icd9_heatmap.png', heats, height = 10, width = 7)
-ggsave('figs/tiffs/icd9_heatmap.tiff', heats, height = 10, width = 7, dpi = 300)
+ggsave('figs/tiffs/efig_2.tiff', heats, height = 10, width = 7, dpi = 300)
 ```
 
 
@@ -360,7 +360,6 @@ severe_heats <- cowplot::plot_grid(severe_bef_heat, severe_aft_heat, ncol = 1,
                    labels = c('A. Before admission', 'B. After admission'))
 severe_heats
 ggsave('figs/icd9_severe_heatmap.png', severe_heats, height = 10, width = 7)
-ggsave('figs/tiffs/icd9_severe_heatmap.tiff', severe_heats, height = 10, width = 7, dpi = 300)
 ```
 
 
@@ -394,7 +393,7 @@ diag_icd_9 <- diag_icd_9 %>%
 
 ## Before admission
 
-```{r}
+```{r warning=FALSE}
 contingency_df <- diag_icd_9 %>% 
   # filter(time == 'Before admission') %>% 
   group_by(full_icd, time) %>% 
@@ -554,7 +553,7 @@ enrichment_plot <- cowplot::plot_grid(
 )
 enrichment_plot
 ggsave('figs/icd9_severe_before_after.png', enrichment_plot, width = 9.5, height = 7)
-ggsave('figs/tiffs/icd9_severe_before_after.tiff', enrichment_plot, width = 9.5, height = 7, dpi = 300)
+ggsave('figs/tiffs/efig_4.tiff', enrichment_plot, width = 9.5, height = 7, dpi = 300)
 ```
 
 Figure caption: 
@@ -586,5 +585,4 @@ plot_enrich_both <- plot_obs_exp %>%
   NULL
 plot_enrich_both
 ggsave('figs/icd9_severe.png', plot_enrich_both, width = 9, height = 5)
-ggsave('figs/tiffs/icd9_severe.png', plot_enrich_both, width = 9, height = 5, dpi = 300)
 ```

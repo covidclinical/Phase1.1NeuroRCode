@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -232,26 +231,26 @@ window.initializeCodeFolding = function(show) {
   var currentIndex = 1;
 
   // select all R code blocks
-  var rCodeBlocks = $('pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.julia');
+  var rCodeBlocks = $('pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.julia, pre.foldable');
   rCodeBlocks.each(function() {
 
     // create a collapsable div to wrap the code in
     var div = $('<div class="collapse r-code-collapse"></div>');
-    if (show || $(this)[0].classList.contains('fold-show'))
-      div.addClass('in');
+    var showThis = (show || $(this).hasClass('fold-show')) && !$(this).hasClass('fold-hide');
+    if (showThis) div.addClass('in');
     var id = 'rcode-643E0F36' + currentIndex++;
     div.attr('id', id);
     $(this).before(div);
     $(this).detach().appendTo(div);
 
     // add a show code button right above
-    var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+    var showCodeText = $('<span>' + (showThis ? 'Hide' : 'Code') + '</span>');
     var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
     showCodeButton.append(showCodeText);
     showCodeButton
         .attr('data-toggle', 'collapse')
         .attr('data-target', '#' + id)
-        .attr('aria-expanded', show)
+        .attr('aria-expanded', showThis)
         .attr('aria-controls', id);
 
     var buttonRow = $('<div class="row"></div>');
@@ -286,6 +285,93 @@ window.initializeSourceEmbed = function(filename) {
   });
 };
 </script>
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+      code.sourceCode > span { display: inline-block; line-height: 1.25; }
+  code.sourceCode > span { color: inherit; text-decoration: inherit; }
+  code.sourceCode > span:empty { height: 1.2em; }
+  .sourceCode { overflow: visible; }
+  code.sourceCode { white-space: pre; position: relative; }
+  div.sourceCode { margin: 1em 0; }
+  pre.sourceCode { margin: 0; }
+  @media screen {
+  div.sourceCode { overflow: auto; }
+  }
+  @media print {
+  code.sourceCode { white-space: pre-wrap; }
+  code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+  }
+  pre.numberSource code
+    { counter-reset: source-line 0; }
+  pre.numberSource code > span
+    { position: relative; left: -4em; counter-increment: source-line; }
+  pre.numberSource code > span > a:first-child::before
+    { content: counter(source-line);
+      position: relative; left: -1em; text-align: right; vertical-align: baseline;
+      border: none; display: inline-block;
+      -webkit-touch-callout: none; -webkit-user-select: none;
+      -khtml-user-select: none; -moz-user-select: none;
+      -ms-user-select: none; user-select: none;
+      padding: 0 4px; width: 4em;
+      color: #aaaaaa;
+    }
+  pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+  div.sourceCode
+    {  background-color: #f8f8f8; }
+  @media screen {
+  code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+  }
+  code span.al { color: #ef2929; } /* Alert */
+  code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+  code span.at { color: #c4a000; } /* Attribute */
+  code span.bn { color: #0000cf; } /* BaseN */
+  code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+  code span.ch { color: #4e9a06; } /* Char */
+  code span.cn { color: #000000; } /* Constant */
+  code span.co { color: #8f5902; font-style: italic; } /* Comment */
+  code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+  code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+  code span.dt { color: #204a87; } /* DataType */
+  code span.dv { color: #0000cf; } /* DecVal */
+  code span.er { color: #a40000; font-weight: bold; } /* Error */
+  code span.ex { } /* Extension */
+  code span.fl { color: #0000cf; } /* Float */
+  code span.fu { color: #000000; } /* Function */
+  code span.im { } /* Import */
+  code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+  code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+  code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+  code span.ot { color: #8f5902; } /* Other */
+  code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+  code span.sc { color: #000000; } /* SpecialChar */
+  code span.ss { color: #4e9a06; } /* SpecialString */
+  code span.st { color: #4e9a06; } /* String */
+  code span.va { color: #000000; } /* Variable */
+  code span.vs { color: #4e9a06; } /* VerbatimString */
+  code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+    </style>
 
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -488,6 +574,7 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -557,54 +644,47 @@ summary {
 <pre><code>## The following objects are masked from &#39;package:base&#39;:
 ## 
 ##     intersect, setdiff, setequal, union</code></pre>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">library</span>(tidyr)</span></code></pre></div>
-<pre><code>## Warning: package &#39;tidyr&#39; was built under R version 3.5.2</code></pre>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">library</span>(readr)</span>
-<span id="cb7-2"><a href="#cb7-2"></a><span class="kw">library</span>(readxl)</span></code></pre></div>
-<pre><code>## Warning: package &#39;readxl&#39; was built under R version 3.5.2</code></pre>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">library</span>(httr)</span></code></pre></div>
-<pre><code>## Warning: package &#39;httr&#39; was built under R version 3.5.2</code></pre>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">library</span>(purrr)</span></code></pre></div>
-<pre><code>## Warning: package &#39;purrr&#39; was built under R version 3.5.2</code></pre>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">library</span>(stringi)</span></code></pre></div>
-<pre><code>## Warning: package &#39;stringi&#39; was built under R version 3.5.2</code></pre>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">library</span>(tibble)</span></code></pre></div>
-<pre><code>## Warning: package &#39;tibble&#39; was built under R version 3.5.2</code></pre>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="co"># library(gt)</span></span>
-<span id="cb17-2"><a href="#cb17-2"></a><span class="co"># library(gtsummary)</span></span>
-<span id="cb17-3"><a href="#cb17-3"></a><span class="kw">source</span>(<span class="st">&#39;utils.R&#39;</span>)</span></code></pre></div>
-<pre><code>## Warning: package &#39;epitools&#39; was built under R version 3.5.2</code></pre>
-<pre><code>## Warning: package &#39;stringr&#39; was built under R version 3.5.2</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">library</span>(tidyr)</span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="kw">library</span>(readr)</span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="kw">library</span>(readxl)</span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="kw">library</span>(httr)</span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="kw">library</span>(purrr)</span>
+<span id="cb5-6"><a href="#cb5-6"></a><span class="kw">library</span>(stringi)</span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="kw">library</span>(tibble)</span>
+<span id="cb5-8"><a href="#cb5-8"></a><span class="co"># library(gt)</span></span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="co"># library(gtsummary)</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a><span class="kw">source</span>(<span class="st">&#39;utils.R&#39;</span>)</span></code></pre></div>
 <div id="download-data" class="section level2">
 <h2>Download data</h2>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>github_link &lt;-<span class="st"> &#39;https://raw.githubusercontent.com/covidclinical/Phase1.1AggregateDataPerSite/master/&#39;</span></span>
-<span id="cb20-2"><a href="#cb20-2"></a>demo_link &lt;-<span class="st"> </span><span class="kw">paste0</span>(github_link, <span class="st">&#39;Demographics_persite_fakeID.csv&#39;</span>)</span>
-<span id="cb20-3"><a href="#cb20-3"></a>diag_link &lt;-<span class="st"> </span><span class="kw">paste0</span>(github_link, <span class="st">&#39;Diagnoses_persite_fakeID.csv&#39;</span>)</span>
-<span id="cb20-4"><a href="#cb20-4"></a></span>
-<span id="cb20-5"><a href="#cb20-5"></a>temp_file_<span class="dv">1</span> &lt;-<span class="st"> </span>temp_file_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">tempfile</span>(<span class="dt">fileext =</span> <span class="st">&quot;.csv&quot;</span>)</span>
-<span id="cb20-6"><a href="#cb20-6"></a>req &lt;-<span class="st"> </span><span class="kw">GET</span>(demo_link, </span>
-<span id="cb20-7"><a href="#cb20-7"></a>          <span class="co"># authenticate using GITHUB_PAT</span></span>
-<span id="cb20-8"><a href="#cb20-8"></a>           <span class="kw">authenticate</span>(<span class="kw">Sys.getenv</span>(<span class="st">&quot;GITHUB_PAT&quot;</span>), <span class="st">&quot;&quot;</span>),</span>
-<span id="cb20-9"><a href="#cb20-9"></a>          <span class="co"># write result to disk</span></span>
-<span id="cb20-10"><a href="#cb20-10"></a>           <span class="kw">write_disk</span>(<span class="dt">path =</span> temp_file_<span class="dv">1</span>))</span>
-<span id="cb20-11"><a href="#cb20-11"></a>demo_all &lt;-<span class="st"> </span><span class="kw">read_csv</span>(temp_file_<span class="dv">1</span>)</span>
-<span id="cb20-12"><a href="#cb20-12"></a><span class="kw">unlink</span>(temp_file_<span class="dv">1</span>)</span>
-<span id="cb20-13"><a href="#cb20-13"></a></span>
-<span id="cb20-14"><a href="#cb20-14"></a>req &lt;-<span class="st"> </span><span class="kw">GET</span>(diag_link, </span>
-<span id="cb20-15"><a href="#cb20-15"></a>           <span class="kw">authenticate</span>(<span class="kw">Sys.getenv</span>(<span class="st">&quot;GITHUB_PAT&quot;</span>), <span class="st">&quot;&quot;</span>),</span>
-<span id="cb20-16"><a href="#cb20-16"></a>           <span class="kw">write_disk</span>(<span class="dt">path =</span> temp_file_<span class="dv">2</span>))</span>
-<span id="cb20-17"><a href="#cb20-17"></a>diag_all &lt;-<span class="st"> </span><span class="kw">read_csv</span>(temp_file_<span class="dv">2</span>)</span>
-<span id="cb20-18"><a href="#cb20-18"></a><span class="kw">unlink</span>(temp_file_<span class="dv">2</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>github_link &lt;-<span class="st"> &#39;https://raw.githubusercontent.com/covidclinical/Phase1.1AggregateDataPerSite/master/&#39;</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a>demo_link &lt;-<span class="st"> </span><span class="kw">paste0</span>(github_link, <span class="st">&#39;Demographics_persite_fakeID.csv&#39;</span>)</span>
+<span id="cb6-3"><a href="#cb6-3"></a>diag_link &lt;-<span class="st"> </span><span class="kw">paste0</span>(github_link, <span class="st">&#39;Diagnoses_persite_fakeID.csv&#39;</span>)</span>
+<span id="cb6-4"><a href="#cb6-4"></a></span>
+<span id="cb6-5"><a href="#cb6-5"></a>temp_file_<span class="dv">1</span> &lt;-<span class="st"> </span>temp_file_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">tempfile</span>(<span class="dt">fileext =</span> <span class="st">&quot;.csv&quot;</span>)</span>
+<span id="cb6-6"><a href="#cb6-6"></a>req &lt;-<span class="st"> </span><span class="kw">GET</span>(demo_link, </span>
+<span id="cb6-7"><a href="#cb6-7"></a>          <span class="co"># authenticate using GITHUB_PAT</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a>           <span class="kw">authenticate</span>(<span class="kw">Sys.getenv</span>(<span class="st">&quot;GITHUB_PAT&quot;</span>), <span class="st">&quot;&quot;</span>),</span>
+<span id="cb6-9"><a href="#cb6-9"></a>          <span class="co"># write result to disk</span></span>
+<span id="cb6-10"><a href="#cb6-10"></a>           <span class="kw">write_disk</span>(<span class="dt">path =</span> temp_file_<span class="dv">1</span>))</span>
+<span id="cb6-11"><a href="#cb6-11"></a>demo_all &lt;-<span class="st"> </span><span class="kw">read_csv</span>(temp_file_<span class="dv">1</span>)</span>
+<span id="cb6-12"><a href="#cb6-12"></a><span class="kw">unlink</span>(temp_file_<span class="dv">1</span>)</span>
+<span id="cb6-13"><a href="#cb6-13"></a></span>
+<span id="cb6-14"><a href="#cb6-14"></a>req &lt;-<span class="st"> </span><span class="kw">GET</span>(diag_link, </span>
+<span id="cb6-15"><a href="#cb6-15"></a>           <span class="kw">authenticate</span>(<span class="kw">Sys.getenv</span>(<span class="st">&quot;GITHUB_PAT&quot;</span>), <span class="st">&quot;&quot;</span>),</span>
+<span id="cb6-16"><a href="#cb6-16"></a>           <span class="kw">write_disk</span>(<span class="dt">path =</span> temp_file_<span class="dv">2</span>))</span>
+<span id="cb6-17"><a href="#cb6-17"></a>diag_all &lt;-<span class="st"> </span><span class="kw">read_csv</span>(temp_file_<span class="dv">2</span>)</span>
+<span id="cb6-18"><a href="#cb6-18"></a><span class="kw">unlink</span>(temp_file_<span class="dv">2</span>)</span></code></pre></div>
 <p>Notes: - <code>num_patients_ever_severe_icd1</code>: number of patients having the icd code and ever being severe - <code>num_patients_never_severe_icd1</code>: number of patients having the icd code and never being severe - <code>num_patients_ever_severe_icd0</code>: number of patients not having the icd code and ever being severe - <code>num_patients_never_severe_icd0</code>: number of patients not having the icd code and never being severe</p>
 </div>
 <div id="read-in-local-files" class="section level2">
 <h2>Read in local files</h2>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>site_country &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&#39;data/SiteID_Map_Non_Pediatric_3digit_toshare.csv&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb21-2"><a href="#cb21-2"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>Peds.only) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb21-3"><a href="#cb21-3"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">Country =</span> <span class="kw">case_when</span>(</span>
-<span id="cb21-4"><a href="#cb21-4"></a>    Country <span class="op">==</span><span class="st"> &#39;USA&#39;</span> <span class="op">~</span><span class="st"> </span>Country,</span>
-<span id="cb21-5"><a href="#cb21-5"></a>    <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span>stringr<span class="op">::</span><span class="kw">str_to_title</span>(Country)))</span></code></pre></div>
-<pre><code>## Parsed with column specification:
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>site_country &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&#39;data/SiteID_Map_Non_Pediatric_3digit_toshare.csv&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>Peds.only) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">Country =</span> <span class="kw">case_when</span>(</span>
+<span id="cb7-4"><a href="#cb7-4"></a>    Country <span class="op">==</span><span class="st"> &#39;USA&#39;</span> <span class="op">~</span><span class="st"> </span>Country,</span>
+<span id="cb7-5"><a href="#cb7-5"></a>    <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span>stringr<span class="op">::</span><span class="kw">str_to_title</span>(Country)))</span></code></pre></div>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
 ## cols(
 ##   Country = col_character(),
 ##   SiteID.new = col_character(),
@@ -614,21 +694,21 @@ summary {
 <!-- If this were not combined: data could be known the specific site. -->
 <!-- SITE660 was mapped to both US and France? -->
 <!-- SITE309 was mapped to both US and Italy? -->
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>neuro_icds_<span class="dv">10</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&#39;data/2020-09-10_neuro-icd10.xlsx&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-2"><a href="#cb23-2"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;icd&#39;</span> =<span class="st"> `</span><span class="dt">ICD-10</span><span class="st">`</span>)</span>
-<span id="cb23-3"><a href="#cb23-3"></a></span>
-<span id="cb23-4"><a href="#cb23-4"></a>neuro_icds_<span class="dv">9</span> &lt;-<span class="st"> </span>readxl<span class="op">::</span><span class="kw">read_excel</span>(<span class="st">&#39;data/neuroicd10to9withdescript.xlsx&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-5"><a href="#cb23-5"></a><span class="st">  </span><span class="kw">left_join</span>(neuro_icds_<span class="dv">10</span> <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>, icd), </span>
-<span id="cb23-6"><a href="#cb23-6"></a>            <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;ICD10_CODE&#39;</span> =<span class="st"> &#39;icd&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-7"><a href="#cb23-7"></a><span class="st">  </span><span class="co"># select(- c(ICD9_CODE, ICD9_DESCRIPTION, ICD10_CODE)) %&gt;% </span></span>
-<span id="cb23-8"><a href="#cb23-8"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;icd&#39;</span> =<span class="st"> </span>ICD9_THREE_DIGIT) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-9"><a href="#cb23-9"></a><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">is.na</span>(icd)) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># ignore ICD10 code G46 and G65 not mapped to any ICD_9 code</span></span>
-<span id="cb23-10"><a href="#cb23-10"></a><span class="st">  </span>{.}</span>
-<span id="cb23-11"><a href="#cb23-11"></a></span>
-<span id="cb23-12"><a href="#cb23-12"></a>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-13"><a href="#cb23-13"></a><span class="st">  </span><span class="kw">distinct</span>(icd, ICD10_CODE) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb23-14"><a href="#cb23-14"></a><span class="st">  </span><span class="kw">count</span>(icd) <span class="op">%&gt;%</span></span>
-<span id="cb23-15"><a href="#cb23-15"></a><span class="st">  </span><span class="kw">filter</span>(n <span class="op">&gt;</span><span class="st"> </span><span class="dv">1</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>neuro_icds_<span class="dv">10</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&#39;data/2020-09-10_neuro-icd10.xlsx&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;icd&#39;</span> =<span class="st"> `</span><span class="dt">ICD-10</span><span class="st">`</span>)</span>
+<span id="cb9-3"><a href="#cb9-3"></a></span>
+<span id="cb9-4"><a href="#cb9-4"></a>neuro_icds_<span class="dv">9</span> &lt;-<span class="st"> </span>readxl<span class="op">::</span><span class="kw">read_excel</span>(<span class="st">&#39;data/neuroicd10to9withdescript.xlsx&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="st">  </span><span class="kw">left_join</span>(neuro_icds_<span class="dv">10</span> <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>, icd), </span>
+<span id="cb9-6"><a href="#cb9-6"></a>            <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;ICD10_CODE&#39;</span> =<span class="st"> &#39;icd&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="st">  </span><span class="co"># select(- c(ICD9_CODE, ICD9_DESCRIPTION, ICD10_CODE)) %&gt;% </span></span>
+<span id="cb9-8"><a href="#cb9-8"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;icd&#39;</span> =<span class="st"> </span>ICD9_THREE_DIGIT) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">is.na</span>(icd)) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># ignore ICD10 code G46 and G65 not mapped to any ICD_9 code</span></span>
+<span id="cb9-10"><a href="#cb9-10"></a><span class="st">  </span>{.}</span>
+<span id="cb9-11"><a href="#cb9-11"></a></span>
+<span id="cb9-12"><a href="#cb9-12"></a>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-13"><a href="#cb9-13"></a><span class="st">  </span><span class="kw">distinct</span>(icd, ICD10_CODE) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb9-14"><a href="#cb9-14"></a><span class="st">  </span><span class="kw">count</span>(icd) <span class="op">%&gt;%</span></span>
+<span id="cb9-15"><a href="#cb9-15"></a><span class="st">  </span><span class="kw">filter</span>(n <span class="op">&gt;</span><span class="st"> </span><span class="dv">1</span>)</span></code></pre></div>
 <pre><code>## # A tibble: 4 x 2
 ##   icd       n
 ##   &lt;chr&gt; &lt;int&gt;
@@ -641,9 +721,10 @@ summary {
 <div id="manual-grouping-of-four-icd-9-codes" class="section level2">
 <h2>Manual grouping of four ICD-9 codes</h2>
 <p>For the two codes with non-specific description (780 and 781), we can include (in the Methods, Figure legend or supplementary material) the descriptions of all subcodes for each. See link here <a href="http://dbmi-ncats-test01.dbmi.pitt.edu/webclient/" class="uri">http://dbmi-ncats-test01.dbmi.pitt.edu/webclient/</a>: no login required, and also the link below each code. I added the disease groups in parentheses for these four codes. The only group that is not consistent with the grouping based on ICD10 codes is vision/smell/taste. (For ICD10 codes, we separate vision and neuropathy, the latter of which includes smell and taste). V41 Problems with special senses and other special functions (vision/smell/taste) 437 Other and ill-defined cerebrovascular disease (vascular) 780 General symptoms (Other) <a href="https://icd.codes/icd9cm/780" class="uri">https://icd.codes/icd9cm/780</a> 781 Symptoms involving nervous and musculoskeletal systems (Other) <a href="https://icd.codes/icd9cm/781" class="uri">https://icd.codes/icd9cm/781</a></p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a>phecode_icd9 &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&#39;data/phecode_icd9_rolled.csv&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb25-2"><a href="#cb25-2"></a><span class="st">  </span><span class="kw">select</span>(<span class="dt">icd =</span> ICD9, <span class="dt">icd9_desc =</span> <span class="st">`</span><span class="dt">ICD9 String</span><span class="st">`</span>)</span></code></pre></div>
-<pre><code>## Parsed with column specification:
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>phecode_icd9 &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&#39;data/phecode_icd9_rolled.csv&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="st">  </span><span class="kw">select</span>(<span class="dt">icd =</span> ICD9, <span class="dt">icd9_desc =</span> <span class="st">`</span><span class="dt">ICD9 String</span><span class="st">`</span>)</span></code></pre></div>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
 ## cols(
 ##   ICD9 = col_character(),
 ##   `ICD9 String` = col_character(),
@@ -654,49 +735,48 @@ summary {
 ##   Rollup = col_double(),
 ##   Leaf = col_double()
 ## )</code></pre>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a>neuro_icds_<span class="dv">9</span> &lt;-<span class="st"> </span>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb27-2"><a href="#cb27-2"></a><span class="st">  </span><span class="kw">left_join</span>(phecode_icd9, <span class="dt">by =</span> <span class="st">&#39;icd&#39;</span>)</span>
-<span id="cb27-3"><a href="#cb27-3"></a></span>
-<span id="cb27-4"><a href="#cb27-4"></a>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(icd <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;V41&#39;</span>, <span class="st">&#39;780&#39;</span>, <span class="st">&#39;781&#39;</span>, <span class="st">&#39;437&#39;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>neuro_icds_<span class="dv">9</span> &lt;-<span class="st"> </span>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb13-2"><a href="#cb13-2"></a><span class="st">  </span><span class="kw">left_join</span>(phecode_icd9, <span class="dt">by =</span> <span class="st">&#39;icd&#39;</span>)</span>
+<span id="cb13-3"><a href="#cb13-3"></a></span>
+<span id="cb13-4"><a href="#cb13-4"></a>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(icd <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;V41&#39;</span>, <span class="st">&#39;780&#39;</span>, <span class="st">&#39;781&#39;</span>, <span class="st">&#39;437&#39;</span>))</span></code></pre></div>
 <pre><code>## # A tibble: 19 x 7
-##    icd   ICD9_CODE ICD9_DESCRIPTION ICD10_CODE ICD10_DESCRIPTI…
-##    &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt;            &lt;chr&gt;      &lt;chr&gt;           
-##  1 437   437.7     Transient globa… G45        Transient cereb…
-##  2 780   780.79    Other malaise a… G93        Other disorders…
-##  3 V41   V41.0     Problems with s… H54        Blindness and l…
-##  4 437   437.0     Cerebral athero… I67        Other cerebrova…
-##  5 437   437.1     Other generaliz… I67        Other cerebrova…
-##  6 437   437.2     Hypertensive en… I67        Other cerebrova…
-##  7 437   437.3     Cerebral aneury… I67        Other cerebrova…
-##  8 437   437.4     Cerebral arteri… I67        Other cerebrova…
-##  9 437   437.5     Moyamoya disease I67        Other cerebrova…
-## 10 437   437.6     Nonpyogenic thr… I67        Other cerebrova…
-## 11 437   437.8     Other ill-defin… I67        Other cerebrova…
-## 12 437   437.9     Unspecified cer… I67        Other cerebrova…
-## 13 781   781.3     Lack of coordin… R27        Other lack of c…
-## 14 780   780.93    Memory loss      R41        Other symptoms …
-## 15 780   780.97    Altered mental … R41        Other symptoms …
-## 16 781   781.8     Neurologic negl… R41        Other symptoms …
-## 17 780   780.4     Dizziness and g… R42        Dizziness and g…
-## 18 781   781.1     Disturbances of… R43        Disturbances of…
-## 19 V41   V41.5     Problems with s… R43        Disturbances of…
-## # … with 2 more variables: `Neurological Disease Category` &lt;chr&gt;,
-## #   icd9_desc &lt;chr&gt;</code></pre>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a>neuro_icds_<span class="dv">9</span> &lt;-<span class="st"> </span>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb29-2"><a href="#cb29-2"></a><span class="st">  </span><span class="kw">within</span>(., icd9_desc[icd <span class="op">==</span><span class="st"> &#39;V41&#39;</span>] &lt;-<span class="st"> &#39;Problems with special senses and other special functions&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb29-3"><a href="#cb29-3"></a><span class="st">  </span><span class="kw">within</span>(., <span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>[icd <span class="op">==</span><span class="st"> &#39;V41&#39;</span>] &lt;-<span class="st"> &#39;Vision/smell/taste&#39;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb29-4"><a href="#cb29-4"></a><span class="st">  </span><span class="kw">within</span>(., icd9_desc[icd <span class="op">==</span><span class="st"> &#39;781&#39;</span>] &lt;-<span class="st"> &#39;Symptoms involving nervous and musculoskeletal systems&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb29-5"><a href="#cb29-5"></a><span class="st">  </span><span class="kw">within</span>(., <span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>[icd <span class="op">==</span><span class="st"> &#39;781&#39;</span>] &lt;-<span class="st"> &#39;Neuropathy&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># and Consciousness</span></span>
-<span id="cb29-6"><a href="#cb29-6"></a><span class="st">  </span><span class="kw">within</span>(., icd9_desc[icd <span class="op">==</span><span class="st"> &#39;437&#39;</span>] &lt;-<span class="st"> &#39;Other and ill-defined cerebrovascular disease&#39;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb29-7"><a href="#cb29-7"></a><span class="st">  </span><span class="kw">within</span>(., icd9_desc[icd <span class="op">==</span><span class="st"> &#39;780&#39;</span>] &lt;-<span class="st"> &#39;General symptoms&#39;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb29-8"><a href="#cb29-8"></a><span class="st">  </span><span class="kw">within</span>(., <span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>[icd <span class="op">==</span><span class="st"> &#39;780&#39;</span>] &lt;-<span class="st"> &#39;Other&#39;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb29-9"><a href="#cb29-9"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb29-10"><a href="#cb29-10"></a><span class="st">  </span><span class="kw">select</span>(<span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>, icd, icd9_desc) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb29-11"><a href="#cb29-11"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb29-12"><a href="#cb29-12"></a><span class="st">  </span><span class="kw">arrange</span>(icd)</span>
-<span id="cb29-13"><a href="#cb29-13"></a></span>
-<span id="cb29-14"><a href="#cb29-14"></a>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb29-15"><a href="#cb29-15"></a><span class="st">  </span><span class="kw">write_csv</span>(<span class="st">&#39;results/icd9_tab.csv&#39;</span>)</span></code></pre></div>
+##    icd   ICD9_CODE ICD9_DESCRIPTION ICD10_CODE ICD10_DESCRIPTI… `Neurological D…
+##    &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt;            &lt;chr&gt;      &lt;chr&gt;            &lt;chr&gt;           
+##  1 437   437.7     Transient globa… G45        Transient cereb… Vascular        
+##  2 780   780.79    Other malaise a… G93        Other disorders… Other           
+##  3 V41   V41.0     Problems with s… H54        Blindness and l… Vision          
+##  4 437   437.0     Cerebral athero… I67        Other cerebrova… Vascular        
+##  5 437   437.1     Other generaliz… I67        Other cerebrova… Vascular        
+##  6 437   437.2     Hypertensive en… I67        Other cerebrova… Vascular        
+##  7 437   437.3     Cerebral aneury… I67        Other cerebrova… Vascular        
+##  8 437   437.4     Cerebral arteri… I67        Other cerebrova… Vascular        
+##  9 437   437.5     Moyamoya disease I67        Other cerebrova… Vascular        
+## 10 437   437.6     Nonpyogenic thr… I67        Other cerebrova… Vascular        
+## 11 437   437.8     Other ill-defin… I67        Other cerebrova… Vascular        
+## 12 437   437.9     Unspecified cer… I67        Other cerebrova… Vascular        
+## 13 781   781.3     Lack of coordin… R27        Other lack of c… Coordination    
+## 14 780   780.93    Memory loss      R41        Other symptoms … Consciousness   
+## 15 780   780.97    Altered mental … R41        Other symptoms … Consciousness   
+## 16 781   781.8     Neurologic negl… R41        Other symptoms … Consciousness   
+## 17 780   780.4     Dizziness and g… R42        Dizziness and g… Dizziness       
+## 18 781   781.1     Disturbances of… R43        Disturbances of… Neuropathy      
+## 19 V41   V41.5     Problems with s… R43        Disturbances of… Neuropathy      
+## # … with 1 more variable: icd9_desc &lt;chr&gt;</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>neuro_icds_<span class="dv">9</span> &lt;-<span class="st"> </span>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb15-2"><a href="#cb15-2"></a><span class="st">  </span><span class="kw">within</span>(., icd9_desc[icd <span class="op">==</span><span class="st"> &#39;V41&#39;</span>] &lt;-<span class="st"> &#39;Problems with special senses and other special functions&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb15-3"><a href="#cb15-3"></a><span class="st">  </span><span class="kw">within</span>(., <span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>[icd <span class="op">==</span><span class="st"> &#39;V41&#39;</span>] &lt;-<span class="st"> &#39;Vision/smell/taste&#39;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb15-4"><a href="#cb15-4"></a><span class="st">  </span><span class="kw">within</span>(., icd9_desc[icd <span class="op">==</span><span class="st"> &#39;781&#39;</span>] &lt;-<span class="st"> &#39;Symptoms involving nervous and musculoskeletal systems&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb15-5"><a href="#cb15-5"></a><span class="st">  </span><span class="kw">within</span>(., <span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>[icd <span class="op">==</span><span class="st"> &#39;781&#39;</span>] &lt;-<span class="st"> &#39;Neuropathy&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># and Consciousness</span></span>
+<span id="cb15-6"><a href="#cb15-6"></a><span class="st">  </span><span class="kw">within</span>(., icd9_desc[icd <span class="op">==</span><span class="st"> &#39;437&#39;</span>] &lt;-<span class="st"> &#39;Other and ill-defined cerebrovascular disease&#39;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb15-7"><a href="#cb15-7"></a><span class="st">  </span><span class="kw">within</span>(., icd9_desc[icd <span class="op">==</span><span class="st"> &#39;780&#39;</span>] &lt;-<span class="st"> &#39;General symptoms&#39;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb15-8"><a href="#cb15-8"></a><span class="st">  </span><span class="kw">within</span>(., <span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>[icd <span class="op">==</span><span class="st"> &#39;780&#39;</span>] &lt;-<span class="st"> &#39;Other&#39;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb15-9"><a href="#cb15-9"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb15-10"><a href="#cb15-10"></a><span class="st">  </span><span class="kw">select</span>(<span class="st">`</span><span class="dt">Neurological Disease Category</span><span class="st">`</span>, icd, icd9_desc) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb15-11"><a href="#cb15-11"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb15-12"><a href="#cb15-12"></a><span class="st">  </span><span class="kw">arrange</span>(icd)</span>
+<span id="cb15-13"><a href="#cb15-13"></a></span>
+<span id="cb15-14"><a href="#cb15-14"></a>neuro_icds_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb15-15"><a href="#cb15-15"></a><span class="st">  </span><span class="kw">write_csv</span>(<span class="st">&#39;results/icd9_tab.csv&#39;</span>)</span></code></pre></div>
 <p>Notes:</p>
 <p>“-99” indicate masked small numbers (for obfuscation) and “-999” indicate missing, mismatches, not applicable, etc.</p>
 </div>
@@ -706,187 +786,187 @@ summary {
 </div>
 <div id="mold-data-frames" class="section level1">
 <h1>Mold data frames</h1>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a>demo_ana &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-2"><a href="#cb30-2"></a><span class="st">  </span><span class="kw">filter</span>(race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-3"><a href="#cb30-3"></a><span class="st">  </span><span class="co"># left_join(site_to_country, by = &#39;siteid&#39;) %&gt;% </span></span>
-<span id="cb30-4"><a href="#cb30-4"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span><span class="kw">c</span>(sex, age_group, race)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-5"><a href="#cb30-5"></a><span class="st">  </span><span class="kw">bind_rows</span>(<span class="co"># Compute patients_all for SITE734 manually</span></span>
-<span id="cb30-6"><a href="#cb30-6"></a>    demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-7"><a href="#cb30-7"></a><span class="st">      </span><span class="kw">filter</span>(siteid <span class="op">==</span><span class="st"> &#39;SITE734&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-8"><a href="#cb30-8"></a><span class="st">      </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-9"><a href="#cb30-9"></a><span class="st">      </span><span class="kw">summarise</span>(<span class="kw">across</span>(<span class="kw">c</span>(num_patients_all, num_patients_ever_severe), <span class="dt">.fns =</span> sum),</span>
-<span id="cb30-10"><a href="#cb30-10"></a>                <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>)</span>
-<span id="cb30-11"><a href="#cb30-11"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-12"><a href="#cb30-12"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">num_patients_never_severe =</span> num_patients_all <span class="op">-</span><span class="st"> </span>num_patients_ever_severe)</span>
-<span id="cb30-13"><a href="#cb30-13"></a></span>
-<span id="cb30-14"><a href="#cb30-14"></a></span>
-<span id="cb30-15"><a href="#cb30-15"></a>split_patient_type &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</span>
-<span id="cb30-16"><a href="#cb30-16"></a>  temp &lt;-<span class="st"> </span><span class="kw">strsplit</span>(<span class="kw">sub</span>(<span class="st">&#39;(^[^_]+_[^_]+)_(.*)$&#39;</span>, <span class="st">&#39;</span><span class="ch">\\</span><span class="st">1 </span><span class="ch">\\</span><span class="st">2&#39;</span>, <span class="kw">stri_reverse</span>(x)), <span class="st">&#39; &#39;</span>)</span>
-<span id="cb30-17"><a href="#cb30-17"></a>  <span class="kw">map</span>(temp, stri_reverse)</span>
-<span id="cb30-18"><a href="#cb30-18"></a>}</span>
-<span id="cb30-19"><a href="#cb30-19"></a></span>
-<span id="cb30-20"><a href="#cb30-20"></a>diag_ana &lt;-<span class="st"> </span>diag_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-21"><a href="#cb30-21"></a><span class="st">  </span><span class="kw">mutate</span>(</span>
-<span id="cb30-22"><a href="#cb30-22"></a>    <span class="dt">num_patients_never_severe_before_admission =</span> num_patients_all_before_admission <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_before_admission,</span>
-<span id="cb30-23"><a href="#cb30-23"></a>    <span class="dt">num_patients_never_severe_since_admission =</span> num_patients_all_since_admission <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_since_admission,</span>
-<span id="cb30-24"><a href="#cb30-24"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-25"><a href="#cb30-25"></a><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="kw">starts_with</span>(<span class="st">&#39;num&#39;</span>), <span class="dt">names_to =</span> <span class="st">&#39;patient_type&#39;</span>, <span class="dt">values_to =</span> <span class="st">&#39;count&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-26"><a href="#cb30-26"></a><span class="st">  </span><span class="kw">bind_cols</span>(</span>
-<span id="cb30-27"><a href="#cb30-27"></a>    <span class="kw">split_patient_type</span>(.[[<span class="st">&#39;patient_type&#39;</span>]]) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-28"><a href="#cb30-28"></a><span class="st">      </span><span class="kw">do.call</span>(rbind, .) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-29"><a href="#cb30-29"></a><span class="st">      </span><span class="kw">as.data.frame</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-30"><a href="#cb30-30"></a><span class="st">      `</span><span class="dt">colnames&lt;-</span><span class="st">`</span>(<span class="kw">c</span>(<span class="st">&#39;time&#39;</span>, <span class="st">&#39;severe&#39;</span>))</span>
-<span id="cb30-31"><a href="#cb30-31"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-32"><a href="#cb30-32"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">severe =</span> <span class="kw">recode</span>(severe, </span>
-<span id="cb30-33"><a href="#cb30-33"></a>                         <span class="dt">num_patients_all =</span> <span class="st">&#39;num_patients_icd&#39;</span>,</span>
-<span id="cb30-34"><a href="#cb30-34"></a>                         <span class="dt">num_patients_ever_severe=</span> <span class="st">&#39;num_patients_ever_severe_icd1&#39;</span>,</span>
-<span id="cb30-35"><a href="#cb30-35"></a>                         <span class="dt">num_patients_never_severe=</span> <span class="st">&#39;num_patients_never_severe_icd1&#39;</span>),</span>
-<span id="cb30-36"><a href="#cb30-36"></a>         <span class="dt">time =</span> <span class="kw">recode</span>(time,</span>
-<span id="cb30-37"><a href="#cb30-37"></a>                       <span class="dt">before_admission =</span> <span class="st">&#39;Before admission&#39;</span>,</span>
-<span id="cb30-38"><a href="#cb30-38"></a>                       <span class="dt">since_admission =</span> <span class="st">&#39;After admission&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-39"><a href="#cb30-39"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;icd&#39;</span> =<span class="st"> </span>icd_code_3chars) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-40"><a href="#cb30-40"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>patient_type) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-41"><a href="#cb30-41"></a><span class="st">  </span><span class="kw">drop_na</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-42"><a href="#cb30-42"></a><span class="st">  </span><span class="kw">left_join</span>(site_country, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;siteid&#39;</span> =<span class="st"> &#39;SiteID.new&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-43"><a href="#cb30-43"></a><span class="st">  </span>{.}</span>
-<span id="cb30-44"><a href="#cb30-44"></a></span>
-<span id="cb30-45"><a href="#cb30-45"></a>diag_icd_<span class="dv">10</span> &lt;-<span class="st"> </span>diag_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-46"><a href="#cb30-46"></a><span class="st">  </span><span class="kw">filter</span>(icd_version <span class="op">==</span><span class="st"> </span><span class="dv">10</span>) <span class="op">%&gt;%</span></span>
-<span id="cb30-47"><a href="#cb30-47"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>icd_version) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-48"><a href="#cb30-48"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> severe, <span class="dt">values_from =</span> count) <span class="op">%&gt;%</span></span>
-<span id="cb30-49"><a href="#cb30-49"></a><span class="st">  </span><span class="kw">right_join</span>(neuro_icds_<span class="dv">10</span>, <span class="dt">by =</span> <span class="st">&#39;icd&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-50"><a href="#cb30-50"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-51"><a href="#cb30-51"></a><span class="st">  </span><span class="kw">left_join</span>(demo_ana, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-52"><a href="#cb30-52"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">full_icd =</span> <span class="kw">paste0</span>(<span class="st">`</span><span class="dt">ICD-10 Description</span><span class="st">`</span>, <span class="st">&#39; (&#39;</span>, icd, <span class="st">&#39;)&#39;</span>),</span>
-<span id="cb30-53"><a href="#cb30-53"></a>         <span class="dt">num_patients_never_severe_icd0 =</span> num_patients_never_severe <span class="op">-</span><span class="st"> </span>num_patients_never_severe_icd1,</span>
-<span id="cb30-54"><a href="#cb30-54"></a>         <span class="dt">num_patients_ever_severe_icd0 =</span> num_patients_ever_severe <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_icd1,</span>
-<span id="cb30-55"><a href="#cb30-55"></a>  ) <span class="op">%&gt;%</span></span>
-<span id="cb30-56"><a href="#cb30-56"></a><span class="st">  </span><span class="kw">drop_na</span>(num_patients_icd) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-57"><a href="#cb30-57"></a><span class="st">  </span>{.}</span>
-<span id="cb30-58"><a href="#cb30-58"></a></span>
-<span id="cb30-59"><a href="#cb30-59"></a>diag_icd_<span class="dv">9</span> &lt;-<span class="st"> </span>diag_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-60"><a href="#cb30-60"></a><span class="st">  </span><span class="kw">filter</span>(icd_version <span class="op">==</span><span class="st"> </span><span class="dv">9</span>) <span class="op">%&gt;%</span></span>
-<span id="cb30-61"><a href="#cb30-61"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>icd_version) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-62"><a href="#cb30-62"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> severe, <span class="dt">values_from =</span> count) <span class="op">%&gt;%</span></span>
-<span id="cb30-63"><a href="#cb30-63"></a><span class="st">  </span><span class="kw">right_join</span>(neuro_icds_<span class="dv">9</span>, <span class="dt">by =</span> <span class="st">&#39;icd&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-64"><a href="#cb30-64"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-65"><a href="#cb30-65"></a><span class="st">  </span><span class="kw">left_join</span>(demo_ana, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-66"><a href="#cb30-66"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">full_icd =</span> <span class="kw">paste0</span>(icd9_desc, <span class="st">&#39; (&#39;</span>, icd, <span class="st">&#39;)&#39;</span>),</span>
-<span id="cb30-67"><a href="#cb30-67"></a>         <span class="dt">num_patients_never_severe_icd0 =</span> num_patients_never_severe <span class="op">-</span><span class="st"> </span>num_patients_never_severe_icd1,</span>
-<span id="cb30-68"><a href="#cb30-68"></a>         <span class="dt">num_patients_ever_severe_icd0 =</span> num_patients_ever_severe <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_icd1,</span>
-<span id="cb30-69"><a href="#cb30-69"></a>  ) <span class="op">%&gt;%</span></span>
-<span id="cb30-70"><a href="#cb30-70"></a><span class="st">  </span><span class="kw">drop_na</span>(num_patients_icd) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb30-71"><a href="#cb30-71"></a><span class="st">  </span>{.}</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a>demo_ana &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-2"><a href="#cb16-2"></a><span class="st">  </span><span class="kw">filter</span>(race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-3"><a href="#cb16-3"></a><span class="st">  </span><span class="co"># left_join(site_to_country, by = &#39;siteid&#39;) %&gt;% </span></span>
+<span id="cb16-4"><a href="#cb16-4"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span><span class="kw">c</span>(sex, age_group, race)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-5"><a href="#cb16-5"></a><span class="st">  </span><span class="kw">bind_rows</span>(<span class="co"># Compute patients_all for SITE734 manually</span></span>
+<span id="cb16-6"><a href="#cb16-6"></a>    demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-7"><a href="#cb16-7"></a><span class="st">      </span><span class="kw">filter</span>(siteid <span class="op">==</span><span class="st"> &#39;SITE734&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-8"><a href="#cb16-8"></a><span class="st">      </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-9"><a href="#cb16-9"></a><span class="st">      </span><span class="kw">summarise</span>(<span class="kw">across</span>(<span class="kw">c</span>(num_patients_all, num_patients_ever_severe), <span class="dt">.fns =</span> sum),</span>
+<span id="cb16-10"><a href="#cb16-10"></a>                <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>)</span>
+<span id="cb16-11"><a href="#cb16-11"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-12"><a href="#cb16-12"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">num_patients_never_severe =</span> num_patients_all <span class="op">-</span><span class="st"> </span>num_patients_ever_severe)</span>
+<span id="cb16-13"><a href="#cb16-13"></a></span>
+<span id="cb16-14"><a href="#cb16-14"></a></span>
+<span id="cb16-15"><a href="#cb16-15"></a>split_patient_type &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</span>
+<span id="cb16-16"><a href="#cb16-16"></a>  temp &lt;-<span class="st"> </span><span class="kw">strsplit</span>(<span class="kw">sub</span>(<span class="st">&#39;(^[^_]+_[^_]+)_(.*)$&#39;</span>, <span class="st">&#39;</span><span class="ch">\\</span><span class="st">1 </span><span class="ch">\\</span><span class="st">2&#39;</span>, <span class="kw">stri_reverse</span>(x)), <span class="st">&#39; &#39;</span>)</span>
+<span id="cb16-17"><a href="#cb16-17"></a>  <span class="kw">map</span>(temp, stri_reverse)</span>
+<span id="cb16-18"><a href="#cb16-18"></a>}</span>
+<span id="cb16-19"><a href="#cb16-19"></a></span>
+<span id="cb16-20"><a href="#cb16-20"></a>diag_ana &lt;-<span class="st"> </span>diag_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-21"><a href="#cb16-21"></a><span class="st">  </span><span class="kw">mutate</span>(</span>
+<span id="cb16-22"><a href="#cb16-22"></a>    <span class="dt">num_patients_never_severe_before_admission =</span> num_patients_all_before_admission <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_before_admission,</span>
+<span id="cb16-23"><a href="#cb16-23"></a>    <span class="dt">num_patients_never_severe_since_admission =</span> num_patients_all_since_admission <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_since_admission,</span>
+<span id="cb16-24"><a href="#cb16-24"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-25"><a href="#cb16-25"></a><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="kw">starts_with</span>(<span class="st">&#39;num&#39;</span>), <span class="dt">names_to =</span> <span class="st">&#39;patient_type&#39;</span>, <span class="dt">values_to =</span> <span class="st">&#39;count&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-26"><a href="#cb16-26"></a><span class="st">  </span><span class="kw">bind_cols</span>(</span>
+<span id="cb16-27"><a href="#cb16-27"></a>    <span class="kw">split_patient_type</span>(.[[<span class="st">&#39;patient_type&#39;</span>]]) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-28"><a href="#cb16-28"></a><span class="st">      </span><span class="kw">do.call</span>(rbind, .) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-29"><a href="#cb16-29"></a><span class="st">      </span><span class="kw">as.data.frame</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-30"><a href="#cb16-30"></a><span class="st">      `</span><span class="dt">colnames&lt;-</span><span class="st">`</span>(<span class="kw">c</span>(<span class="st">&#39;time&#39;</span>, <span class="st">&#39;severe&#39;</span>))</span>
+<span id="cb16-31"><a href="#cb16-31"></a>  ) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-32"><a href="#cb16-32"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">severe =</span> <span class="kw">recode</span>(severe, </span>
+<span id="cb16-33"><a href="#cb16-33"></a>                         <span class="dt">num_patients_all =</span> <span class="st">&#39;num_patients_icd&#39;</span>,</span>
+<span id="cb16-34"><a href="#cb16-34"></a>                         <span class="dt">num_patients_ever_severe=</span> <span class="st">&#39;num_patients_ever_severe_icd1&#39;</span>,</span>
+<span id="cb16-35"><a href="#cb16-35"></a>                         <span class="dt">num_patients_never_severe=</span> <span class="st">&#39;num_patients_never_severe_icd1&#39;</span>),</span>
+<span id="cb16-36"><a href="#cb16-36"></a>         <span class="dt">time =</span> <span class="kw">recode</span>(time,</span>
+<span id="cb16-37"><a href="#cb16-37"></a>                       <span class="dt">before_admission =</span> <span class="st">&#39;Before admission&#39;</span>,</span>
+<span id="cb16-38"><a href="#cb16-38"></a>                       <span class="dt">since_admission =</span> <span class="st">&#39;After admission&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-39"><a href="#cb16-39"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;icd&#39;</span> =<span class="st"> </span>icd_code_3chars) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-40"><a href="#cb16-40"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>patient_type) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-41"><a href="#cb16-41"></a><span class="st">  </span><span class="kw">drop_na</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-42"><a href="#cb16-42"></a><span class="st">  </span><span class="kw">left_join</span>(site_country, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;siteid&#39;</span> =<span class="st"> &#39;SiteID.new&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-43"><a href="#cb16-43"></a><span class="st">  </span>{.}</span>
+<span id="cb16-44"><a href="#cb16-44"></a></span>
+<span id="cb16-45"><a href="#cb16-45"></a>diag_icd_<span class="dv">10</span> &lt;-<span class="st"> </span>diag_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-46"><a href="#cb16-46"></a><span class="st">  </span><span class="kw">filter</span>(icd_version <span class="op">==</span><span class="st"> </span><span class="dv">10</span>) <span class="op">%&gt;%</span></span>
+<span id="cb16-47"><a href="#cb16-47"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>icd_version) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-48"><a href="#cb16-48"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> severe, <span class="dt">values_from =</span> count) <span class="op">%&gt;%</span></span>
+<span id="cb16-49"><a href="#cb16-49"></a><span class="st">  </span><span class="kw">right_join</span>(neuro_icds_<span class="dv">10</span>, <span class="dt">by =</span> <span class="st">&#39;icd&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-50"><a href="#cb16-50"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-51"><a href="#cb16-51"></a><span class="st">  </span><span class="kw">left_join</span>(demo_ana, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-52"><a href="#cb16-52"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">full_icd =</span> <span class="kw">paste0</span>(<span class="st">`</span><span class="dt">ICD-10 Description</span><span class="st">`</span>, <span class="st">&#39; (&#39;</span>, icd, <span class="st">&#39;)&#39;</span>),</span>
+<span id="cb16-53"><a href="#cb16-53"></a>         <span class="dt">num_patients_never_severe_icd0 =</span> num_patients_never_severe <span class="op">-</span><span class="st"> </span>num_patients_never_severe_icd1,</span>
+<span id="cb16-54"><a href="#cb16-54"></a>         <span class="dt">num_patients_ever_severe_icd0 =</span> num_patients_ever_severe <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_icd1,</span>
+<span id="cb16-55"><a href="#cb16-55"></a>  ) <span class="op">%&gt;%</span></span>
+<span id="cb16-56"><a href="#cb16-56"></a><span class="st">  </span><span class="kw">drop_na</span>(num_patients_icd) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-57"><a href="#cb16-57"></a><span class="st">  </span>{.}</span>
+<span id="cb16-58"><a href="#cb16-58"></a></span>
+<span id="cb16-59"><a href="#cb16-59"></a>diag_icd_<span class="dv">9</span> &lt;-<span class="st"> </span>diag_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-60"><a href="#cb16-60"></a><span class="st">  </span><span class="kw">filter</span>(icd_version <span class="op">==</span><span class="st"> </span><span class="dv">9</span>) <span class="op">%&gt;%</span></span>
+<span id="cb16-61"><a href="#cb16-61"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span>icd_version) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-62"><a href="#cb16-62"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> severe, <span class="dt">values_from =</span> count) <span class="op">%&gt;%</span></span>
+<span id="cb16-63"><a href="#cb16-63"></a><span class="st">  </span><span class="kw">right_join</span>(neuro_icds_<span class="dv">9</span>, <span class="dt">by =</span> <span class="st">&#39;icd&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-64"><a href="#cb16-64"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-65"><a href="#cb16-65"></a><span class="st">  </span><span class="kw">left_join</span>(demo_ana, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-66"><a href="#cb16-66"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">full_icd =</span> <span class="kw">paste0</span>(icd9_desc, <span class="st">&#39; (&#39;</span>, icd, <span class="st">&#39;)&#39;</span>),</span>
+<span id="cb16-67"><a href="#cb16-67"></a>         <span class="dt">num_patients_never_severe_icd0 =</span> num_patients_never_severe <span class="op">-</span><span class="st"> </span>num_patients_never_severe_icd1,</span>
+<span id="cb16-68"><a href="#cb16-68"></a>         <span class="dt">num_patients_ever_severe_icd0 =</span> num_patients_ever_severe <span class="op">-</span><span class="st"> </span>num_patients_ever_severe_icd1,</span>
+<span id="cb16-69"><a href="#cb16-69"></a>  ) <span class="op">%&gt;%</span></span>
+<span id="cb16-70"><a href="#cb16-70"></a><span class="st">  </span><span class="kw">drop_na</span>(num_patients_icd) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-71"><a href="#cb16-71"></a><span class="st">  </span>{.}</span></code></pre></div>
 <p>40 sites with icd-10 code. 11 sites have icd-9.</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1"></a>country_sum_icd10 &lt;-<span class="st"> </span>diag_icd_<span class="dv">10</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb31-2"><a href="#cb31-2"></a><span class="st">  </span><span class="kw">select</span>(siteid, Country, num_patients_all) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb31-3"><a href="#cb31-3"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb31-4"><a href="#cb31-4"></a><span class="st">  </span><span class="kw">group_by</span>(Country) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb31-5"><a href="#cb31-5"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">all_pats_country =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>)</span>
-<span id="cb31-6"><a href="#cb31-6"></a></span>
-<span id="cb31-7"><a href="#cb31-7"></a>country_sum_icd9 &lt;-<span class="st"> </span>diag_icd_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb31-8"><a href="#cb31-8"></a><span class="st">  </span><span class="kw">select</span>(siteid, Country, num_patients_all) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb31-9"><a href="#cb31-9"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb31-10"><a href="#cb31-10"></a><span class="st">  </span><span class="kw">group_by</span>(Country) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb31-11"><a href="#cb31-11"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">all_pats_country =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>)</span>
-<span id="cb31-12"><a href="#cb31-12"></a></span>
-<span id="cb31-13"><a href="#cb31-13"></a>diag_icd_<span class="dv">10</span> &lt;-<span class="st"> </span>diag_icd_<span class="dv">10</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb31-14"><a href="#cb31-14"></a><span class="st">  </span><span class="kw">merge</span>(country_sum_icd10, <span class="dt">by =</span> <span class="st">&#39;Country&#39;</span>)</span>
-<span id="cb31-15"><a href="#cb31-15"></a></span>
-<span id="cb31-16"><a href="#cb31-16"></a>diag_icd_<span class="dv">9</span> &lt;-<span class="st"> </span>diag_icd_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb31-17"><a href="#cb31-17"></a><span class="st">  </span><span class="kw">merge</span>(country_sum_icd9, <span class="dt">by =</span> <span class="st">&#39;Country&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>country_sum_icd10 &lt;-<span class="st"> </span>diag_icd_<span class="dv">10</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-2"><a href="#cb17-2"></a><span class="st">  </span><span class="kw">select</span>(siteid, Country, num_patients_all) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-3"><a href="#cb17-3"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-4"><a href="#cb17-4"></a><span class="st">  </span><span class="kw">group_by</span>(Country) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-5"><a href="#cb17-5"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">all_pats_country =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>)</span>
+<span id="cb17-6"><a href="#cb17-6"></a></span>
+<span id="cb17-7"><a href="#cb17-7"></a>country_sum_icd9 &lt;-<span class="st"> </span>diag_icd_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-8"><a href="#cb17-8"></a><span class="st">  </span><span class="kw">select</span>(siteid, Country, num_patients_all) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-9"><a href="#cb17-9"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-10"><a href="#cb17-10"></a><span class="st">  </span><span class="kw">group_by</span>(Country) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-11"><a href="#cb17-11"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">all_pats_country =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>)</span>
+<span id="cb17-12"><a href="#cb17-12"></a></span>
+<span id="cb17-13"><a href="#cb17-13"></a>diag_icd_<span class="dv">10</span> &lt;-<span class="st"> </span>diag_icd_<span class="dv">10</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-14"><a href="#cb17-14"></a><span class="st">  </span><span class="kw">merge</span>(country_sum_icd10, <span class="dt">by =</span> <span class="st">&#39;Country&#39;</span>)</span>
+<span id="cb17-15"><a href="#cb17-15"></a></span>
+<span id="cb17-16"><a href="#cb17-16"></a>diag_icd_<span class="dv">9</span> &lt;-<span class="st"> </span>diag_icd_<span class="dv">9</span> <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-17"><a href="#cb17-17"></a><span class="st">  </span><span class="kw">merge</span>(country_sum_icd9, <span class="dt">by =</span> <span class="st">&#39;Country&#39;</span>)</span></code></pre></div>
 </div>
 <div id="write-data-out-to-.rdata" class="section level1">
 <h1>Write data out to .Rdata</h1>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1"></a><span class="kw">save</span>(demo_ana, diag_icd_<span class="dv">10</span>, diag_icd_<span class="dv">9</span>, <span class="dt">file =</span> <span class="st">&#39;data/processed-data.Rdata&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a><span class="kw">save</span>(demo_ana, diag_icd_<span class="dv">10</span>, diag_icd_<span class="dv">9</span>, <span class="dt">file =</span> <span class="st">&#39;data/processed-data.Rdata&#39;</span>)</span></code></pre></div>
 </div>
 <div id="quality-checks" class="section level1">
 <h1>Quality checks</h1>
 <div id="check-if-all-equals-to-sum-of-the-rest" class="section level2">
 <h2>Check if ‘all’ equals to sum of the rest</h2>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1"></a>age_group_check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb33-2"><a href="#cb33-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb33-3"><a href="#cb33-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb33-4"><a href="#cb33-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">age_group_sum =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb33-5"><a href="#cb33-5"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb33-6"><a href="#cb33-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mismatches =</span> num_patients_all <span class="op">-</span><span class="st"> </span>age_group_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb33-7"><a href="#cb33-7"></a><span class="st">  </span><span class="co"># filter(abs(mismatches) != 0) %&gt;% </span></span>
-<span id="cb33-8"><a href="#cb33-8"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="kw">contains</span>(<span class="st">&#39;severe&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb33-9"><a href="#cb33-9"></a><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(<span class="kw">abs</span>(mismatches))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb33-10"><a href="#cb33-10"></a><span class="st">  </span>{.}</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>age_group_check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-2"><a href="#cb19-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-3"><a href="#cb19-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-4"><a href="#cb19-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">age_group_sum =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-5"><a href="#cb19-5"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-6"><a href="#cb19-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mismatches =</span> num_patients_all <span class="op">-</span><span class="st"> </span>age_group_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-7"><a href="#cb19-7"></a><span class="st">  </span><span class="co"># filter(abs(mismatches) != 0) %&gt;% </span></span>
+<span id="cb19-8"><a href="#cb19-8"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="kw">contains</span>(<span class="st">&#39;severe&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-9"><a href="#cb19-9"></a><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(<span class="kw">abs</span>(mismatches))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-10"><a href="#cb19-10"></a><span class="st">  </span>{.}</span></code></pre></div>
 <pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
-<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1"></a>race_check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb35-2"><a href="#cb35-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb35-3"><a href="#cb35-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb35-4"><a href="#cb35-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">race_sum =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb35-5"><a href="#cb35-5"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb35-6"><a href="#cb35-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mismatches =</span> num_patients_all <span class="op">-</span><span class="st"> </span>race_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb35-7"><a href="#cb35-7"></a><span class="st">  </span><span class="co"># filter(abs(mismatches) != 0) %&gt;% </span></span>
-<span id="cb35-8"><a href="#cb35-8"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="kw">contains</span>(<span class="st">&#39;severe&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb35-9"><a href="#cb35-9"></a><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(<span class="kw">abs</span>(mismatches))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb35-10"><a href="#cb35-10"></a><span class="st">  </span>{.}</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>race_check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-2"><a href="#cb21-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-3"><a href="#cb21-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-4"><a href="#cb21-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">race_sum =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-5"><a href="#cb21-5"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-6"><a href="#cb21-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mismatches =</span> num_patients_all <span class="op">-</span><span class="st"> </span>race_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-7"><a href="#cb21-7"></a><span class="st">  </span><span class="co"># filter(abs(mismatches) != 0) %&gt;% </span></span>
+<span id="cb21-8"><a href="#cb21-8"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="kw">contains</span>(<span class="st">&#39;severe&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-9"><a href="#cb21-9"></a><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(<span class="kw">abs</span>(mismatches))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-10"><a href="#cb21-10"></a><span class="st">  </span>{.}</span></code></pre></div>
 <pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1"></a>sex_check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb37-2"><a href="#cb37-2"></a><span class="st">  </span><span class="kw">filter</span>(race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb37-3"><a href="#cb37-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb37-4"><a href="#cb37-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">sex_sum =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb37-5"><a href="#cb37-5"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb37-6"><a href="#cb37-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mismatches =</span> num_patients_all <span class="op">-</span><span class="st"> </span>sex_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb37-7"><a href="#cb37-7"></a><span class="st">  </span><span class="co"># filter(mismatches != 0) %&gt;% </span></span>
-<span id="cb37-8"><a href="#cb37-8"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="kw">contains</span>(<span class="st">&#39;severe&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb37-9"><a href="#cb37-9"></a><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(<span class="kw">abs</span>(mismatches))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb37-10"><a href="#cb37-10"></a><span class="st">  </span>{.}</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>sex_check &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb23-2"><a href="#cb23-2"></a><span class="st">  </span><span class="kw">filter</span>(race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb23-3"><a href="#cb23-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb23-4"><a href="#cb23-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">sex_sum =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb23-5"><a href="#cb23-5"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb23-6"><a href="#cb23-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mismatches =</span> num_patients_all <span class="op">-</span><span class="st"> </span>sex_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb23-7"><a href="#cb23-7"></a><span class="st">  </span><span class="co"># filter(mismatches != 0) %&gt;% </span></span>
+<span id="cb23-8"><a href="#cb23-8"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="kw">contains</span>(<span class="st">&#39;severe&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb23-9"><a href="#cb23-9"></a><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(<span class="kw">abs</span>(mismatches))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb23-10"><a href="#cb23-10"></a><span class="st">  </span>{.}</span></code></pre></div>
 <pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
-<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1"></a>demo_check &lt;-<span class="st"> </span>demo_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb39-2"><a href="#cb39-2"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">perc_severe =</span> num_patients_ever_severe<span class="op">/</span>num_patients_all)</span>
-<span id="cb39-3"><a href="#cb39-3"></a></span>
-<span id="cb39-4"><a href="#cb39-4"></a><span class="kw">write_csv</span>(race_check, <span class="st">&#39;data/race_check.csv&#39;</span>)</span>
-<span id="cb39-5"><a href="#cb39-5"></a><span class="kw">write_csv</span>(sex_check, <span class="st">&#39;data/sex_check.csv&#39;</span>)</span>
-<span id="cb39-6"><a href="#cb39-6"></a><span class="kw">write_csv</span>(age_group_check, <span class="st">&#39;data/age_group_check.csv&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a>demo_check &lt;-<span class="st"> </span>demo_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb25-2"><a href="#cb25-2"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">perc_severe =</span> num_patients_ever_severe<span class="op">/</span>num_patients_all)</span>
+<span id="cb25-3"><a href="#cb25-3"></a></span>
+<span id="cb25-4"><a href="#cb25-4"></a><span class="kw">write_csv</span>(race_check, <span class="st">&#39;data/race_check.csv&#39;</span>)</span>
+<span id="cb25-5"><a href="#cb25-5"></a><span class="kw">write_csv</span>(sex_check, <span class="st">&#39;data/sex_check.csv&#39;</span>)</span>
+<span id="cb25-6"><a href="#cb25-6"></a><span class="kw">write_csv</span>(age_group_check, <span class="st">&#39;data/age_group_check.csv&#39;</span>)</span></code></pre></div>
 </div>
 <div id="generate-characteristics-table" class="section level2">
 <h2>Generate characteristics table</h2>
-<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1"></a>sum_sum &lt;-<span class="st"> </span><span class="kw">sym</span>(<span class="kw">paste</span>(<span class="st">&#39;N =&#39;</span>, <span class="kw">sum</span>(demo_ana<span class="op">$</span>num_patients_all)))</span></code></pre></div>
-<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1"></a>sites_no_age &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-2"><a href="#cb41-2"></a><span class="st">  </span><span class="kw">filter</span>(siteid <span class="op">%in%</span><span class="st"> </span>(age_group_check <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">is.na</span>(age_group_sum)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">pull</span>(siteid)), </span>
-<span id="cb41-3"><a href="#cb41-3"></a>         age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-4"><a href="#cb41-4"></a><span class="st">  </span><span class="kw">group_by</span>(siteid, age_group) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-5"><a href="#cb41-5"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) </span>
-<span id="cb41-6"><a href="#cb41-6"></a></span>
-<span id="cb41-7"><a href="#cb41-7"></a>age_group_desc &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-8"><a href="#cb41-8"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-9"><a href="#cb41-9"></a><span class="st">  </span><span class="kw">group_by</span>(age_group, siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-10"><a href="#cb41-10"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all, <span class="dt">na.rm =</span> T), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-11"><a href="#cb41-11"></a><span class="st">  </span><span class="kw">bind_rows</span>(sites_no_age) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-12"><a href="#cb41-12"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> age_group, <span class="dt">values_from =</span> size, <span class="dt">values_fill =</span> <span class="kw">list</span>(<span class="dt">size =</span> <span class="dv">0</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-13"><a href="#cb41-13"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">sum_age_cols =</span> <span class="kw">rowSums</span>(.[, <span class="dv">-1</span>])) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-14"><a href="#cb41-14"></a><span class="st">  </span><span class="kw">right_join</span>(age_group_check) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-15"><a href="#cb41-15"></a><span class="st">  </span><span class="kw">replace</span>(<span class="kw">is.na</span>(.), <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-16"><a href="#cb41-16"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">unknown_other =</span> other <span class="op">+</span><span class="st"> </span>num_patients_all <span class="op">-</span><span class="st"> </span>sum_age_cols) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb41-17"><a href="#cb41-17"></a><span class="st">  </span>{.}</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a>sum_sum &lt;-<span class="st"> </span><span class="kw">sym</span>(<span class="kw">paste</span>(<span class="st">&#39;N =&#39;</span>, <span class="kw">sum</span>(demo_ana<span class="op">$</span>num_patients_all)))</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a>sites_no_age &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-2"><a href="#cb27-2"></a><span class="st">  </span><span class="kw">filter</span>(siteid <span class="op">%in%</span><span class="st"> </span>(age_group_check <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">is.na</span>(age_group_sum)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">pull</span>(siteid)), </span>
+<span id="cb27-3"><a href="#cb27-3"></a>         age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-4"><a href="#cb27-4"></a><span class="st">  </span><span class="kw">group_by</span>(siteid, age_group) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-5"><a href="#cb27-5"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) </span>
+<span id="cb27-6"><a href="#cb27-6"></a></span>
+<span id="cb27-7"><a href="#cb27-7"></a>age_group_desc &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-8"><a href="#cb27-8"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-9"><a href="#cb27-9"></a><span class="st">  </span><span class="kw">group_by</span>(age_group, siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-10"><a href="#cb27-10"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all, <span class="dt">na.rm =</span> T), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-11"><a href="#cb27-11"></a><span class="st">  </span><span class="kw">bind_rows</span>(sites_no_age) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-12"><a href="#cb27-12"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> age_group, <span class="dt">values_from =</span> size, <span class="dt">values_fill =</span> <span class="kw">list</span>(<span class="dt">size =</span> <span class="dv">0</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-13"><a href="#cb27-13"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">sum_age_cols =</span> <span class="kw">rowSums</span>(.[, <span class="dv">-1</span>])) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-14"><a href="#cb27-14"></a><span class="st">  </span><span class="kw">right_join</span>(age_group_check) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-15"><a href="#cb27-15"></a><span class="st">  </span><span class="kw">replace</span>(<span class="kw">is.na</span>(.), <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-16"><a href="#cb27-16"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">unknown_other =</span> other <span class="op">+</span><span class="st"> </span>num_patients_all <span class="op">-</span><span class="st"> </span>sum_age_cols) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb27-17"><a href="#cb27-17"></a><span class="st">  </span>{.}</span></code></pre></div>
 <pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
-<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1"></a>age_comp &lt;-<span class="st"> </span>age_group_desc  <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb43-2"><a href="#cb43-2"></a><span class="st">  </span><span class="kw">column_to_rownames</span>(<span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb43-3"><a href="#cb43-3"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;80to100&#39;</span> =<span class="st"> `</span><span class="dt">80plus</span><span class="st">`</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb43-4"><a href="#cb43-4"></a><span class="st">  </span><span class="kw">select</span>(<span class="kw">contains</span>(<span class="st">&#39;to&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb43-5"><a href="#cb43-5"></a><span class="st">  </span><span class="kw">apply</span>(., <span class="dv">1</span>, cumsum) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb43-6"><a href="#cb43-6"></a><span class="st">  </span><span class="kw">t</span>()</span>
-<span id="cb43-7"><a href="#cb43-7"></a><span class="kw">median_age</span>(age_comp[<span class="dv">2</span>,])</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a>age_comp &lt;-<span class="st"> </span>age_group_desc  <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb29-2"><a href="#cb29-2"></a><span class="st">  </span><span class="kw">column_to_rownames</span>(<span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb29-3"><a href="#cb29-3"></a><span class="st">  </span><span class="kw">rename</span>(<span class="st">&#39;80to100&#39;</span> =<span class="st"> `</span><span class="dt">80plus</span><span class="st">`</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb29-4"><a href="#cb29-4"></a><span class="st">  </span><span class="kw">select</span>(<span class="kw">contains</span>(<span class="st">&#39;to&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb29-5"><a href="#cb29-5"></a><span class="st">  </span><span class="kw">apply</span>(., <span class="dv">1</span>, cumsum) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb29-6"><a href="#cb29-6"></a><span class="st">  </span><span class="kw">t</span>()</span>
+<span id="cb29-7"><a href="#cb29-7"></a><span class="kw">median_age</span>(age_comp[<span class="dv">2</span>,])</span></code></pre></div>
 <pre><code>## [1] 67.94007</code></pre>
-<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1"></a>age_med_df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">median_age =</span> <span class="kw">apply</span>(age_comp, <span class="dv">1</span>, median_age)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb45-2"><a href="#cb45-2"></a><span class="st">  </span><span class="kw">rownames_to_column</span>(<span class="st">&#39;siteid&#39;</span>)</span>
-<span id="cb45-3"><a href="#cb45-3"></a></span>
-<span id="cb45-4"><a href="#cb45-4"></a>age_group_desc &lt;-<span class="st"> </span>age_group_desc <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb45-5"><a href="#cb45-5"></a><span class="st">  </span><span class="kw">left_join</span>(age_med_df)</span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1"></a>age_med_df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">median_age =</span> <span class="kw">apply</span>(age_comp, <span class="dv">1</span>, median_age)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb31-2"><a href="#cb31-2"></a><span class="st">  </span><span class="kw">rownames_to_column</span>(<span class="st">&#39;siteid&#39;</span>)</span>
+<span id="cb31-3"><a href="#cb31-3"></a></span>
+<span id="cb31-4"><a href="#cb31-4"></a>age_group_desc &lt;-<span class="st"> </span>age_group_desc <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb31-5"><a href="#cb31-5"></a><span class="st">  </span><span class="kw">left_join</span>(age_med_df)</span></code></pre></div>
 <pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
-<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1"></a>sites_no_race &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb47-2"><a href="#cb47-2"></a><span class="st">  </span><span class="kw">filter</span>(siteid <span class="op">%in%</span><span class="st"> </span>(race_check <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">is.na</span>(race_sum)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">pull</span>(siteid)), </span>
-<span id="cb47-3"><a href="#cb47-3"></a>  age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb47-4"><a href="#cb47-4"></a><span class="st">  </span><span class="kw">group_by</span>(siteid, race) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb47-5"><a href="#cb47-5"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) </span>
-<span id="cb47-6"><a href="#cb47-6"></a></span>
-<span id="cb47-7"><a href="#cb47-7"></a>sites_no_race <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb47-8"><a href="#cb47-8"></a><span class="st">  </span><span class="kw">left_join</span>(site_country, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;siteid&#39;</span> =<span class="st"> &#39;SiteID.new&#39;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1"></a>sites_no_race &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb33-2"><a href="#cb33-2"></a><span class="st">  </span><span class="kw">filter</span>(siteid <span class="op">%in%</span><span class="st"> </span>(race_check <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">is.na</span>(race_sum)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">pull</span>(siteid)), </span>
+<span id="cb33-3"><a href="#cb33-3"></a>  age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb33-4"><a href="#cb33-4"></a><span class="st">  </span><span class="kw">group_by</span>(siteid, race) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb33-5"><a href="#cb33-5"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) </span>
+<span id="cb33-6"><a href="#cb33-6"></a></span>
+<span id="cb33-7"><a href="#cb33-7"></a>sites_no_race <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb33-8"><a href="#cb33-8"></a><span class="st">  </span><span class="kw">left_join</span>(site_country, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;siteid&#39;</span> =<span class="st"> &#39;SiteID.new&#39;</span>))</span></code></pre></div>
 <pre><code>## # A tibble: 10 x 4
 ##    siteid  race             size Country  
 ##    &lt;chr&gt;   &lt;chr&gt;           &lt;dbl&gt; &lt;chr&gt;    
@@ -900,125 +980,125 @@ summary {
 ##  8 SITE434 white               0 Italy    
 ##  9 SITE926 other             945 Italy    
 ## 10 SITE974 white              62 Italy</code></pre>
-<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1"></a>race_desc &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb49-2"><a href="#cb49-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb49-3"><a href="#cb49-3"></a><span class="st">  </span><span class="kw">group_by</span>(race, siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb49-4"><a href="#cb49-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all, <span class="dt">na.rm =</span> T), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb49-5"><a href="#cb49-5"></a><span class="st">  </span><span class="kw">bind_rows</span>(sites_no_race) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb49-6"><a href="#cb49-6"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> race, <span class="dt">values_from =</span> size, <span class="dt">values_fill =</span> <span class="kw">list</span>(<span class="dt">size =</span> <span class="dv">0</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb49-7"><a href="#cb49-7"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">sum_race_cols =</span> <span class="kw">rowSums</span>(.[, <span class="dv">-1</span>])) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb49-8"><a href="#cb49-8"></a><span class="st">  </span><span class="kw">right_join</span>(race_check) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb49-9"><a href="#cb49-9"></a><span class="st">  </span><span class="kw">replace</span>(<span class="kw">is.na</span>(.), <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb49-10"><a href="#cb49-10"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">unknown_other_race =</span> other <span class="op">+</span><span class="st"> </span>num_patients_all <span class="op">-</span><span class="st"> </span>sum_race_cols) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb49-11"><a href="#cb49-11"></a><span class="st">  </span>{.}</span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1"></a>race_desc &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb35-2"><a href="#cb35-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">==</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb35-3"><a href="#cb35-3"></a><span class="st">  </span><span class="kw">group_by</span>(race, siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb35-4"><a href="#cb35-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all, <span class="dt">na.rm =</span> T), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb35-5"><a href="#cb35-5"></a><span class="st">  </span><span class="kw">bind_rows</span>(sites_no_race) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb35-6"><a href="#cb35-6"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> race, <span class="dt">values_from =</span> size, <span class="dt">values_fill =</span> <span class="kw">list</span>(<span class="dt">size =</span> <span class="dv">0</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb35-7"><a href="#cb35-7"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">sum_race_cols =</span> <span class="kw">rowSums</span>(.[, <span class="dv">-1</span>])) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb35-8"><a href="#cb35-8"></a><span class="st">  </span><span class="kw">right_join</span>(race_check) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb35-9"><a href="#cb35-9"></a><span class="st">  </span><span class="kw">replace</span>(<span class="kw">is.na</span>(.), <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb35-10"><a href="#cb35-10"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">unknown_other_race =</span> other <span class="op">+</span><span class="st"> </span>num_patients_all <span class="op">-</span><span class="st"> </span>sum_race_cols) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb35-11"><a href="#cb35-11"></a><span class="st">  </span>{.}</span></code></pre></div>
 <pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
-<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1"></a>sex_desc &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb51-2"><a href="#cb51-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb51-3"><a href="#cb51-3"></a><span class="st">  </span><span class="kw">group_by</span>(sex, siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb51-4"><a href="#cb51-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all, <span class="dt">na.rm =</span> T), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb51-5"><a href="#cb51-5"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> sex, <span class="dt">values_from =</span> size, <span class="dt">values_fill =</span> <span class="kw">list</span>(<span class="dt">size =</span> <span class="dv">0</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb51-6"><a href="#cb51-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">sum_sex_cols =</span> <span class="kw">rowSums</span>(.[, <span class="dv">-1</span>])) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb51-7"><a href="#cb51-7"></a><span class="st">  </span><span class="kw">right_join</span>(sex_check) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb51-8"><a href="#cb51-8"></a><span class="st">  </span><span class="kw">replace</span>(<span class="kw">is.na</span>(.), <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb51-9"><a href="#cb51-9"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">unknown_other =</span> other <span class="op">+</span><span class="st"> </span>num_patients_all <span class="op">-</span><span class="st"> </span>sex_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb51-10"><a href="#cb51-10"></a><span class="st">  </span>{.}</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1"></a>sex_desc &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb37-2"><a href="#cb37-2"></a><span class="st">  </span><span class="kw">filter</span>(sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, race <span class="op">==</span><span class="st"> &#39;all&#39;</span>, age_group <span class="op">==</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb37-3"><a href="#cb37-3"></a><span class="st">  </span><span class="kw">group_by</span>(sex, siteid) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb37-4"><a href="#cb37-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all, <span class="dt">na.rm =</span> T), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb37-5"><a href="#cb37-5"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> sex, <span class="dt">values_from =</span> size, <span class="dt">values_fill =</span> <span class="kw">list</span>(<span class="dt">size =</span> <span class="dv">0</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb37-6"><a href="#cb37-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">sum_sex_cols =</span> <span class="kw">rowSums</span>(.[, <span class="dv">-1</span>])) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb37-7"><a href="#cb37-7"></a><span class="st">  </span><span class="kw">right_join</span>(sex_check) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb37-8"><a href="#cb37-8"></a><span class="st">  </span><span class="kw">replace</span>(<span class="kw">is.na</span>(.), <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb37-9"><a href="#cb37-9"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">unknown_other =</span> other <span class="op">+</span><span class="st"> </span>num_patients_all <span class="op">-</span><span class="st"> </span>sex_sum) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb37-10"><a href="#cb37-10"></a><span class="st">  </span>{.}</span></code></pre></div>
 <pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
-<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1"></a><span class="co"># race_desc &lt;- demo_all %&gt;%</span></span>
-<span id="cb53-2"><a href="#cb53-2"></a><span class="co">#   filter(sex == &#39;all&#39;, race != &#39;all&#39;, age_group == &#39;all&#39;) %&gt;% </span></span>
-<span id="cb53-3"><a href="#cb53-3"></a><span class="co">#   group_by(race, siteid) %&gt;% </span></span>
-<span id="cb53-4"><a href="#cb53-4"></a><span class="co">#   summarise(size = sum(num_patients_all, na.rm = T), .groups = &#39;drop&#39;) %&gt;% </span></span>
-<span id="cb53-5"><a href="#cb53-5"></a><span class="co">#   pivot_wider(names_from = race, values_from = size, values_fill = list(size = 0)) %&gt;% </span></span>
-<span id="cb53-6"><a href="#cb53-6"></a><span class="co">#   mutate(sum_race_cols = rowSums(.[, -1])) %&gt;% </span></span>
-<span id="cb53-7"><a href="#cb53-7"></a><span class="co">#   right_join(race_check) %&gt;% </span></span>
-<span id="cb53-8"><a href="#cb53-8"></a><span class="co">#   replace(is.na(.), 0) %&gt;% </span></span>
-<span id="cb53-9"><a href="#cb53-9"></a><span class="co">#   mutate(unknown_other_race = other + num_patients_all - race_sum) %&gt;% </span></span>
-<span id="cb53-10"><a href="#cb53-10"></a><span class="co">#   {.}</span></span>
-<span id="cb53-11"><a href="#cb53-11"></a></span>
-<span id="cb53-12"><a href="#cb53-12"></a>demo_desc &lt;-<span class="st"> </span><span class="kw">left_join</span>(sex_desc, age_group_desc, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>, <span class="dt">suffix =</span> <span class="kw">c</span>(<span class="st">&quot;_sex&quot;</span>, <span class="st">&quot;_age_group&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb53-13"><a href="#cb53-13"></a><span class="st">  </span><span class="kw">left_join</span>(race_desc, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb53-14"><a href="#cb53-14"></a><span class="st">  </span><span class="co"># Reduce(function(...) left_join(..., by = &#39;siteid&#39;, , &#39;_race&#39;)), </span></span>
-<span id="cb53-15"><a href="#cb53-15"></a><span class="st">  </span><span class="co">#                   list(, race_desc), ) %&gt;% </span></span>
-<span id="cb53-16"><a href="#cb53-16"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span><span class="kw">c</span>(<span class="kw">contains</span>(<span class="st">&#39;um&#39;</span>), <span class="kw">contains</span>(<span class="st">&#39;mismatches&#39;</span>))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb53-17"><a href="#cb53-17"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana, ., <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb53-18"><a href="#cb53-18"></a><span class="st">  </span><span class="kw">left_join</span>(site_country, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;siteid&#39;</span> =<span class="st"> &#39;SiteID.new&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb53-19"><a href="#cb53-19"></a><span class="st">  </span><span class="kw">select</span>(siteid, Country, <span class="kw">everything</span>())</span>
-<span id="cb53-20"><a href="#cb53-20"></a></span>
-<span id="cb53-21"><a href="#cb53-21"></a></span>
-<span id="cb53-22"><a href="#cb53-22"></a>demo_perc &lt;-<span class="st"> </span>demo_desc <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb53-23"><a href="#cb53-23"></a><span class="st">  </span><span class="co"># mutate(across(- contains(&#39;num&#39;), ~ .x/.data$num_patients_all))</span></span>
-<span id="cb53-24"><a href="#cb53-24"></a><span class="st">  </span><span class="kw">mutate_at</span>(<span class="kw">vars</span>(<span class="op">-</span><span class="st"> </span>num_patients_all, <span class="op">-</span><span class="st"> </span>siteid, <span class="op">-</span><span class="st"> </span>Country, <span class="op">-</span><span class="st"> </span>median_age),</span>
-<span id="cb53-25"><a href="#cb53-25"></a>            <span class="kw">list</span>(<span class="op">~</span><span class="st"> </span><span class="kw">round</span>(. <span class="op">/</span><span class="st"> </span>.data<span class="op">$</span>num_patients_all <span class="op">*</span><span class="st"> </span><span class="dv">100</span>, <span class="dv">1</span>)))</span>
-<span id="cb53-26"><a href="#cb53-26"></a></span>
-<span id="cb53-27"><a href="#cb53-27"></a>demo_desc <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">write_csv</span>(<span class="st">&#39;results/demo_prelim.csv&#39;</span>)</span>
-<span id="cb53-28"><a href="#cb53-28"></a>demo_perc <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">write_csv</span>(<span class="st">&#39;results/demo_perc_prelim.csv&#39;</span>)</span>
-<span id="cb53-29"><a href="#cb53-29"></a><span class="co"># some NAs are because there are just not a row for with that value</span></span></code></pre></div>
-<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1"></a>sex_age &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-2"><a href="#cb54-2"></a><span class="st">  </span><span class="kw">filter</span>(age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-3"><a href="#cb54-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid, age_group, sex) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-4"><a href="#cb54-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-5"><a href="#cb54-5"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> <span class="kw">c</span>(sex, age_group), <span class="dt">values_from =</span> size, <span class="dt">values_fill =</span> <span class="kw">list</span>(<span class="dt">size =</span> <span class="dv">0</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-6"><a href="#cb54-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">sum_age_cols =</span> <span class="kw">rowSums</span>(.[, <span class="dv">-1</span>])) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-7"><a href="#cb54-7"></a><span class="st">  </span><span class="kw">right_join</span>(age_group_check) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-8"><a href="#cb54-8"></a><span class="st">  </span><span class="kw">replace</span>(<span class="kw">is.na</span>(.), <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-9"><a href="#cb54-9"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">unknown_other =</span> female_other <span class="op">+</span><span class="st"> </span>male_other <span class="op">+</span><span class="st"> </span>other_other <span class="op">+</span><span class="st"> </span>num_patients_all <span class="op">-</span><span class="st"> </span>sum_age_cols) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-10"><a href="#cb54-10"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span><span class="kw">c</span>(<span class="kw">contains</span>(<span class="st">&#39;um&#39;</span>), <span class="kw">contains</span>(<span class="st">&#39;mismatches&#39;</span>))) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-11"><a href="#cb54-11"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana, ., <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-12"><a href="#cb54-12"></a><span class="st">  </span><span class="kw">left_join</span>(site_country, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;siteid&#39;</span> =<span class="st"> &#39;SiteID.new&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-13"><a href="#cb54-13"></a><span class="st">  </span><span class="kw">select</span>(siteid, Country, <span class="kw">everything</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb54-14"><a href="#cb54-14"></a><span class="st">  </span>{.}</span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1"></a><span class="co"># race_desc &lt;- demo_all %&gt;%</span></span>
+<span id="cb39-2"><a href="#cb39-2"></a><span class="co">#   filter(sex == &#39;all&#39;, race != &#39;all&#39;, age_group == &#39;all&#39;) %&gt;% </span></span>
+<span id="cb39-3"><a href="#cb39-3"></a><span class="co">#   group_by(race, siteid) %&gt;% </span></span>
+<span id="cb39-4"><a href="#cb39-4"></a><span class="co">#   summarise(size = sum(num_patients_all, na.rm = T), .groups = &#39;drop&#39;) %&gt;% </span></span>
+<span id="cb39-5"><a href="#cb39-5"></a><span class="co">#   pivot_wider(names_from = race, values_from = size, values_fill = list(size = 0)) %&gt;% </span></span>
+<span id="cb39-6"><a href="#cb39-6"></a><span class="co">#   mutate(sum_race_cols = rowSums(.[, -1])) %&gt;% </span></span>
+<span id="cb39-7"><a href="#cb39-7"></a><span class="co">#   right_join(race_check) %&gt;% </span></span>
+<span id="cb39-8"><a href="#cb39-8"></a><span class="co">#   replace(is.na(.), 0) %&gt;% </span></span>
+<span id="cb39-9"><a href="#cb39-9"></a><span class="co">#   mutate(unknown_other_race = other + num_patients_all - race_sum) %&gt;% </span></span>
+<span id="cb39-10"><a href="#cb39-10"></a><span class="co">#   {.}</span></span>
+<span id="cb39-11"><a href="#cb39-11"></a></span>
+<span id="cb39-12"><a href="#cb39-12"></a>demo_desc &lt;-<span class="st"> </span><span class="kw">left_join</span>(sex_desc, age_group_desc, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>, <span class="dt">suffix =</span> <span class="kw">c</span>(<span class="st">&quot;_sex&quot;</span>, <span class="st">&quot;_age_group&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb39-13"><a href="#cb39-13"></a><span class="st">  </span><span class="kw">left_join</span>(race_desc, <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb39-14"><a href="#cb39-14"></a><span class="st">  </span><span class="co"># Reduce(function(...) left_join(..., by = &#39;siteid&#39;, , &#39;_race&#39;)), </span></span>
+<span id="cb39-15"><a href="#cb39-15"></a><span class="st">  </span><span class="co">#                   list(, race_desc), ) %&gt;% </span></span>
+<span id="cb39-16"><a href="#cb39-16"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span><span class="kw">c</span>(<span class="kw">contains</span>(<span class="st">&#39;um&#39;</span>), <span class="kw">contains</span>(<span class="st">&#39;mismatches&#39;</span>))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb39-17"><a href="#cb39-17"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana, ., <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb39-18"><a href="#cb39-18"></a><span class="st">  </span><span class="kw">left_join</span>(site_country, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;siteid&#39;</span> =<span class="st"> &#39;SiteID.new&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb39-19"><a href="#cb39-19"></a><span class="st">  </span><span class="kw">select</span>(siteid, Country, <span class="kw">everything</span>())</span>
+<span id="cb39-20"><a href="#cb39-20"></a></span>
+<span id="cb39-21"><a href="#cb39-21"></a></span>
+<span id="cb39-22"><a href="#cb39-22"></a>demo_perc &lt;-<span class="st"> </span>demo_desc <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb39-23"><a href="#cb39-23"></a><span class="st">  </span><span class="co"># mutate(across(- contains(&#39;num&#39;), ~ .x/.data$num_patients_all))</span></span>
+<span id="cb39-24"><a href="#cb39-24"></a><span class="st">  </span><span class="kw">mutate_at</span>(<span class="kw">vars</span>(<span class="op">-</span><span class="st"> </span>num_patients_all, <span class="op">-</span><span class="st"> </span>siteid, <span class="op">-</span><span class="st"> </span>Country, <span class="op">-</span><span class="st"> </span>median_age),</span>
+<span id="cb39-25"><a href="#cb39-25"></a>            <span class="kw">list</span>(<span class="op">~</span><span class="st"> </span><span class="kw">round</span>(. <span class="op">/</span><span class="st"> </span>.data<span class="op">$</span>num_patients_all <span class="op">*</span><span class="st"> </span><span class="dv">100</span>, <span class="dv">1</span>)))</span>
+<span id="cb39-26"><a href="#cb39-26"></a></span>
+<span id="cb39-27"><a href="#cb39-27"></a>demo_desc <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">write_csv</span>(<span class="st">&#39;results/demo_prelim.csv&#39;</span>)</span>
+<span id="cb39-28"><a href="#cb39-28"></a>demo_perc <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">write_csv</span>(<span class="st">&#39;results/demo_perc_prelim.csv&#39;</span>)</span>
+<span id="cb39-29"><a href="#cb39-29"></a><span class="co"># some NAs are because there are just not a row for with that value</span></span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1"></a>sex_age &lt;-<span class="st"> </span>demo_all <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-2"><a href="#cb40-2"></a><span class="st">  </span><span class="kw">filter</span>(age_group <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, sex <span class="op">!=</span><span class="st"> &#39;all&#39;</span>, race <span class="op">!=</span><span class="st"> &#39;all&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-3"><a href="#cb40-3"></a><span class="st">  </span><span class="kw">group_by</span>(siteid, age_group, sex) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-4"><a href="#cb40-4"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">size =</span> <span class="kw">sum</span>(num_patients_all), <span class="dt">.groups =</span> <span class="st">&#39;drop&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-5"><a href="#cb40-5"></a><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> <span class="kw">c</span>(sex, age_group), <span class="dt">values_from =</span> size, <span class="dt">values_fill =</span> <span class="kw">list</span>(<span class="dt">size =</span> <span class="dv">0</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-6"><a href="#cb40-6"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">sum_age_cols =</span> <span class="kw">rowSums</span>(.[, <span class="dv">-1</span>])) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-7"><a href="#cb40-7"></a><span class="st">  </span><span class="kw">right_join</span>(age_group_check) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-8"><a href="#cb40-8"></a><span class="st">  </span><span class="kw">replace</span>(<span class="kw">is.na</span>(.), <span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-9"><a href="#cb40-9"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">unknown_other =</span> female_other <span class="op">+</span><span class="st"> </span>male_other <span class="op">+</span><span class="st"> </span>other_other <span class="op">+</span><span class="st"> </span>num_patients_all <span class="op">-</span><span class="st"> </span>sum_age_cols) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-10"><a href="#cb40-10"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span><span class="st"> </span><span class="kw">c</span>(<span class="kw">contains</span>(<span class="st">&#39;um&#39;</span>), <span class="kw">contains</span>(<span class="st">&#39;mismatches&#39;</span>))) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-11"><a href="#cb40-11"></a><span class="st">  </span><span class="kw">right_join</span>(demo_ana, ., <span class="dt">by =</span> <span class="st">&#39;siteid&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-12"><a href="#cb40-12"></a><span class="st">  </span><span class="kw">left_join</span>(site_country, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&#39;siteid&#39;</span> =<span class="st"> &#39;SiteID.new&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-13"><a href="#cb40-13"></a><span class="st">  </span><span class="kw">select</span>(siteid, Country, <span class="kw">everything</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb40-14"><a href="#cb40-14"></a><span class="st">  </span>{.}</span></code></pre></div>
 <pre><code>## Joining, by = &quot;siteid&quot;</code></pre>
-<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1"></a><span class="co"># sex_desc &lt;- demo_all %&gt;% </span></span>
-<span id="cb56-2"><a href="#cb56-2"></a><span class="co">#   filter(sex != &#39;all&#39;, race == &#39;all&#39;, age_group == &#39;all&#39;) %&gt;% </span></span>
-<span id="cb56-3"><a href="#cb56-3"></a><span class="co">#   group_by(sex) %&gt;% </span></span>
-<span id="cb56-4"><a href="#cb56-4"></a><span class="co">#   summarise(!!sum_sum := sum(num_patients_all), .groups = &#39;drop&#39;) %&gt;% </span></span>
-<span id="cb56-5"><a href="#cb56-5"></a><span class="co">#   mutate(category = &#39;Sex&#39;) %&gt;% </span></span>
-<span id="cb56-6"><a href="#cb56-6"></a><span class="co">#   rename(&#39;Characteristics&#39; = sex)</span></span>
-<span id="cb56-7"><a href="#cb56-7"></a><span class="co"># </span></span>
-<span id="cb56-8"><a href="#cb56-8"></a><span class="co"># race_desc &lt;- demo_all %&gt;% </span></span>
-<span id="cb56-9"><a href="#cb56-9"></a><span class="co">#   filter(sex == &#39;all&#39;, race != &#39;all&#39;, age_group == &#39;all&#39;) %&gt;% </span></span>
-<span id="cb56-10"><a href="#cb56-10"></a><span class="co">#   group_by(race) %&gt;% </span></span>
-<span id="cb56-11"><a href="#cb56-11"></a><span class="co">#   summarise(!!sum_sum := sum(num_patients_all), .groups = &#39;drop&#39;) %&gt;% </span></span>
-<span id="cb56-12"><a href="#cb56-12"></a><span class="co">#   mutate(category = &#39;Race/Ethnicity&#39;) %&gt;% </span></span>
-<span id="cb56-13"><a href="#cb56-13"></a><span class="co">#   rename(&#39;Characteristics&#39; = race)</span></span>
-<span id="cb56-14"><a href="#cb56-14"></a><span class="co"># </span></span>
-<span id="cb56-15"><a href="#cb56-15"></a><span class="co"># bind_rows(age_group_desc, sex_desc, race_desc) %&gt;% </span></span>
-<span id="cb56-16"><a href="#cb56-16"></a><span class="co">#   group_by(category) %&gt;% </span></span>
-<span id="cb56-17"><a href="#cb56-17"></a><span class="co">#   gt() %&gt;% </span></span>
-<span id="cb56-18"><a href="#cb56-18"></a><span class="co">#   tab_footnote(</span></span>
-<span id="cb56-19"><a href="#cb56-19"></a><span class="co">#     footnote = &quot;Obfuscation at each site may affect the total counts.&quot;,</span></span>
-<span id="cb56-20"><a href="#cb56-20"></a><span class="co">#     locations = cells_column_labels(</span></span>
-<span id="cb56-21"><a href="#cb56-21"></a><span class="co">#       columns = 2)</span></span>
-<span id="cb56-22"><a href="#cb56-22"></a><span class="co">#   ) %&gt;% </span></span>
-<span id="cb56-23"><a href="#cb56-23"></a><span class="co">#   {.}</span></span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1"></a><span class="co"># sex_desc &lt;- demo_all %&gt;% </span></span>
+<span id="cb42-2"><a href="#cb42-2"></a><span class="co">#   filter(sex != &#39;all&#39;, race == &#39;all&#39;, age_group == &#39;all&#39;) %&gt;% </span></span>
+<span id="cb42-3"><a href="#cb42-3"></a><span class="co">#   group_by(sex) %&gt;% </span></span>
+<span id="cb42-4"><a href="#cb42-4"></a><span class="co">#   summarise(!!sum_sum := sum(num_patients_all), .groups = &#39;drop&#39;) %&gt;% </span></span>
+<span id="cb42-5"><a href="#cb42-5"></a><span class="co">#   mutate(category = &#39;Sex&#39;) %&gt;% </span></span>
+<span id="cb42-6"><a href="#cb42-6"></a><span class="co">#   rename(&#39;Characteristics&#39; = sex)</span></span>
+<span id="cb42-7"><a href="#cb42-7"></a><span class="co"># </span></span>
+<span id="cb42-8"><a href="#cb42-8"></a><span class="co"># race_desc &lt;- demo_all %&gt;% </span></span>
+<span id="cb42-9"><a href="#cb42-9"></a><span class="co">#   filter(sex == &#39;all&#39;, race != &#39;all&#39;, age_group == &#39;all&#39;) %&gt;% </span></span>
+<span id="cb42-10"><a href="#cb42-10"></a><span class="co">#   group_by(race) %&gt;% </span></span>
+<span id="cb42-11"><a href="#cb42-11"></a><span class="co">#   summarise(!!sum_sum := sum(num_patients_all), .groups = &#39;drop&#39;) %&gt;% </span></span>
+<span id="cb42-12"><a href="#cb42-12"></a><span class="co">#   mutate(category = &#39;Race/Ethnicity&#39;) %&gt;% </span></span>
+<span id="cb42-13"><a href="#cb42-13"></a><span class="co">#   rename(&#39;Characteristics&#39; = race)</span></span>
+<span id="cb42-14"><a href="#cb42-14"></a><span class="co"># </span></span>
+<span id="cb42-15"><a href="#cb42-15"></a><span class="co"># bind_rows(age_group_desc, sex_desc, race_desc) %&gt;% </span></span>
+<span id="cb42-16"><a href="#cb42-16"></a><span class="co">#   group_by(category) %&gt;% </span></span>
+<span id="cb42-17"><a href="#cb42-17"></a><span class="co">#   gt() %&gt;% </span></span>
+<span id="cb42-18"><a href="#cb42-18"></a><span class="co">#   tab_footnote(</span></span>
+<span id="cb42-19"><a href="#cb42-19"></a><span class="co">#     footnote = &quot;Obfuscation at each site may affect the total counts.&quot;,</span></span>
+<span id="cb42-20"><a href="#cb42-20"></a><span class="co">#     locations = cells_column_labels(</span></span>
+<span id="cb42-21"><a href="#cb42-21"></a><span class="co">#       columns = 2)</span></span>
+<span id="cb42-22"><a href="#cb42-22"></a><span class="co">#   ) %&gt;% </span></span>
+<span id="cb42-23"><a href="#cb42-23"></a><span class="co">#   {.}</span></span></code></pre></div>
 <p>Check NAs:</p>
-<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1"></a>na_diag &lt;-<span class="st"> </span>diag_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb57-2"><a href="#cb57-2"></a><span class="st">  </span><span class="kw">select</span>(siteid, icd, <span class="kw">contains</span>(<span class="st">&#39;num&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb57-3"><a href="#cb57-3"></a><span class="st">  </span><span class="kw">filter</span>(<span class="kw">rowSums</span>(<span class="kw">is.na</span>(.)) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1"></a>na_diag &lt;-<span class="st"> </span>diag_ana <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb43-2"><a href="#cb43-2"></a><span class="st">  </span><span class="kw">select</span>(siteid, icd, <span class="kw">contains</span>(<span class="st">&#39;num&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb43-3"><a href="#cb43-3"></a><span class="st">  </span><span class="kw">filter</span>(<span class="kw">rowSums</span>(<span class="kw">is.na</span>(.)) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</span></code></pre></div>
 <!-- # More quality check: -->
-<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1"></a><span class="co"># va_vec &lt;- c(&quot;VA1&quot;, &quot;VA10&quot;, &quot;VA12&quot;, &quot;VA15&quot;, &quot;VA16&quot;, &quot;VA17&quot;, &quot;VA19&quot;, &quot;VA2&quot;, &quot;VA20&quot;, &quot;VA21&quot;, &quot;VA22&quot;, &quot;VA23&quot;, &quot;VA4&quot;, &quot;VA5&quot;, &quot;VA6&quot;, &quot;VA7&quot;, &quot;VA8&quot;, &quot;VA9&quot;)</span></span>
-<span id="cb58-2"><a href="#cb58-2"></a><span class="co"># sites &lt;- c(&quot;APHP&quot;, &quot;ASSTPAVIA&quot;, &quot;BIDMC&quot;, &quot;C2WF&quot;, &quot;FRBDX&quot;, &quot;H12O&quot;, &quot;HPG23&quot;, &quot;ICSM1&quot;, &quot;KUMC&quot;, &quot;MCWCTSI&quot;, &quot;MGB&quot;, &quot;MUSC&quot;, &quot;NUH&quot;, &quot;NWU&quot;, &quot;POLIMI&quot;, &quot;RIVHS&quot;, &quot;SLHN&quot;, &quot;UCLA&quot;, &quot;UKER&quot;, &quot;UKFR&quot;, &quot;UKY&quot;, &quot;UMICH&quot;, &quot;UMM&quot;, &quot;UNICZ&quot;, &quot;UPenn&quot;, &quot;UPITT&quot;, &quot;UTSW&quot;, &quot;VA&quot;)</span></span>
-<span id="cb58-3"><a href="#cb58-3"></a><span class="co"># </span></span>
-<span id="cb58-4"><a href="#cb58-4"></a><span class="co"># obfuscation_df &lt;- googlesheets4::read_sheet(</span></span>
-<span id="cb58-5"><a href="#cb58-5"></a><span class="co">#   # &#39;https://docs.google.com/spreadsheets/d/1VhtKIbzEOeGFG1Iw27D_gq_l3eJpKn0LiJr_f_hFdwc/edit?ts=5ec17a70#gid=0&#39;,</span></span>
-<span id="cb58-6"><a href="#cb58-6"></a><span class="co">#   &#39;https://docs.google.com/spreadsheets/d/1Xl9juDBXt86P3xQtsoTaBl2zPl1BIiAG9DI3Rotyqp8/edit#gid=212461777&#39;,</span></span>
-<span id="cb58-7"><a href="#cb58-7"></a><span class="co">#   skip = 1,</span></span>
-<span id="cb58-8"><a href="#cb58-8"></a><span class="co">#   col_names = c(&#39;SLHN&#39;, &#39;site_name&#39;, &#39;contact_name&#39;, &#39;contact_email&#39;, &#39;city&#39;, &#39;country&#39;,</span></span>
-<span id="cb58-9"><a href="#cb58-9"></a><span class="co">#                 &#39;low_count_threshold&#39;, &#39;small_count_rows_deleted&#39;, &#39;blur_range&#39;, &#39;notes&#39;,</span></span>
-<span id="cb58-10"><a href="#cb58-10"></a><span class="co">#                 &#39;irb_statement&#39;)) %&gt;%</span></span>
-<span id="cb58-11"><a href="#cb58-11"></a><span class="co">#   filter(SLHN != &#39;FICHOS&#39;) %&gt;%</span></span>
-<span id="cb58-12"><a href="#cb58-12"></a><span class="co">#   mutate(low_count_threshold = low_count_threshold %&gt;%</span></span>
-<span id="cb58-13"><a href="#cb58-13"></a><span class="co">#            replace(low_count_threshold == &#39;&lt;=10&#39;, &#39;&lt;11&#39;) %&gt;%</span></span>
-<span id="cb58-14"><a href="#cb58-14"></a><span class="co">#            replace(low_count_threshold == &#39;&lt;=5&#39;, &#39;&lt;6&#39;))</span></span>
-<span id="cb58-15"><a href="#cb58-15"></a><span class="co"># </span></span>
-<span id="cb58-16"><a href="#cb58-16"></a><span class="co"># library(ggplot2)</span></span>
-<span id="cb58-17"><a href="#cb58-17"></a></span>
-<span id="cb58-18"><a href="#cb58-18"></a><span class="co"># obfuscation_df %&gt;%</span></span>
-<span id="cb58-19"><a href="#cb58-19"></a><span class="co">#   ggplot(aes(x = low_count_threshold)) +</span></span>
-<span id="cb58-20"><a href="#cb58-20"></a><span class="co">#   geom_bar()</span></span></code></pre></div>
-<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1"></a><span class="co"># obfus_1 &lt;- obfuscation_df %&gt;%</span></span>
-<span id="cb59-2"><a href="#cb59-2"></a><span class="co">#   filter(SLHN %in% sites)</span></span>
-<span id="cb59-3"><a href="#cb59-3"></a><span class="co"># table(obfus_1$low_count_threshold)</span></span>
-<span id="cb59-4"><a href="#cb59-4"></a><span class="co"># sum(table(obfus_1$low_count_threshold))</span></span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1"></a><span class="co"># va_vec &lt;- c(&quot;VA1&quot;, &quot;VA10&quot;, &quot;VA12&quot;, &quot;VA15&quot;, &quot;VA16&quot;, &quot;VA17&quot;, &quot;VA19&quot;, &quot;VA2&quot;, &quot;VA20&quot;, &quot;VA21&quot;, &quot;VA22&quot;, &quot;VA23&quot;, &quot;VA4&quot;, &quot;VA5&quot;, &quot;VA6&quot;, &quot;VA7&quot;, &quot;VA8&quot;, &quot;VA9&quot;)</span></span>
+<span id="cb44-2"><a href="#cb44-2"></a><span class="co"># sites &lt;- c(&quot;APHP&quot;, &quot;ASSTPAVIA&quot;, &quot;BIDMC&quot;, &quot;C2WF&quot;, &quot;FRBDX&quot;, &quot;H12O&quot;, &quot;HPG23&quot;, &quot;ICSM1&quot;, &quot;KUMC&quot;, &quot;MCWCTSI&quot;, &quot;MGB&quot;, &quot;MUSC&quot;, &quot;NUH&quot;, &quot;NWU&quot;, &quot;POLIMI&quot;, &quot;RIVHS&quot;, &quot;SLHN&quot;, &quot;UCLA&quot;, &quot;UKER&quot;, &quot;UKFR&quot;, &quot;UKY&quot;, &quot;UMICH&quot;, &quot;UMM&quot;, &quot;UNICZ&quot;, &quot;UPenn&quot;, &quot;UPITT&quot;, &quot;UTSW&quot;, &quot;VA&quot;)</span></span>
+<span id="cb44-3"><a href="#cb44-3"></a><span class="co"># </span></span>
+<span id="cb44-4"><a href="#cb44-4"></a><span class="co"># obfuscation_df &lt;- googlesheets4::read_sheet(</span></span>
+<span id="cb44-5"><a href="#cb44-5"></a><span class="co">#   # &#39;https://docs.google.com/spreadsheets/d/1VhtKIbzEOeGFG1Iw27D_gq_l3eJpKn0LiJr_f_hFdwc/edit?ts=5ec17a70#gid=0&#39;,</span></span>
+<span id="cb44-6"><a href="#cb44-6"></a><span class="co">#   &#39;https://docs.google.com/spreadsheets/d/1Xl9juDBXt86P3xQtsoTaBl2zPl1BIiAG9DI3Rotyqp8/edit#gid=212461777&#39;,</span></span>
+<span id="cb44-7"><a href="#cb44-7"></a><span class="co">#   skip = 1,</span></span>
+<span id="cb44-8"><a href="#cb44-8"></a><span class="co">#   col_names = c(&#39;SLHN&#39;, &#39;site_name&#39;, &#39;contact_name&#39;, &#39;contact_email&#39;, &#39;city&#39;, &#39;country&#39;,</span></span>
+<span id="cb44-9"><a href="#cb44-9"></a><span class="co">#                 &#39;low_count_threshold&#39;, &#39;small_count_rows_deleted&#39;, &#39;blur_range&#39;, &#39;notes&#39;,</span></span>
+<span id="cb44-10"><a href="#cb44-10"></a><span class="co">#                 &#39;irb_statement&#39;)) %&gt;%</span></span>
+<span id="cb44-11"><a href="#cb44-11"></a><span class="co">#   filter(SLHN != &#39;FICHOS&#39;) %&gt;%</span></span>
+<span id="cb44-12"><a href="#cb44-12"></a><span class="co">#   mutate(low_count_threshold = low_count_threshold %&gt;%</span></span>
+<span id="cb44-13"><a href="#cb44-13"></a><span class="co">#            replace(low_count_threshold == &#39;&lt;=10&#39;, &#39;&lt;11&#39;) %&gt;%</span></span>
+<span id="cb44-14"><a href="#cb44-14"></a><span class="co">#            replace(low_count_threshold == &#39;&lt;=5&#39;, &#39;&lt;6&#39;))</span></span>
+<span id="cb44-15"><a href="#cb44-15"></a><span class="co"># </span></span>
+<span id="cb44-16"><a href="#cb44-16"></a><span class="co"># library(ggplot2)</span></span>
+<span id="cb44-17"><a href="#cb44-17"></a></span>
+<span id="cb44-18"><a href="#cb44-18"></a><span class="co"># obfuscation_df %&gt;%</span></span>
+<span id="cb44-19"><a href="#cb44-19"></a><span class="co">#   ggplot(aes(x = low_count_threshold)) +</span></span>
+<span id="cb44-20"><a href="#cb44-20"></a><span class="co">#   geom_bar()</span></span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1"></a><span class="co"># obfus_1 &lt;- obfuscation_df %&gt;%</span></span>
+<span id="cb45-2"><a href="#cb45-2"></a><span class="co">#   filter(SLHN %in% sites)</span></span>
+<span id="cb45-3"><a href="#cb45-3"></a><span class="co"># table(obfus_1$low_count_threshold)</span></span>
+<span id="cb45-4"><a href="#cb45-4"></a><span class="co"># sum(table(obfus_1$low_count_threshold))</span></span></code></pre></div>
 </div>
 </div>
 

@@ -276,7 +276,7 @@ abcd <- plot_grid(gender_race, age_plot, ncol = 2,
                   axis = 'b')
 abcd
 ggsave('figs/composite_plot.png', abcd, height = 6.5, width = 9)
-ggsave('figs/tiffs/composite_plot.tiff', abcd, height = 6.5, width = 9, dpi = 300)
+ggsave('figs/tiffs/fig_2.tiff', abcd, height = 6.5, width = 9, dpi = 300)
 ```
 
 

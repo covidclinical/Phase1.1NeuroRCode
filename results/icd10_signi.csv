@@ -1,9 +1,4 @@
 time,full_icd,lestimate,drr,ci_drr,p_fdr
-Before admission,Disturbances of smell and taste (R43),-1.28,-59,"(-79, -17)",0.003
-Before admission,Dizziness and giddiness (R42),-0.16,-11,"(-16, -5)",0.00086
-Before admission,Epilepsy and recurrent seizures (G40),-0.14,-9,"(-16, -2)",0.024
-Before admission,Other and unspecified myopathies (G72),0.49,41,"(24, 59)",0.00051
-Before admission,Unspecified psychosis not due to a substance or known physiological condition (F29),-0.79,-42,"(-58, -21)",8.4e-05
 After admission,Blindness and low vision (H54),-0.38,-23,"(-33, -11)",2e-04
 After admission,Dizziness and giddiness (R42),-0.47,-28,"(-33, -22)",6.3e-19
 After admission,"Encephalitis, myelitis and encephalomyelitis (G04)",0.45,37,"(17, 60)",0.0081
@@ -17,3 +12,8 @@ After admission,Other headache syndromes (G44),-0.91,-47,"(-59, -31)",9.4e-09
 After admission,Other symptoms and signs involving cognitive functions and awareness (R41),0.28,22,"(19, 25)",2.1e-39
 After admission,Transient cerebral ischemic attacks and related syndromes (G45),-0.85,-45,"(-56, -31)",5e-10
 After admission,Unspecified psychosis not due to a substance or known physiological condition (F29),-0.84,-44,"(-57, -28)",7.7e-08
+Before admission,Disturbances of smell and taste (R43),-1.28,-59,"(-79, -17)",0.003
+Before admission,Dizziness and giddiness (R42),-0.16,-11,"(-16, -5)",0.00086
+Before admission,Epilepsy and recurrent seizures (G40),-0.14,-9,"(-16, -2)",0.024
+Before admission,Other and unspecified myopathies (G72),0.49,41,"(24, 59)",0.00051
+Before admission,Unspecified psychosis not due to a substance or known physiological condition (F29),-0.79,-42,"(-58, -21)",8.4e-05
