@@ -359,6 +359,101 @@ We performed an enrichment analysis to examine the difference of *severe patient
 We calculated each ICD code's enrichment by dividing the observed proportion of honorees by the expected proportion of honorees and reported a value of log2 enrichment (LOE) and its 95% confidence intervals.
 The 95% confidence interval of the LOE was estimated using the Poisson model method [@isbn:9780849394447].
 
+```{r}
+contingency_continent <- diag_icd_10 %>%
+  mutate(continent = ifelse(Country == 'USA', 'US', 'NonUS')) %>% 
+  group_by(full_icd, time, continent) %>%
+  summarise(across(contains('severe'), .fns = sum, na.rm = T), .groups = 'drop') %>%
+  mutate(Observed = num_patients_ever_severe_icd1,
+         num_non_severe = num_patients_never_severe_icd1 + num_patients_never_severe_icd0,
+         num_severe = num_patients_ever_severe_icd1 + num_patients_ever_severe_icd0,
+         Expected = num_patients_never_severe_icd1/num_non_severe*num_severe,
+         over_sev = Observed - Expected)
+
+ind_fish <- contingency_continent %>%
+  filter(!is.na(Expected), num_patients_never_severe_icd0 >= 0) %>%
+  select(full_icd, time, continent,
+         num_patients_never_severe_icd0,
+         num_patients_never_severe_icd1,
+         num_patients_ever_severe_icd0,
+         num_patients_ever_severe_icd1) %>%
+  group_by(full_icd, time, continent) %>%
+  nest() %>%
+  mutate(fish = map(data, my_fish)) %>%
+  dplyr::select(-data) %>%
+  unnest(cols = c(fish)) %>% 
+  mutate(upper = ifelse(is.na(upper), Inf, upper)) %>% 
+  mutate(lci = paste0('(', round(log2(lower), 1), ', ', 
+                     round(log2(upper), 1), ')'),
+         lestimate = log2(estimate))
+ind_fish$`P value (Holm)` <-  p.adjust(ind_fish$p_value, 'holm')
+ind_fish$`P value (FDR)` <- p.adjust(ind_fish$p_value, 'BH')
+
+madata <- contingency_continent %>% 
+  left_join(ind_fish, by = c('full_icd', 'continent', 'time')) %>% 
+  filter(time == 'After admission') %>% 
+  mutate(
+    distance_to_null = case_when(
+      lower > 1 ~ lower - 1,
+      TRUE ~ upper - 2
+    ),
+    presentation = case_when(
+      lower > 1 & `P value (FDR)` < 0.05 ~ '#d46780', 
+      upper < 1 & `P value (FDR)` < 0.05 ~ '#798234',
+      TRUE ~ 'grey20'
+    ),
+    upper = ifelse(is.na(upper), Inf, upper))
+  
+plot_obs_exp <- madata %>%
+  mutate(lestimate = log2(estimate),
+         llower = log2(lower), 
+         lupper = log2(upper)) %>% 
+  select(full_icd, continent, lestimate, llower, lupper, presentation, over_sev, Observed, Expected) %>% 
+  pivot_longer(- c(full_icd, continent, presentation, over_sev), names_to = 'type') %>% 
+  mutate(subtype = ifelse(type == 'Expected' | type == 'Observed', 
+                          'Sqrt(number of honorees)', 
+                          'Log2 enrichment, 95% CI')) %>% 
+  pivot_wider(names_from = type, values_from = value) %>% 
+  mutate(presentation = as.factor(presentation),
+         full_icd = fct_relevel(full_icd, sorted_icds))
+
+sorted_icds <- madata %>% 
+  filter(time == 'After admission') %>% 
+  group_by(full_icd) %>% 
+  summarise(total_expected = sum(Expected), .groups = 'drop') %>% 
+  arrange(total_expected) %>% 
+  pull(full_icd)
+
+plot_obs_exp_right <- plot_obs_exp %>% filter(subtype == 'Sqrt(number of honorees)') 
+plot_obs_exp_left <- plot_obs_exp %>% filter(subtype != 'Sqrt(number of honorees)') 
+
+enrichment_plot_us <- plot_enrich(
+  plot_obs_exp_left %>% filter(continent == 'US'),
+  plot_obs_exp_right %>% filter(continent == 'US') %>% 
+    slice(match(sorted_icds, full_icd)),
+  nudge = 2.5)
+
+enrichment_plot_nonus <- plot_enrich(
+  plot_obs_exp_left %>% filter(continent == 'NonUS'),
+  plot_obs_exp_right %>% filter(continent == 'NonUS') %>% slice(match(sorted_icds, full_icd)),
+  nudge = 2.5)
+
+enrichment_plot_cont <- cowplot::plot_grid(
+  enrichment_plot_us,
+  enrichment_plot_nonus,
+  ncol = 1, hjust = -0.05,
+  labels = c('A. US sites', 'B. Non-US sites')
+)
+
+
+
+ggsave('figs/icd_severe_after_us_nonus.png', enrichment_plot_cont, width = 9.5, height = 7)
+ggsave('figs/tiffs/efig_2.tiff', enrichment_plot_cont, width = 9.5, height = 7, dpi = 300)
+
+madata %>% 
+  write_csv('results/icd10_fish_tab_us_nonus.csv')
+```
+
 ```{r warning=FALSE, message=FALSE, include=FALSE, eval=FALSE}
 # Metaanalysis
 # library(meta)
@@ -385,9 +480,9 @@ The 95% confidence interval of the LOE was estimated using the Poisson model met
 # 
 # madata <- ind_fish %>% 
 #   mutate(upper = ifelse(is.na(upper), Inf, upper),
-#          lestimate = log(estimate),
-#          llower = log(lower),
-#          lupper = log(upper),
+#          lestimate = log2(estimate),
+#          llower = log2(lower),
+#          lupper = log2(upper),
 #          mase = (lupper - llower)/(2*alpha_threshold))
 
 # meta_res <- data.frame()
@@ -584,7 +679,7 @@ enrichment_plot <- cowplot::plot_grid(
   labels = c('A. Before admission', 'B. After admission')
 )
 enrichment_plot
-ggsave('figs/icd_severe_before_after.png', enrichment_plot_after, width = 9.5, height = 3.5)
+ggsave('figs/icd_severe_after.png', enrichment_plot_after, width = 9.5, height = 3.5)
 ggsave('figs/tiffs/fig_4.tiff', enrichment_plot_after, width = 9.5, height = 3.5, dpi = 300)
 ```
 
