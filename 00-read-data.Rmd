@@ -67,8 +67,6 @@ site_country <- read_csv('data/SiteID_Map_Non_Pediatric_3digit_toshare.csv') %>%
 <!-- Two rows have country SINGAPORE_SPAIN because there is only one site in each one of the countries. -->
 <!-- If this were not combined: data could be known the specific site. -->
 
-<!-- SITE660 was mapped to both US and France? -->
-<!-- SITE309 was mapped to both US and Italy? -->
 ```{r}
 neuro_icds_10 <- read_excel('data/2020-09-10_neuro-icd10.xlsx') %>% 
   rename('icd' = `ICD-10`)
@@ -186,6 +184,14 @@ diag_ana <- diag_all %>%
   drop_na() %>% 
   left_join(site_country, by = c('siteid' = 'SiteID.new')) %>% 
   {.}
+
+add_back_974 = cbind('SITE974', '728', 9, 0, 
+crossing(c('Before admission', 'After admission'), 
+c('num_patients_icd', 'num_patients_ever_severe_icd1')), 'Italy') %>% 
+`colnames<-`(colnames(diag_ana)) %>% 
+  as.data.frame()
+
+diag_ana = bind_rows(diag_ana, add_back_974) # 0 as count
 
 diag_icd_10 <- diag_ana %>% 
   filter(icd_version == 10) %>%
