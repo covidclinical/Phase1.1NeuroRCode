@@ -69,7 +69,7 @@ diff_code_loc <- diff_code %>%
   bind_rows(diff_code_country)
 
 diff_heat <- diff_code_loc %>% 
-  ggplot(aes(y = icd, x = location, fill = percent_diff)) +
+  ggplot(aes(y = fct_rev(icd), x = location, fill = percent_diff)) +
   geom_tile() +
   labs(y = NULL, x = NULL, fill = 'After - Before') +
   scale_x_discrete() + 
@@ -208,17 +208,21 @@ icd_time <- diag_icd_10 %>%
 #   filter(time == 'After admission') %>% 
 #   arrange(pats_icd_time) %>% 
 #   pull(full_icd)
+# sorted_icds <- code_prevalence %>% 
+#   ungroup() %>% 
+#   select(time, percent_pats_site, full_icd, siteid) %>% 
+#   pivot_wider(names_from = time, values_from = percent_pats_site, 
+#               values_fill = list(percent_pats_site = 0)) %>% 
+#   group_by(full_icd) %>% 
+#   summarise(after = mean(`After admission`, na.rm = T),
+#          before = mean(`Before admission`, na.rm = T),
+#          diff_prev = after - before,
+#          .groups = 'drop') %>% 
+#   arrange(diff_prev) %>% 
+#   pull(full_icd)
 sorted_icds <- code_prevalence %>% 
-  ungroup() %>% 
-  select(time, percent_pats_site, full_icd, siteid) %>% 
-  pivot_wider(names_from = time, values_from = percent_pats_site, 
-              values_fill = list(percent_pats_site = 0)) %>% 
-  group_by(full_icd) %>% 
-  summarise(after = mean(`After admission`, na.rm = T),
-         before = mean(`Before admission`, na.rm = T),
-         diff_prev = after - before,
-         .groups = 'drop') %>% 
-  arrange(diff_prev) %>% 
+  distinct(full_icd, icd, `Neurological Disease Category`) %>% 
+  arrange(desc(`Neurological Disease Category`), desc(icd)) %>% 
   pull(full_icd)
 
 total_icd <- icd_time %>% 
@@ -513,7 +517,8 @@ madata %>%
 
 ```{r}
 contingency_df <- diag_icd_10 %>% 
-  # filter(time == 'Before admission') %>% 
+  # filter(time == 'Before admission') %>%
+  select(- c(num_patients_all, num_patients_ever_severe, num_patients_never_severe)) %>% 
   group_by(full_icd, time) %>% 
   summarise(across(contains('severe'), .fns = sum, na.rm = T), .groups = 'drop') %>% 
   mutate(Observed = num_patients_ever_severe_icd1, 
